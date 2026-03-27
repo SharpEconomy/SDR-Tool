@@ -11,6 +11,9 @@ websites, and prepare the final output as a downloadable CSV.
 - Resolves and validates the sponsor's primary website and domain.
 - Uses public search results and sponsor websites to infer likely
   decision-makers.
+- Uses Gemini to qualify sponsors toward recently funded Tech/AI/Web3
+  companies that likely need developer adoption and market visibility, with a
+  US/India priority and global coverage.
 - Prechecks each email with syntax, MX, and SMTP validation before it is
   written to CSV.
 - Exports only accepted leads when `SMTP_PRECHECK_REQUIRED=true`.
@@ -35,7 +38,13 @@ notepad .env
 SMTP_FROM_EMAIL=hello@yourdomain.com
 WEBSITE_PRECHECK_REQUIRED=true
 SMTP_PRECHECK_REQUIRED=true
+GEMINI_ENABLED=true
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-2.0-flash
 ```
+
+Set `GEMINI_ENABLED=false` for bulk test runs when you want to skip Gemini
+qualification and avoid quota pressure.
 
 1. Install dependencies:
 
@@ -91,11 +100,19 @@ Expected columns:
 - `sponsor_company`
 - `sponsor_website`
 - `sponsor_domain`
+- `company_segment`
+- `recently_funded`
+- `recent_funding_signal`
+- `company_location`
+- `location_priority`
+- `developer_adoption_need`
+- `market_visibility_need`
 - `decision_maker_name`
 - `decision_maker_title`
 - `decision_maker_email`
 - `linkedin_url`
 - `evidence`
+- `qualification_notes`
 
 ## Extending to more websites later
 

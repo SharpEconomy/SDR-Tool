@@ -10,11 +10,19 @@ PUBLIC_LEAD_COLUMNS = [
     "sponsor_company",
     "sponsor_website",
     "sponsor_domain",
+    "company_segment",
+    "recently_funded",
+    "recent_funding_signal",
+    "company_location",
+    "location_priority",
+    "developer_adoption_need",
+    "market_visibility_need",
     "decision_maker_name",
     "decision_maker_title",
     "decision_maker_email",
     "linkedin_url",
     "evidence",
+    "qualification_notes",
 ]
 
 
@@ -75,6 +83,20 @@ class EmailValidation:
 
 
 @dataclass(slots=True)
+class CompanyQualification:
+    company_segment: str | None
+    recently_funded: bool | None
+    recent_funding_signal: str | None
+    company_location: str | None
+    location_priority: str | None
+    developer_adoption_need: bool | None
+    market_visibility_need: bool | None
+    qualification_notes: str | None
+    score: int
+    accepted: bool
+
+
+@dataclass(slots=True)
 class Lead:
     source: str
     event_name: str
@@ -82,6 +104,13 @@ class Lead:
     sponsor_company: str
     sponsor_website: str | None
     sponsor_domain: str | None
+    company_segment: str | None
+    recently_funded: bool | None
+    recent_funding_signal: str | None
+    company_location: str | None
+    location_priority: str | None
+    developer_adoption_need: bool | None
+    market_visibility_need: bool | None
     decision_maker_name: str | None
     decision_maker_title: str | None
     decision_maker_email: str | None
@@ -91,6 +120,9 @@ class Lead:
     email_score: int
     email_accepted: bool
     evidence: str | None
+    qualification_notes: str | None
+    qualification_score: int
+    qualification_accepted: bool
 
     def as_row(self) -> dict[str, Any]:
         return {
@@ -100,6 +132,13 @@ class Lead:
             "sponsor_company": self.sponsor_company,
             "sponsor_website": self.sponsor_website,
             "sponsor_domain": self.sponsor_domain,
+            "company_segment": self.company_segment,
+            "recently_funded": self.recently_funded,
+            "recent_funding_signal": self.recent_funding_signal,
+            "company_location": self.company_location,
+            "location_priority": self.location_priority,
+            "developer_adoption_need": self.developer_adoption_need,
+            "market_visibility_need": self.market_visibility_need,
             "decision_maker_name": self.decision_maker_name,
             "decision_maker_title": self.decision_maker_title,
             "decision_maker_email": self.decision_maker_email,
@@ -109,6 +148,9 @@ class Lead:
             "email_score": self.email_score,
             "email_accepted": self.email_accepted,
             "evidence": self.evidence,
+            "qualification_notes": self.qualification_notes,
+            "qualification_score": self.qualification_score,
+            "qualification_accepted": self.qualification_accepted,
         }
 
     def as_export_row(self) -> dict[str, Any]:

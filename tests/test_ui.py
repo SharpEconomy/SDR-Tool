@@ -98,12 +98,20 @@ class FakeResult:
 
 
 class FakeStreamlit:
-    def __init__(self, *, buttons=None, sources=None, keywords="ai,web3") -> None:
+    def __init__(
+        self,
+        *,
+        buttons=None,
+        sources=None,
+        keywords="ai,web3",
+        gemini_enabled=None,
+    ) -> None:
         self.sidebar = FakeSidebar()
         self.session_state = {}
         self.button_presses = buttons or {}
         self.sources = ["ethglobal"] if sources is None else sources
         self.keywords = keywords
+        self.gemini_enabled = gemini_enabled
         self.errors = []
         self.successes = []
         self.warnings = []
@@ -130,11 +138,17 @@ class FakeStreamlit:
     def markdown(self, text, unsafe_allow_html=False) -> None:
         self.markdowns.append((text, unsafe_allow_html))
 
-    def multiselect(self, label, options, default):
+    def multiselect(self, label, options, default, format_func=None):
+        self.multiselect_format_func = format_func
         return self.sources
 
     def text_input(self, label, value):
         return self.keywords
+
+    def checkbox(self, label, value=False, help=None):
+        if self.gemini_enabled is None:
+            return value
+        return self.gemini_enabled
 
     def number_input(self, label, min_value, max_value, value, step):
         return value
@@ -220,6 +234,7 @@ def test_render_env_status_displays_metrics(settings, monkeypatch) -> None:
     assert metrics[1].metrics[0] == ("Website precheck", "on")
     assert metrics[2].metrics[0] == ("SMTP precheck", "on")
     assert metrics[3].metrics[0] == ("Browser fallback", "on")
+    assert metrics[4].metrics[0] == ("Gemini fit", "off")
 
 
 def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> None:
@@ -256,12 +271,35 @@ def test_render_start_displays_completed_result(
     assert fake_st.downloads == [csv_name]
     source_columns = fake_st.columns_created[2]
     source_container = source_columns[0].containers[0]
+    assert source_container.subheaders == ["ETHGLOBAL"]
     assert source_container.height == ui.SOURCE_PANEL_HEIGHT
     assert source_container.containers[0].height == ui.SOURCE_LOG_HEIGHT
     assert fake_st.dataframe_height == ui._dataframe_height_for_rows(0)
     assert fake_st.events.index("download") < fake_st.events.index("dataframe")
     assert fake_st.events.index("dataframe") < fake_st.events.index("container")
     assert fake_st.events.index("download") < fake_st.events.index("container")
+    assert fake_st.multiselect_format_func("ethglobal") == "ETHGLOBAL"
+
+
+def test_render_sidebar_gemini_toggle_overrides_settings(settings, monkeypatch) -> None:
+    settings.gemini_api_key = "test-key"
+    fake_st = FakeStreamlit(buttons={"Start": True}, gemini_enabled=False)
+    monkeypatch.setattr(ui, "st", fake_st)
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+
+    captured = {}
+
+    def fake_start(incoming_settings, selected_sources, keywords, limit_per_source):
+        captured["gemini_enabled"] = incoming_settings.gemini_enabled
+        active_run = _build_active_run("result.csv")
+        fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
+        return active_run
+
+    monkeypatch.setattr(ui, "_start_background_run", fake_start)
+
+    ui.render()
+
+    assert captured["gemini_enabled"] is False
 
 
 def test_render_pause_button_updates_active_run_status(

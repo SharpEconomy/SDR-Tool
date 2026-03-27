@@ -27,6 +27,9 @@ def test_settings_load_reads_env(monkeypatch) -> None:
     monkeypatch.setenv("WEBSITE_PRECHECK_REQUIRED", "false")
     monkeypatch.setenv("SMTP_PRECHECK_REQUIRED", "true")
     monkeypatch.setenv("MIN_VALIDATION_SCORE", "3")
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-2.0-flash")
+    monkeypatch.setenv("GEMINI_ENABLED", "false")
 
     loaded = config.Settings.load()
 
@@ -43,3 +46,6 @@ def test_settings_load_reads_env(monkeypatch) -> None:
     assert loaded.website_precheck_required is False
     assert loaded.smtp_precheck_required is True
     assert loaded.min_validation_score == 3
+    assert loaded.gemini_api_key == "test-key"
+    assert loaded.gemini_model == "gemini-2.0-flash"
+    assert loaded.gemini_enabled is False

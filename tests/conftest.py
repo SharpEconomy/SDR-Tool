@@ -21,4 +21,7 @@ def settings() -> Settings:
         website_precheck_required=True,
         smtp_precheck_required=True,
         min_validation_score=2,
+        gemini_api_key="",
+        gemini_model="gemini-2.0-flash",
+        gemini_enabled=True,
     )

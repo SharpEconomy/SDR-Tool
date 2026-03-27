@@ -34,6 +34,13 @@ def test_lead_as_row_contains_expected_keys() -> None:
         sponsor_company="ENS",
         sponsor_website="https://ens.domains",
         sponsor_domain="ens.domains",
+        company_segment="Web3",
+        recently_funded=True,
+        recent_funding_signal="Raised funding in 2025",
+        company_location="New York, US",
+        location_priority="US",
+        developer_adoption_need=True,
+        market_visibility_need=True,
         decision_maker_name="Jane Doe",
         decision_maker_title="Head of Partnerships",
         decision_maker_email="jane@ens.domains",
@@ -43,11 +50,15 @@ def test_lead_as_row_contains_expected_keys() -> None:
         email_score=3,
         email_accepted=True,
         evidence="embedded-json",
+        qualification_notes="Developer ecosystem push after recent funding.",
+        qualification_score=91,
+        qualification_accepted=True,
     )
 
     row = lead.as_row()
 
     assert row["sponsor_company"] == "ENS"
+    assert row["company_segment"] == "Web3"
     assert row["decision_maker_email"] == "jane@ens.domains"
     assert row["email_accepted"] is True
 
@@ -60,6 +71,13 @@ def test_lead_as_export_row_excludes_internal_validation_fields() -> None:
         sponsor_company="ENS",
         sponsor_website="https://ens.domains",
         sponsor_domain="ens.domains",
+        company_segment="Web3",
+        recently_funded=True,
+        recent_funding_signal="Raised funding in 2025",
+        company_location="New York, US",
+        location_priority="US",
+        developer_adoption_need=True,
+        market_visibility_need=True,
         decision_maker_name="Jane Doe",
         decision_maker_title="Head of Partnerships",
         decision_maker_email="jane@ens.domains",
@@ -69,6 +87,9 @@ def test_lead_as_export_row_excludes_internal_validation_fields() -> None:
         email_score=3,
         email_accepted=True,
         evidence="embedded-json",
+        qualification_notes="Developer ecosystem push after recent funding.",
+        qualification_score=91,
+        qualification_accepted=True,
     )
 
     row = lead.as_export_row()
@@ -78,3 +99,5 @@ def test_lead_as_export_row_excludes_internal_validation_fields() -> None:
     assert "email_smtp_code" not in row
     assert "email_score" not in row
     assert "email_accepted" not in row
+    assert "qualification_score" not in row
+    assert "qualification_accepted" not in row

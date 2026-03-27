@@ -11,6 +11,7 @@ import pandas as pd
 
 from hackindia_leads.config import Settings
 from hackindia_leads.models import PUBLIC_LEAD_COLUMNS, Event, Lead, Sponsor
+from hackindia_leads.services.company_qualification import GeminiCompanyQualifier
 from hackindia_leads.services.email_validation import EmailValidatorService
 from hackindia_leads.services.enrichment import ContactEnricher
 from hackindia_leads.services.fetcher import PageFetcher
@@ -67,6 +68,7 @@ class LeadPipeline:
         self.search_client = SearchClient()
         self.sources = build_sources(self.fetcher, self.search_client)
         self.enricher = ContactEnricher(settings, self.fetcher, self.search_client)
+        self.qualifier = GeminiCompanyQualifier(settings, self.search_client)
         self.validator = EmailValidatorService(settings)
         self._progress_lock = threading.Lock()
 
@@ -255,6 +257,33 @@ class LeadPipeline:
                     ),
                 )
                 return None
+            qualification = None
+            if self.qualifier.is_enabled():
+                qualification = self.qualifier.qualify(
+                    sponsor,
+                    event,
+                    website,
+                    domain,
+                )
+                if qualification is not None:
+                    self._emit(
+                        progress_callback,
+                        f"{source_name}: Gemini qualified '{sponsor.name}'",
+                    )
+                    if not qualification.accepted:
+                        self._emit(
+                            progress_callback,
+                            (
+                                f"{source_name}: filtered sponsor '{sponsor.name}' "
+                                "by Gemini fit"
+                            ),
+                        )
+                        return None
+            else:
+                self._emit(
+                    progress_callback,
+                    f"{source_name}: Gemini skipped for '{sponsor.name}'",
+                )
             contacts = self.enricher.find_contact_candidates(sponsor, website, domain)
         except Exception as exc:
             self._emit(
@@ -281,6 +310,37 @@ class LeadPipeline:
                 sponsor_company=sponsor.name,
                 sponsor_website=website,
                 sponsor_domain=domain,
+                company_segment=(
+                    qualification.company_segment if qualification is not None else None
+                ),
+                recently_funded=(
+                    qualification.recently_funded if qualification is not None else None
+                ),
+                recent_funding_signal=(
+                    qualification.recent_funding_signal
+                    if qualification is not None
+                    else None
+                ),
+                company_location=(
+                    qualification.company_location
+                    if qualification is not None
+                    else None
+                ),
+                location_priority=(
+                    qualification.location_priority
+                    if qualification is not None
+                    else None
+                ),
+                developer_adoption_need=(
+                    qualification.developer_adoption_need
+                    if qualification is not None
+                    else None
+                ),
+                market_visibility_need=(
+                    qualification.market_visibility_need
+                    if qualification is not None
+                    else None
+                ),
                 decision_maker_name=contact.full_name,
                 decision_maker_title=contact.title,
                 decision_maker_email=contact.email,
@@ -293,6 +353,17 @@ class LeadPipeline:
                     and validation.score >= self.settings.min_validation_score
                 ),
                 evidence=sponsor.evidence,
+                qualification_notes=(
+                    qualification.qualification_notes
+                    if qualification is not None
+                    else None
+                ),
+                qualification_score=(
+                    qualification.score if qualification is not None else 0
+                ),
+                qualification_accepted=(
+                    qualification.accepted if qualification is not None else True
+                ),
             )
             if best_lead is None or lead.email_score > best_lead.email_score:
                 best_lead = lead
@@ -332,12 +403,13 @@ class LeadPipeline:
         *,
         stopped: bool,
     ) -> PipelineResult:
-        csv_name, csv_bytes = self._build_csv(leads)
+        ordered_leads = sorted(leads, key=self._lead_sort_key, reverse=True)
+        csv_name, csv_bytes = self._build_csv(ordered_leads)
         if stopped:
             self._emit(
                 progress_callback,
                 (
-                    f"Run stopped with {len(leads)} validated lead(s). "
+                    f"Run stopped with {len(ordered_leads)} validated lead(s). "
                     f"Download ready: {csv_name}"
                 ),
             )
@@ -345,11 +417,15 @@ class LeadPipeline:
             self._emit(
                 progress_callback,
                 (
-                    f"Finished run with {len(leads)} validated lead(s). "
+                    f"Finished run with {len(ordered_leads)} validated lead(s). "
                     f"Download ready: {csv_name}"
                 ),
             )
-        return PipelineResult(rows=leads, csv_name=csv_name, csv_bytes=csv_bytes)
+        return PipelineResult(
+            rows=ordered_leads,
+            csv_name=csv_name,
+            csv_bytes=csv_bytes,
+        )
 
     def _checkpoint(self, control: PipelineControl | None) -> bool:
         if control is None:
@@ -370,3 +446,11 @@ class LeadPipeline:
         if progress_callback is not None:
             with self._progress_lock:
                 progress_callback(message)
+
+    def _lead_sort_key(self, lead: Lead) -> tuple[int, int, int]:
+        location_rank = {"US": 3, "India": 3, "Global": 2, "Unknown": 1}
+        return (
+            location_rank.get(lead.location_priority or "Unknown", 0),
+            lead.qualification_score,
+            lead.email_score,
+        )

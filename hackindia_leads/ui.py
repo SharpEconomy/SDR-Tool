@@ -57,7 +57,12 @@ def render() -> None:
     st.set_page_config(page_title="HackIndia Lead Finder", layout="wide")
     _inject_styles()
     st.title("HackIndia Lead Finder")
-    st.caption("Minimal sponsor-lead scraper for AI and Web3 hackathons.")
+    st.caption(
+        (
+            "Sponsor-lead scraper focused on recently funded Tech/AI/Web3 "
+            "companies, with global coverage and a US/India priority."
+        )
+    )
 
     settings = Settings.load()
     _ensure_session_state()
@@ -71,9 +76,18 @@ def render() -> None:
             "Sources",
             options=["ethglobal", "devpost", "dorahacks", "mlh"],
             default=settings.default_sources,
+            format_func=_format_source_label,
         )
         keywords_raw = st.text_input(
             "Themes", value=",".join(settings.default_keywords)
+        )
+        settings.gemini_enabled = st.checkbox(
+            "Use Gemini qualification",
+            value=settings.gemini_enabled,
+            help=(
+                "Turn this off for bulk test runs when you want to skip Gemini "
+                "qualification and avoid quota usage."
+            ),
         )
         limit_per_source = st.number_input(
             "Event pages per source",
@@ -427,6 +441,10 @@ def _format_duration(total_seconds: int) -> str:
     return f"{seconds}s"
 
 
+def _format_source_label(source_name: str) -> str:
+    return source_name.replace("_", " ").upper()
+
+
 def _create_source_panels(
     selected_sources: list[str],
 ) -> dict[str, dict[str, object]]:
@@ -439,7 +457,7 @@ def _create_source_panels(
                 border=True,
                 height=SOURCE_PANEL_HEIGHT,
             )
-            container.subheader(source_name.replace("_", " ").title())
+            container.subheader(_format_source_label(source_name))
             container.caption("Live source-specific progress")
             logs_container = container.container(height=SOURCE_LOG_HEIGHT, border=False)
             panels[source_name] = {
@@ -520,6 +538,15 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
         state.status = "Resolving contacts"
         return
 
+    if "Gemini qualified" in cleaned:
+        state.status = "Applying target fit"
+        return
+
+    if "filtered sponsor" in cleaned and "Gemini fit" in cleaned:
+        state.status = "Filtered by target fit"
+        state.filtered += 1
+        return
+
     if "accepted lead for" in cleaned:
         state.status = "Accepted lead found"
         state.accepted += 1
@@ -552,16 +579,21 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
 
 
 def _render_env_status(settings: Settings) -> None:
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("SMTP sender", "set" if settings.smtp_from_email else "missing")
     col2.metric(
         "Website precheck", "on" if settings.website_precheck_required else "off"
     )
     col3.metric("SMTP precheck", "on" if settings.smtp_precheck_required else "off")
     col4.metric("Browser fallback", "on" if settings.use_browser_fallback else "off")
+    col5.metric(
+        "Gemini fit",
+        "on" if settings.gemini_enabled and settings.gemini_api_key else "off",
+    )
 
 
 def _inject_styles() -> None:
+    column_count = len(PUBLIC_LEAD_COLUMNS)
     st.markdown(
         """
         <style>
@@ -625,7 +657,7 @@ def _inject_styles() -> None:
         .loading-table__header,
         .loading-table__row {
             display: grid;
-            grid-template-columns: repeat(11, minmax(120px, 1fr));
+            grid-template-columns: repeat(__COLUMN_COUNT__, minmax(120px, 1fr));
             gap: 0;
         }
 
@@ -701,6 +733,6 @@ def _inject_styles() -> None:
             }
         }
         </style>
-        """,
+        """.replace("__COLUMN_COUNT__", str(column_count)),
         unsafe_allow_html=True,
     )
