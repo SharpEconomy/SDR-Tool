@@ -8,7 +8,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: PYTHON_VERSION
-        value: 3.14.3
+        value: 3.13.2
       - key: USE_BROWSER_FALLBACK
         value: "false"
       - key: WEBSITE_PRECHECK_REQUIRED
