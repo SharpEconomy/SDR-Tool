@@ -16,10 +16,11 @@ class FakeSidebar:
 
 
 class FakeColumn:
-    def __init__(self, button_presses=None) -> None:
+    def __init__(self, button_presses=None, events=None) -> None:
         self.metrics = []
         self.containers = []
         self.button_presses = {} if button_presses is None else button_presses
+        self.events = [] if events is None else events
 
     def metric(self, label, value) -> None:
         self.metrics.append((label, value))
@@ -27,6 +28,7 @@ class FakeColumn:
     def container(self, border=False, height=None) -> "FakeContainer":
         container = FakeContainer(border=border, height=height)
         self.containers.append(container)
+        self.events.append("container")
         return container
 
     def button(self, label, use_container_width=False, disabled=False) -> bool:
@@ -109,6 +111,7 @@ class FakeStreamlit:
         self.columns_created = []
         self.containers = []
         self.markdowns = []
+        self.events = []
         self.rerun_called = 0
 
     def set_page_config(self, **kwargs) -> None:
@@ -141,7 +144,7 @@ class FakeStreamlit:
         return self.button_presses.get(label, False)
 
     def columns(self, count):
-        cols = [FakeColumn(self.button_presses) for _ in range(count)]
+        cols = [FakeColumn(self.button_presses, self.events) for _ in range(count)]
         self.columns_created.append(cols)
         return cols
 
@@ -159,15 +162,18 @@ class FakeStreamlit:
 
     def dataframe(self, frame, use_container_width, height) -> None:
         self.dataframe_frame = frame
+        self.events.append("dataframe")
 
     def download_button(
         self, label, data, file_name, mime, use_container_width
     ) -> None:
         self.downloads.append(file_name)
+        self.events.append("download")
 
     def container(self, border=False, height=None) -> FakeContainer:
         container = FakeContainer(border=border, height=height)
         self.containers.append(container)
+        self.events.append("container")
         return container
 
     def rerun(self) -> None:
@@ -180,6 +186,8 @@ def _build_active_run(
     status="completed",
     alive=False,
     rows=None,
+    started_at=0.0,
+    estimated_total_seconds=120,
 ) -> ui.ActiveRunState:
     source_states = {"ethglobal": ui.SourceProgressState(name="ethglobal")}
     controller = PipelineControl()
@@ -191,6 +199,8 @@ def _build_active_run(
         progress_queue=Queue(),
         controller=controller,
         worker=FakeWorker(alive=alive),
+        started_at=started_at,
+        estimated_total_seconds=estimated_total_seconds,
         status=status,
         result=FakeResult(csv_path, rows=rows),
     )
@@ -247,6 +257,8 @@ def test_render_start_displays_completed_result(
     source_container = source_columns[0].containers[0]
     assert source_container.height == ui.SOURCE_PANEL_HEIGHT
     assert source_container.containers[0].height == ui.SOURCE_LOG_HEIGHT
+    assert fake_st.events.index("dataframe") < fake_st.events.index("container")
+    assert fake_st.events.index("download") < fake_st.events.index("container")
 
 
 def test_render_pause_button_updates_active_run_status(
@@ -265,6 +277,26 @@ def test_render_pause_button_updates_active_run_status(
 
     active_run = fake_st.session_state[ui.ACTIVE_RUN_KEY]
     assert active_run.status == "paused"
+
+
+def test_render_shows_runtime_estimate_while_running(
+    settings, monkeypatch, tmp_path: Path
+) -> None:
+    fake_st = FakeStreamlit()
+    monkeypatch.setattr(ui, "st", fake_st)
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+    monkeypatch.setattr(ui.time, "time", lambda: 30.0)
+    fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
+        tmp_path / "result.csv",
+        status="running",
+        alive=True,
+        started_at=0.0,
+        estimated_total_seconds=120,
+    )
+
+    ui.render()
+
+    assert any("Estimated time remaining: 1m 30s." in text for text in fake_st.infos)
 
 
 def test_render_stop_button_requests_stop(

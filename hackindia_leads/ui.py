@@ -39,6 +39,8 @@ class ActiveRunState:
     progress_queue: Queue[tuple[str, object]]
     controller: PipelineControl
     worker: threading.Thread
+    started_at: float
+    estimated_total_seconds: int
     status: str = "running"
     result: PipelineResult | None = None
     error: str | None = None
@@ -105,6 +107,7 @@ def render() -> None:
             )
             return
         keywords = [item.strip() for item in keywords_raw.split(",") if item.strip()]
+        st.session_state[ACTIVE_RUN_KEY] = None
         active_run = _start_background_run(
             settings,
             selected_sources,
@@ -129,14 +132,13 @@ def render() -> None:
         return
 
     _sync_active_run(active_run)
+    _render_run_outcome(active_run)
     source_panels = _create_source_panels(active_run.source_order)
     for source_name in active_run.source_order:
         _render_source_panel(
             active_run.source_states[source_name],
             source_panels[source_name],
         )
-
-    _render_run_outcome(active_run)
 
     if active_run.status in {"running", "stopping"} and active_run.worker.is_alive():
         time.sleep(0.5)
@@ -182,6 +184,11 @@ def _start_background_run(
         progress_queue=progress_queue,
         controller=controller,
         worker=worker,
+        started_at=time.time(),
+        estimated_total_seconds=_estimate_total_seconds(
+            len(selected_sources),
+            limit_per_source,
+        ),
     )
     st.session_state[ACTIVE_RUN_KEY] = active_run
     worker.start()
@@ -254,12 +261,21 @@ def _render_run_outcome(active_run: ActiveRunState) -> None:
     if active_run.error:
         st.error(active_run.error)
         return
+
+    runtime_summary = _build_runtime_summary(active_run)
     if active_run.status == "paused":
-        st.info("Run paused. Use Resume to continue or Stop to end the run.")
+        st.info(
+            (
+                "Run paused. Use Resume to continue or Stop to end the run. "
+                f"{runtime_summary}"
+            )
+        )
     elif active_run.status == "running":
-        st.info("Fetching data in the background.")
+        st.info(f"Fetching data in the background. {runtime_summary}")
     elif active_run.status == "stopping":
-        st.warning("Stopping the run. Waiting for in-flight work to finish.")
+        st.warning(
+            f"Stopping the run. Waiting for in-flight work to finish. {runtime_summary}"
+        )
 
     if active_run.result is None:
         return
@@ -273,9 +289,7 @@ def _render_run_outcome(active_run: ActiveRunState) -> None:
             )
         )
     else:
-        st.success(
-            f"Saved {len(rows)} validated leads to {active_run.result.csv_path}"
-        )
+        st.success(f"Saved {len(rows)} validated leads to {active_run.result.csv_path}")
 
     if not rows:
         st.warning(
@@ -327,12 +341,43 @@ def _describe_run_state(active_run: ActiveRunState | None) -> str:
     return active_run.status.replace("_", " ").title()
 
 
+def _estimate_total_seconds(source_count: int, limit_per_source: int) -> int:
+    base_seconds = 20
+    per_source_seconds = 25
+    per_page_seconds = 8
+    return max(
+        30,
+        base_seconds
+        + (source_count * per_source_seconds)
+        + (source_count * limit_per_source * per_page_seconds),
+    )
+
+
+def _build_runtime_summary(active_run: ActiveRunState) -> str:
+    elapsed_seconds = max(0, int(time.time() - active_run.started_at))
+    remaining_seconds = max(0, active_run.estimated_total_seconds - elapsed_seconds)
+    return (
+        f"Elapsed: {_format_duration(elapsed_seconds)}. "
+        f"Estimated time remaining: {_format_duration(remaining_seconds)}."
+    )
+
+
+def _format_duration(total_seconds: int) -> str:
+    minutes, seconds = divmod(max(0, total_seconds), 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours}h {minutes}m"
+    if minutes:
+        return f"{minutes}m {seconds}s"
+    return f"{seconds}s"
+
+
 def _create_source_panels(
     selected_sources: list[str],
 ) -> dict[str, dict[str, object]]:
     panels: dict[str, dict[str, object]] = {}
     for index in range(0, len(selected_sources), SOURCE_PANEL_COLUMNS):
-        row_sources = selected_sources[index:index + SOURCE_PANEL_COLUMNS]
+        row_sources = selected_sources[index : index + SOURCE_PANEL_COLUMNS]
         columns = st.columns(SOURCE_PANEL_COLUMNS)
         for column_index, source_name in enumerate(row_sources):
             container = columns[column_index].container(
