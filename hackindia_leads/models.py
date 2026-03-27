@@ -9,20 +9,15 @@ PUBLIC_LEAD_COLUMNS = [
     "event_url",
     "sponsor_company",
     "sponsor_website",
-    "sponsor_domain",
     "company_segment",
     "recently_funded",
-    "recent_funding_signal",
     "company_location",
-    "location_priority",
     "developer_adoption_need",
     "market_visibility_need",
     "decision_maker_name",
     "decision_maker_title",
     "decision_maker_email",
     "linkedin_url",
-    "evidence",
-    "qualification_notes",
 ]
 
 

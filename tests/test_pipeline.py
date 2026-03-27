@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import threading
+import time
+from io import BytesIO
 from types import SimpleNamespace
+
+import pandas as pd
 
 from hackindia_leads.models import (
     PUBLIC_LEAD_COLUMNS,
@@ -13,8 +18,102 @@ from hackindia_leads.models import (
 from hackindia_leads.pipeline import LeadPipeline, PipelineControl, PipelineResult
 
 
-def test_pipeline_result_dataframe(settings) -> None:
-    result = PipelineResult(rows=[], csv_name="empty.csv", csv_bytes=b"")
+def _build_event(
+    *,
+    url: str = "https://ethglobal.com/events/mumbai",
+    title: str = "ETHGlobal Mumbai",
+    sponsors: list[Sponsor] | None = None,
+) -> Event:
+    return Event(
+        source="ethglobal",
+        url=url,
+        title=title,
+        sponsors=sponsors or [Sponsor(name="ENS", website="https://ens.domains")],
+    )
+
+
+def _build_contact(
+    *,
+    email: str = "jane@ens.domains",
+    linkedin_url: str | None = "https://linkedin.com/in/jane",
+) -> ContactCandidate:
+    return ContactCandidate(
+        full_name="Jane Doe",
+        first_name="Jane",
+        last_name="Doe",
+        title="Head of Partnerships",
+        email=email,
+        source="public-search-pattern",
+        linkedin_url=linkedin_url,
+        confidence=90,
+    )
+
+
+def _build_validation(
+    *,
+    syntax_valid: bool = True,
+    mx_valid: bool = True,
+    smtp_code: int | None = 250,
+    smtp_message: str | None = "ok",
+) -> EmailValidation:
+    return EmailValidation(
+        syntax_valid=syntax_valid,
+        mx_valid=mx_valid,
+        smtp_code=smtp_code,
+        smtp_message=smtp_message,
+    )
+
+
+def _stub_source_events(
+    pipeline: LeadPipeline,
+    events: list[Event],
+    *,
+    source_name: str = "ethglobal",
+) -> None:
+    pipeline.sources = {
+        source_name: SimpleNamespace(
+            fetch_events=lambda keywords, limit, progress_callback=None: events
+        )
+    }
+
+
+def _stub_enrichment(
+    pipeline: LeadPipeline,
+    monkeypatch,
+    *,
+    website: str = "https://ens.domains",
+    domain: str = "ens.domains",
+    website_is_valid: bool = True,
+    contacts: list[ContactCandidate] | None = None,
+    validation: EmailValidation | None = None,
+) -> None:
+    monkeypatch.setattr(pipeline.enricher, "resolve_website", lambda sponsor: website)
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "resolve_domain",
+        lambda sponsor, resolved_website: domain,
+    )
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "validate_website",
+        lambda resolved_website: website_is_valid,
+    )
+    if contacts is not None:
+        monkeypatch.setattr(
+            pipeline.enricher,
+            "find_contact_candidates",
+            lambda sponsor, resolved_website, resolved_domain: contacts,
+        )
+    if validation is not None:
+        monkeypatch.setattr(
+            pipeline.validator,
+            "validate",
+            lambda email: validation,
+        )
+
+
+def test_pipeline_result_dataframe() -> None:
+    result = PipelineResult(rows=[], export_name="empty.xlsx", export_bytes=b"")
 
     frame = result.dataframe()
 
@@ -24,95 +123,80 @@ def test_pipeline_result_dataframe(settings) -> None:
 
 def test_pipeline_run_writes_only_accepted_leads(settings, monkeypatch) -> None:
     pipeline = LeadPipeline(settings)
-    event = Event(
-        source="ethglobal",
-        url="https://ethglobal.com/events/mumbai",
-        title="ETHGlobal Mumbai",
-        sponsors=[
-            Sponsor(name="ENS", website="https://ens.domains", evidence="embedded-json")
-        ],
-    )
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: [event]
-        )
-    }
-    monkeypatch.setattr(
-        pipeline.enricher, "resolve_website", lambda sponsor: "https://ens.domains"
-    )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "resolve_domain",
-        lambda sponsor, website: "ens.domains",
-    )
-    monkeypatch.setattr(pipeline.enricher, "validate_website", lambda website: True)
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "find_contact_candidates",
-        lambda sponsor, website, domain: [
-            ContactCandidate(
-                full_name="Jane Doe",
-                first_name="Jane",
-                last_name="Doe",
-                title="Head of Partnerships",
-                email="jane@ens.domains",
-                source="public-search-pattern",
-                linkedin_url="https://linkedin.com/in/jane",
-                confidence=90,
+    _stub_source_events(
+        pipeline,
+        [
+            _build_event(
+                sponsors=[
+                    Sponsor(
+                        name="ENS",
+                        website="https://ens.domains",
+                        evidence="embedded-json",
+                    )
+                ]
             )
         ],
     )
-    monkeypatch.setattr(
-        pipeline.validator,
-        "validate",
-        lambda email: EmailValidation(
-            syntax_valid=True,
-            mx_valid=True,
-            smtp_code=250,
-            smtp_message="ok",
-        ),
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact()],
+        validation=_build_validation(),
     )
 
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
     assert len(result.rows) == 1
     assert result.rows[0].decision_maker_email == "jane@ens.domains"
-    assert result.csv_name.startswith("hackindia_leads_")
-    assert result.csv_name.endswith(".csv")
-    assert result.csv_bytes.startswith(b"\xef\xbb\xbf")
-    csv_text = result.csv_bytes.decode("utf-8-sig")
-    assert "jane@ens.domains" in csv_text
-    assert "email_smtp_code" not in csv_text
-    assert "email_score" not in csv_text
-    assert "email_accepted" not in csv_text
-    assert "contact_source" not in csv_text
+    assert result.export_name.startswith("hackindia_leads_")
+    assert result.export_name.endswith(".xlsx")
+    exported_frame = pd.read_excel(BytesIO(result.export_bytes))
+    assert exported_frame.columns.tolist() == PUBLIC_LEAD_COLUMNS
+    assert exported_frame.loc[0, "decision_maker_email"] == "jane@ens.domains"
 
 
-def test_pipeline_run_filters_sponsor_with_failed_gemini_fit(
+def test_pipeline_run_dedupes_duplicate_sponsors(settings, monkeypatch) -> None:
+    pipeline = LeadPipeline(settings)
+    events = [
+        _build_event(),
+        _build_event(
+            url="https://ethglobal.com/events/nyc",
+            title="ETHGlobal NYC",
+        ),
+    ]
+    _stub_source_events(pipeline, events)
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact(linkedin_url=None)],
+        validation=_build_validation(),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 2)
+
+    assert len(result.rows) == 1
+    assert result.rows[0].sponsor_company == "ENS"
+
+
+def test_pipeline_run_filters_sponsor_with_failed_fit_check(
     settings, monkeypatch
 ) -> None:
-    settings.gemini_api_key = "test-key"
     pipeline = LeadPipeline(settings)
-    event = Event(
-        source="ethglobal",
-        url="https://ethglobal.com/events/mumbai",
-        title="ETHGlobal Mumbai",
-        sponsors=[Sponsor(name="Example", website="https://example.com")],
+    _stub_source_events(
+        pipeline,
+        [
+            _build_event(
+                sponsors=[Sponsor(name="Example", website="https://example.com")]
+            )
+        ],
     )
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: [event]
-        )
-    }
-    monkeypatch.setattr(
-        pipeline.enricher, "resolve_website", lambda sponsor: "https://example.com"
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        website="https://example.com",
+        domain="example.com",
+        website_is_valid=True,
     )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "resolve_domain",
-        lambda sponsor, website: "example.com",
-    )
-    monkeypatch.setattr(pipeline.enricher, "validate_website", lambda website: True)
     monkeypatch.setattr(
         pipeline.qualifier,
         "qualify",
@@ -135,61 +219,21 @@ def test_pipeline_run_filters_sponsor_with_failed_gemini_fit(
     assert result.rows == []
 
 
-def test_pipeline_run_skips_gemini_when_disabled(settings, monkeypatch) -> None:
-    settings.gemini_api_key = "test-key"
-    settings.gemini_enabled = False
+def test_pipeline_run_skips_qualification_when_disabled(settings, monkeypatch) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
-    event = Event(
-        source="ethglobal",
-        url="https://ethglobal.com/events/mumbai",
-        title="ETHGlobal Mumbai",
-        sponsors=[Sponsor(name="ENS", website="https://ens.domains")],
-    )
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: [event]
-        )
-    }
-    monkeypatch.setattr(
-        pipeline.enricher, "resolve_website", lambda sponsor: "https://ens.domains"
-    )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "resolve_domain",
-        lambda sponsor, website: "ens.domains",
-    )
-    monkeypatch.setattr(pipeline.enricher, "validate_website", lambda website: True)
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "find_contact_candidates",
-        lambda sponsor, website, domain: [
-            ContactCandidate(
-                full_name="Jane Doe",
-                first_name="Jane",
-                last_name="Doe",
-                title="Head of Partnerships",
-                email="jane@ens.domains",
-                source="public-search-pattern",
-                linkedin_url=None,
-                confidence=90,
-            )
-        ],
-    )
-    monkeypatch.setattr(
-        pipeline.validator,
-        "validate",
-        lambda email: EmailValidation(
-            syntax_valid=True,
-            mx_valid=True,
-            smtp_code=250,
-            smtp_message="ok",
-        ),
+    _stub_source_events(pipeline, [_build_event()])
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact(linkedin_url=None)],
+        validation=_build_validation(),
     )
     monkeypatch.setattr(
         pipeline.qualifier,
         "qualify",
         lambda sponsor, event, website, domain: (_ for _ in ()).throw(
-            AssertionError("Gemini should be skipped when disabled")
+            AssertionError("Qualification should be skipped when disabled")
         ),
     )
 
@@ -201,27 +245,20 @@ def test_pipeline_run_skips_gemini_when_disabled(settings, monkeypatch) -> None:
 
 
 def test_pipeline_run_sorts_us_and_india_fit_first(settings, monkeypatch) -> None:
-    settings.gemini_api_key = "test-key"
     pipeline = LeadPipeline(settings)
     events = [
-        Event(
-            source="ethglobal",
+        _build_event(
             url="https://ethglobal.com/events/nyc",
             title="ETHGlobal NYC",
             sponsors=[Sponsor(name="US Co", website="https://usco.example")],
         ),
-        Event(
-            source="ethglobal",
+        _build_event(
             url="https://ethglobal.com/events/berlin",
             title="ETHGlobal Berlin",
             sponsors=[Sponsor(name="Global Co", website="https://global.example")],
         ),
     ]
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: events
-        )
-    }
+    _stub_source_events(pipeline, events)
     monkeypatch.setattr(
         pipeline.enricher,
         "resolve_website",
@@ -288,47 +325,15 @@ def test_pipeline_run_skips_unaccepted_when_precheck_required(
     settings, monkeypatch
 ) -> None:
     pipeline = LeadPipeline(settings)
-    event = Event(
-        source="ethglobal",
-        url="https://ethglobal.com/events/mumbai",
-        title="ETHGlobal Mumbai",
-        sponsors=[Sponsor(name="ENS")],
+    _stub_source_events(
+        pipeline,
+        [_build_event(sponsors=[Sponsor(name="ENS")])],
     )
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: [event]
-        )
-    }
-    monkeypatch.setattr(
-        pipeline.enricher, "resolve_website", lambda sponsor: "https://ens.domains"
-    )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "resolve_domain",
-        lambda sponsor, website: "ens.domains",
-    )
-    monkeypatch.setattr(pipeline.enricher, "validate_website", lambda website: True)
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "find_contact_candidates",
-        lambda sponsor, website, domain: [
-            ContactCandidate(
-                full_name="Jane Doe",
-                first_name="Jane",
-                last_name="Doe",
-                title="Head of Partnerships",
-                email="jane@ens.domains",
-                source="public-search-pattern",
-                linkedin_url=None,
-                confidence=90,
-            )
-        ],
-    )
-    monkeypatch.setattr(
-        pipeline.validator,
-        "validate",
-        lambda email: EmailValidation(
-            syntax_valid=True,
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact(linkedin_url=None)],
+        validation=_build_validation(
             mx_valid=False,
             smtp_code=550,
             smtp_message="rejected",
@@ -342,28 +347,144 @@ def test_pipeline_run_skips_unaccepted_when_precheck_required(
 
 def test_pipeline_run_skips_invalid_website(settings, monkeypatch) -> None:
     pipeline = LeadPipeline(settings)
-    event = Event(
-        source="ethglobal",
-        url="https://ethglobal.com/events/mumbai",
-        title="ETHGlobal Mumbai",
-        sponsors=[Sponsor(name="ENS")],
+    _stub_source_events(
+        pipeline,
+        [_build_event(sponsors=[Sponsor(name="ENS")])],
     )
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: [event]
-        )
-    }
-    monkeypatch.setattr(
-        pipeline.enricher, "resolve_website", lambda sponsor: "https://ens.domains"
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        website_is_valid=False,
     )
-    monkeypatch.setattr(pipeline.enricher, "validate_website", lambda website: False)
 
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
     assert result.rows == []
 
 
-def test_pipeline_run_ignores_source_and_contact_errors(settings, monkeypatch) -> None:
+def test_pipeline_runs_sponsor_checks_in_parallel(settings, monkeypatch) -> None:
+    pipeline = LeadPipeline(settings)
+    _stub_source_events(pipeline, [_build_event()])
+
+    active_calls = {"count": 0, "peak": 0}
+    lock = threading.Lock()
+
+    def track_concurrency(result):
+        def runner(*args, **kwargs):
+            with lock:
+                active_calls["count"] += 1
+                active_calls["peak"] = max(
+                    active_calls["peak"],
+                    active_calls["count"],
+                )
+            try:
+                time.sleep(0.05)
+                return result
+            finally:
+                with lock:
+                    active_calls["count"] -= 1
+
+        return runner
+
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "resolve_website",
+        lambda sponsor: "https://ens.domains",
+    )
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "resolve_domain",
+        lambda sponsor, website: "ens.domains",
+    )
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "validate_website",
+        track_concurrency(True),
+    )
+    monkeypatch.setattr(
+        pipeline.qualifier,
+        "qualify",
+        track_concurrency(
+            CompanyQualification(
+                company_segment="Web3",
+                recently_funded=True,
+                recent_funding_signal="Raised recently",
+                company_location="New York, US",
+                location_priority="US",
+                developer_adoption_need=True,
+                market_visibility_need=True,
+                qualification_notes="Good fit",
+                score=90,
+                accepted=True,
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "find_contact_candidates",
+        lambda sponsor, website, domain: [_build_contact()],
+    )
+    monkeypatch.setattr(
+        pipeline.validator,
+        "validate",
+        lambda email: _build_validation(),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert len(result.rows) == 1
+    assert active_calls["peak"] > 1
+
+
+def test_pipeline_validates_contacts_in_parallel(settings, monkeypatch) -> None:
+    pipeline = LeadPipeline(settings)
+    _stub_source_events(pipeline, [_build_event()])
+    settings.qualification_enabled = False
+
+    active_calls = {"count": 0, "peak": 0}
+    lock = threading.Lock()
+
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "resolve_website",
+        lambda sponsor: "https://ens.domains",
+    )
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "resolve_domain",
+        lambda sponsor, website: "ens.domains",
+    )
+    monkeypatch.setattr(pipeline.enricher, "validate_website", lambda website: True)
+    monkeypatch.setattr(
+        pipeline.enricher,
+        "find_contact_candidates",
+        lambda sponsor, website, domain: [
+            _build_contact(email="first@ens.domains", linkedin_url=None),
+            _build_contact(email="second@ens.domains", linkedin_url=None),
+        ],
+    )
+
+    def validate(email: str) -> EmailValidation:
+        with lock:
+            active_calls["count"] += 1
+            active_calls["peak"] = max(active_calls["peak"], active_calls["count"])
+        try:
+            time.sleep(0.05)
+            return _build_validation()
+        finally:
+            with lock:
+                active_calls["count"] -= 1
+
+    monkeypatch.setattr(pipeline.validator, "validate", validate)
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert len(result.rows) == 1
+    assert result.rows[0].decision_maker_email == "first@ens.domains"
+    assert active_calls["peak"] > 1
+
+
+def test_pipeline_run_ignores_source_and_contact_errors(settings) -> None:
     pipeline = LeadPipeline(settings)
     pipeline.sources = {
         "broken": SimpleNamespace(
@@ -376,28 +497,21 @@ def test_pipeline_run_ignores_source_and_contact_errors(settings, monkeypatch) -
     result = pipeline.run(["broken"], ["web3"], 1)
 
     assert result.rows == []
-    assert result.csv_name.endswith(".csv")
-    assert result.csv_bytes.startswith(b"\xef\xbb\xbf")
+    assert result.export_name.endswith(".xlsx")
+    assert pd.read_excel(BytesIO(result.export_bytes)).empty
 
 
 def test_pipeline_run_stops_before_processing_sources(settings, monkeypatch) -> None:
     pipeline = LeadPipeline(settings)
-    pipeline.sources = {
-        "ethglobal": SimpleNamespace(
-            fetch_events=lambda keywords, limit, progress_callback=None: [
-                Event(
-                    source="ethglobal",
-                    url="https://ethglobal.com/events/mumbai",
-                    title="ETHGlobal Mumbai",
-                )
-            ]
-        )
-    }
+    _stub_source_events(
+        pipeline,
+        [_build_event(sponsors=[])],
+    )
     control = PipelineControl()
     control.stop()
 
     result = pipeline.run(["ethglobal"], ["web3"], 1, control=control)
 
     assert result.rows == []
-    assert result.csv_name.endswith(".csv")
-    assert result.csv_bytes.startswith(b"\xef\xbb\xbf")
+    assert result.export_name.endswith(".xlsx")
+    assert pd.read_excel(BytesIO(result.export_bytes)).empty

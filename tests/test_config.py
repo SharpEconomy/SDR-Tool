@@ -1,35 +1,63 @@
 from __future__ import annotations
 
+import pytest
+
 from hackindia_leads import config
 
 
-def test_as_helpers_handle_defaults_and_parsing() -> None:
-    assert config._as_bool("true", False) is True
-    assert config._as_bool("off", True) is False
-    assert config._as_bool(None, True) is True
-    assert config._as_int("7", 1) == 7
-    assert config._as_int("bad", 1) == 1
+@pytest.mark.parametrize(
+    ("value", "default", "expected"),
+    [
+        ("true", False, True),
+        ("off", True, False),
+        (None, True, True),
+    ],
+)
+def test_as_bool_handles_defaults_and_parsing(
+    value: str | None, default: bool, expected: bool
+) -> None:
+    assert config._as_bool(value, default) is expected
+
+
+@pytest.mark.parametrize(
+    ("value", "default", "expected"),
+    [
+        ("7", 1, 7),
+        ("bad", 1, 1),
+    ],
+)
+def test_as_int_handles_defaults_and_parsing(
+    value: str | None, default: int, expected: int
+) -> None:
+    assert config._as_int(value, default) == expected
+
+
+def test_as_list_handles_defaults_and_parsing() -> None:
     assert config._as_list("ai, web3, , llm", ["x"]) == ["ai", "web3", "llm"]
     assert config._as_list("", ["x"]) == ["x"]
 
 
 def test_settings_load_reads_env(monkeypatch) -> None:
-    monkeypatch.setenv("SMTP_FROM_EMAIL", "team@example.com")
-    monkeypatch.setenv("REQUEST_TIMEOUT_SECONDS", "12")
-    monkeypatch.setenv("SMTP_TIMEOUT_SECONDS", "9")
-    monkeypatch.setenv("MAX_EVENTS_PER_SOURCE", "4")
-    monkeypatch.setenv("MAX_CONTACTS_PER_COMPANY", "8")
-    monkeypatch.setenv("MAX_SOURCE_WORKERS", "3")
-    monkeypatch.setenv("MAX_ENRICHMENT_WORKERS", "6")
-    monkeypatch.setenv("DEFAULT_KEYWORDS", "ai, blockchain")
-    monkeypatch.setenv("DEFAULT_SOURCES", "ethglobal,mlh")
-    monkeypatch.setenv("USE_BROWSER_FALLBACK", "false")
-    monkeypatch.setenv("WEBSITE_PRECHECK_REQUIRED", "false")
-    monkeypatch.setenv("SMTP_PRECHECK_REQUIRED", "true")
-    monkeypatch.setenv("MIN_VALIDATION_SCORE", "3")
-    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
-    monkeypatch.setenv("GEMINI_MODEL", "gemini-2.0-flash")
-    monkeypatch.setenv("GEMINI_ENABLED", "false")
+    env_values = {
+        "SMTP_FROM_EMAIL": "team@example.com",
+        "REQUEST_TIMEOUT_SECONDS": "12",
+        "SMTP_TIMEOUT_SECONDS": "9",
+        "MAX_EVENTS_PER_SOURCE": "4",
+        "MAX_CONTACTS_PER_COMPANY": "8",
+        "MAX_SOURCE_WORKERS": "3",
+        "MAX_ENRICHMENT_WORKERS": "6",
+        "DEFAULT_KEYWORDS": "ai, blockchain",
+        "DEFAULT_SOURCES": "ethglobal,mlh",
+        "USE_BROWSER_FALLBACK": "false",
+        "WEBSITE_PRECHECK_REQUIRED": "false",
+        "SMTP_PRECHECK_REQUIRED": "true",
+        "MIN_VALIDATION_SCORE": "3",
+        "QUALIFICATION_ENABLED": "false",
+        "GOOGLE_SEARCH_API_KEY": "google-key",
+        "GOOGLE_SEARCH_ENGINE_ID": "search-engine-id",
+    }
+    for key, value in env_values.items():
+        monkeypatch.setenv(key, value)
 
     loaded = config.Settings.load()
 
@@ -46,6 +74,6 @@ def test_settings_load_reads_env(monkeypatch) -> None:
     assert loaded.website_precheck_required is False
     assert loaded.smtp_precheck_required is True
     assert loaded.min_validation_score == 3
-    assert loaded.gemini_api_key == "test-key"
-    assert loaded.gemini_model == "gemini-2.0-flash"
-    assert loaded.gemini_enabled is False
+    assert loaded.qualification_enabled is False
+    assert loaded.google_search_api_key == "google-key"
+    assert loaded.google_search_engine_id == "search-engine-id"

@@ -44,9 +44,9 @@ class Settings:
     website_precheck_required: bool
     smtp_precheck_required: bool
     min_validation_score: int
-    gemini_api_key: str
-    gemini_model: str
-    gemini_enabled: bool
+    qualification_enabled: bool
+    google_search_api_key: str
+    google_search_engine_id: str
 
     @classmethod
     def load(cls) -> "Settings":
@@ -72,8 +72,10 @@ class Settings:
             ),
             smtp_precheck_required=_as_bool(os.getenv("SMTP_PRECHECK_REQUIRED"), True),
             min_validation_score=_as_int(os.getenv("MIN_VALIDATION_SCORE"), 2),
-            gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
-            gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip()
-            or "gemini-2.0-flash",
-            gemini_enabled=_as_bool(os.getenv("GEMINI_ENABLED"), True),
+            qualification_enabled=_as_bool(
+                os.getenv("QUALIFICATION_ENABLED"),
+                True,
+            ),
+            google_search_api_key=os.getenv("GOOGLE_SEARCH_API_KEY", "").strip(),
+            google_search_engine_id=os.getenv("GOOGLE_SEARCH_ENGINE_ID", "").strip(),
         )

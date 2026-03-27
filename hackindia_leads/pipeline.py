@@ -10,8 +10,14 @@ from io import BytesIO
 import pandas as pd
 
 from hackindia_leads.config import Settings
-from hackindia_leads.models import PUBLIC_LEAD_COLUMNS, Event, Lead, Sponsor
-from hackindia_leads.services.company_qualification import GeminiCompanyQualifier
+from hackindia_leads.models import (
+    PUBLIC_LEAD_COLUMNS,
+    CompanyQualification,
+    Event,
+    Lead,
+    Sponsor,
+)
+from hackindia_leads.services.company_qualification import CompanyQualifier
 from hackindia_leads.services.email_validation import EmailValidatorService
 from hackindia_leads.services.enrichment import ContactEnricher
 from hackindia_leads.services.fetcher import PageFetcher
@@ -22,8 +28,8 @@ from hackindia_leads.sources import build_sources
 @dataclass(slots=True)
 class PipelineResult:
     rows: list[Lead]
-    csv_name: str
-    csv_bytes: bytes
+    export_name: str
+    export_bytes: bytes
 
     def dataframe(self) -> pd.DataFrame:
         return pd.DataFrame(
@@ -65,10 +71,10 @@ class LeadPipeline:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.fetcher = PageFetcher(settings)
-        self.search_client = SearchClient()
+        self.search_client = SearchClient(settings)
         self.sources = build_sources(self.fetcher, self.search_client)
         self.enricher = ContactEnricher(settings, self.fetcher, self.search_client)
-        self.qualifier = GeminiCompanyQualifier(settings, self.search_client)
+        self.qualifier = CompanyQualifier(settings, self.search_client)
         self.validator = EmailValidatorService(settings)
         self._progress_lock = threading.Lock()
 
@@ -247,7 +253,17 @@ class LeadPipeline:
             if not self._checkpoint(control):
                 return None
             domain = self.enricher.resolve_domain(sponsor, website)
-            website_is_valid = self.enricher.validate_website(website)
+            website_is_valid, qualification = self._resolve_sponsor_checks(
+                source_name,
+                event,
+                sponsor,
+                website,
+                domain,
+                progress_callback,
+                control,
+            )
+            if not self._checkpoint(control):
+                return None
             if self.settings.website_precheck_required and not website_is_valid:
                 self._emit(
                     progress_callback,
@@ -257,33 +273,15 @@ class LeadPipeline:
                     ),
                 )
                 return None
-            qualification = None
-            if self.qualifier.is_enabled():
-                qualification = self.qualifier.qualify(
-                    sponsor,
-                    event,
-                    website,
-                    domain,
-                )
-                if qualification is not None:
-                    self._emit(
-                        progress_callback,
-                        f"{source_name}: Gemini qualified '{sponsor.name}'",
-                    )
-                    if not qualification.accepted:
-                        self._emit(
-                            progress_callback,
-                            (
-                                f"{source_name}: filtered sponsor '{sponsor.name}' "
-                                "by Gemini fit"
-                            ),
-                        )
-                        return None
-            else:
+            if qualification is not None and not qualification.accepted:
                 self._emit(
                     progress_callback,
-                    f"{source_name}: Gemini skipped for '{sponsor.name}'",
+                    (
+                        f"{source_name}: filtered sponsor '{sponsor.name}' "
+                        "by fit filter"
+                    ),
                 )
+                return None
             contacts = self.enricher.find_contact_candidates(sponsor, website, domain)
         except Exception as exc:
             self._emit(
@@ -292,78 +290,115 @@ class LeadPipeline:
             )
             return None
 
+        return self._select_lead_for_contacts(
+            source_name,
+            event,
+            sponsor,
+            website,
+            domain,
+            qualification,
+            contacts,
+            progress_callback,
+            control,
+        )
+
+    def _resolve_sponsor_checks(
+        self,
+        source_name: str,
+        event: Event,
+        sponsor: Sponsor,
+        website: str | None,
+        domain: str | None,
+        progress_callback: Callable[[str], None] | None,
+        control: PipelineControl | None,
+    ) -> tuple[bool, CompanyQualification | None]:
+        qualification_enabled = self.qualifier.is_enabled()
+        qualification = None
+        website_is_valid = False
+        max_workers = 2 if qualification_enabled else 1
+        future_names: dict[object, str] = {}
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_names[executor.submit(self.enricher.validate_website, website)] = (
+                "website"
+            )
+            if qualification_enabled:
+                future_names[
+                    executor.submit(
+                        self.qualifier.qualify,
+                        sponsor,
+                        event,
+                        website,
+                        domain,
+                    )
+                ] = "qualification"
+            else:
+                self._emit(
+                    progress_callback,
+                    f"{source_name}: qualification skipped for '{sponsor.name}'",
+                )
+
+            pending = set(future_names)
+            while pending:
+                if not self._checkpoint(control):
+                    return False, None, []
+                done, pending = wait(
+                    pending,
+                    timeout=0.1,
+                    return_when=FIRST_COMPLETED,
+                )
+                for future in done:
+                    result_name = future_names[future]
+                    result = future.result()
+                    if result_name == "website":
+                        website_is_valid = bool(result)
+                    elif result_name == "qualification":
+                        qualification = result
+                        if qualification is not None:
+                            self._emit(
+                                progress_callback,
+                                f"{source_name}: qualified sponsor '{sponsor.name}'",
+                            )
+
+        return website_is_valid, qualification
+
+    def _select_lead_for_contacts(
+        self,
+        source_name: str,
+        event: Event,
+        sponsor: Sponsor,
+        website: str | None,
+        domain: str | None,
+        qualification: CompanyQualification | None,
+        contacts: list,
+        progress_callback: Callable[[str], None] | None,
+        control: PipelineControl | None,
+    ) -> Lead | None:
         best_lead: Lead | None = None
+        validations_by_email = self._validate_contacts(
+            source_name,
+            sponsor,
+            contacts,
+            progress_callback,
+            control,
+        )
+        if validations_by_email is None:
+            return None if self.settings.smtp_precheck_required else best_lead
+
         for contact in contacts:
             if not self._checkpoint(control):
                 if self.settings.smtp_precheck_required:
                     return None
                 return best_lead
-            self._emit(
-                progress_callback,
-                f"{source_name}: validating '{contact.email}' for '{sponsor.name}'",
-            )
-            validation = self.validator.validate(contact.email)
-            lead = Lead(
-                source=event.source,
-                event_name=event.title,
-                event_url=event.url,
-                sponsor_company=sponsor.name,
-                sponsor_website=website,
-                sponsor_domain=domain,
-                company_segment=(
-                    qualification.company_segment if qualification is not None else None
-                ),
-                recently_funded=(
-                    qualification.recently_funded if qualification is not None else None
-                ),
-                recent_funding_signal=(
-                    qualification.recent_funding_signal
-                    if qualification is not None
-                    else None
-                ),
-                company_location=(
-                    qualification.company_location
-                    if qualification is not None
-                    else None
-                ),
-                location_priority=(
-                    qualification.location_priority
-                    if qualification is not None
-                    else None
-                ),
-                developer_adoption_need=(
-                    qualification.developer_adoption_need
-                    if qualification is not None
-                    else None
-                ),
-                market_visibility_need=(
-                    qualification.market_visibility_need
-                    if qualification is not None
-                    else None
-                ),
-                decision_maker_name=contact.full_name,
-                decision_maker_title=contact.title,
-                decision_maker_email=contact.email,
-                contact_source=contact.source,
-                linkedin_url=contact.linkedin_url,
-                email_smtp_code=validation.smtp_code,
-                email_score=validation.score,
-                email_accepted=bool(
-                    validation.accepted
-                    and validation.score >= self.settings.min_validation_score
-                ),
-                evidence=sponsor.evidence,
-                qualification_notes=(
-                    qualification.qualification_notes
-                    if qualification is not None
-                    else None
-                ),
-                qualification_score=(
-                    qualification.score if qualification is not None else 0
-                ),
-                qualification_accepted=(
-                    qualification.accepted if qualification is not None else True
-                ),
+            validation = validations_by_email[contact.email]
+            lead = self._build_lead(
+                event,
+                sponsor,
+                website,
+                domain,
+                qualification,
+                contact,
+                validation,
             )
             if best_lead is None or lead.email_score > best_lead.email_score:
                 best_lead = lead
@@ -387,14 +422,133 @@ class LeadPipeline:
         )
         return None
 
-    def _build_csv(self, leads: list[Lead]) -> tuple[str, bytes]:
+    def _validate_contacts(
+        self,
+        source_name: str,
+        sponsor: Sponsor,
+        contacts: list,
+        progress_callback: Callable[[str], None] | None,
+        control: PipelineControl | None,
+    ) -> dict[str, object] | None:
+        if not contacts:
+            return {}
+
+        if not self.settings.smtp_precheck_required:
+            contact = contacts[0]
+            self._emit(
+                progress_callback,
+                f"{source_name}: validating '{contact.email}' for '{sponsor.name}'",
+            )
+            return {contact.email: self.validator.validate(contact.email)}
+
+        max_workers = max(1, min(len(contacts), 4))
+        future_emails: dict[object, str] = {}
+        validations_by_email: dict[str, object] = {}
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for contact in contacts:
+                if not self._checkpoint(control):
+                    return None
+                self._emit(
+                    progress_callback,
+                    f"{source_name}: validating '{contact.email}' for '{sponsor.name}'",
+                )
+                future_emails[
+                    executor.submit(self.validator.validate, contact.email)
+                ] = contact.email
+
+            pending = set(future_emails)
+            while pending:
+                if not self._checkpoint(control):
+                    return None
+                done, pending = wait(
+                    pending,
+                    timeout=0.1,
+                    return_when=FIRST_COMPLETED,
+                )
+                for future in done:
+                    email = future_emails[future]
+                    validations_by_email[email] = future.result()
+
+        return validations_by_email
+
+    def _build_lead(
+        self,
+        event: Event,
+        sponsor: Sponsor,
+        website: str | None,
+        domain: str | None,
+        qualification: CompanyQualification | None,
+        contact,
+        validation,
+    ) -> Lead:
+        return Lead(
+            source=event.source,
+            event_name=event.title,
+            event_url=event.url,
+            sponsor_company=sponsor.name,
+            sponsor_website=website,
+            sponsor_domain=domain,
+            company_segment=(
+                qualification.company_segment if qualification is not None else None
+            ),
+            recently_funded=(
+                qualification.recently_funded if qualification is not None else None
+            ),
+            recent_funding_signal=(
+                qualification.recent_funding_signal
+                if qualification is not None
+                else None
+            ),
+            company_location=(
+                qualification.company_location if qualification is not None else None
+            ),
+            location_priority=(
+                qualification.location_priority if qualification is not None else None
+            ),
+            developer_adoption_need=(
+                qualification.developer_adoption_need
+                if qualification is not None
+                else None
+            ),
+            market_visibility_need=(
+                qualification.market_visibility_need
+                if qualification is not None
+                else None
+            ),
+            decision_maker_name=contact.full_name,
+            decision_maker_title=contact.title,
+            decision_maker_email=contact.email,
+            contact_source=contact.source,
+            linkedin_url=contact.linkedin_url,
+            email_smtp_code=validation.smtp_code,
+            email_score=validation.score,
+            email_accepted=bool(
+                validation.accepted
+                and validation.score >= self.settings.min_validation_score
+            ),
+            evidence=sponsor.evidence,
+            qualification_notes=(
+                qualification.qualification_notes if qualification is not None else None
+            ),
+            qualification_score=(
+                qualification.score if qualification is not None else 0
+            ),
+            qualification_accepted=(
+                qualification.accepted if qualification is not None else True
+            ),
+        )
+
+    def _build_excel(self, leads: list[Lead]) -> tuple[str, bytes]:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv_name = f"hackindia_leads_{timestamp}.csv"
+        export_name = f"hackindia_leads_{timestamp}.xlsx"
         buffer = BytesIO()
-        pd.DataFrame(
-            [lead.as_export_row() for lead in leads], columns=PUBLIC_LEAD_COLUMNS
-        ).to_csv(buffer, index=False, encoding="utf-8-sig")
-        return csv_name, buffer.getvalue()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            pd.DataFrame(
+                [lead.as_export_row() for lead in leads],
+                columns=PUBLIC_LEAD_COLUMNS,
+            ).to_excel(writer, index=False, sheet_name="Leads")
+        return export_name, buffer.getvalue()
 
     def _finish_run(
         self,
@@ -404,27 +558,28 @@ class LeadPipeline:
         stopped: bool,
     ) -> PipelineResult:
         ordered_leads = sorted(leads, key=self._lead_sort_key, reverse=True)
-        csv_name, csv_bytes = self._build_csv(ordered_leads)
+        unique_leads = self._dedupe_leads_by_sponsor(ordered_leads)
+        export_name, export_bytes = self._build_excel(unique_leads)
         if stopped:
             self._emit(
                 progress_callback,
                 (
-                    f"Run stopped with {len(ordered_leads)} validated lead(s). "
-                    f"Download ready: {csv_name}"
+                    f"Run stopped with {len(unique_leads)} validated lead(s). "
+                    f"Download ready: {export_name}"
                 ),
             )
         else:
             self._emit(
                 progress_callback,
                 (
-                    f"Finished run with {len(ordered_leads)} validated lead(s). "
-                    f"Download ready: {csv_name}"
+                    f"Finished run with {len(unique_leads)} validated lead(s). "
+                    f"Download ready: {export_name}"
                 ),
             )
         return PipelineResult(
-            rows=ordered_leads,
-            csv_name=csv_name,
-            csv_bytes=csv_bytes,
+            rows=unique_leads,
+            export_name=export_name,
+            export_bytes=export_bytes,
         )
 
     def _checkpoint(self, control: PipelineControl | None) -> bool:
@@ -454,3 +609,10 @@ class LeadPipeline:
             lead.qualification_score,
             lead.email_score,
         )
+
+    def _dedupe_leads_by_sponsor(self, leads: list[Lead]) -> list[Lead]:
+        deduped: dict[str, Lead] = {}
+        for lead in leads:
+            sponsor_key = lead.sponsor_company.strip().lower()
+            deduped.setdefault(sponsor_key, lead)
+        return list(deduped.values())

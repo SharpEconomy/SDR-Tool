@@ -63,7 +63,7 @@ class ContactEnricher:
     ) -> None:
         self.settings = settings
         self.fetcher = fetcher or PageFetcher(settings)
-        self.search_client = search_client or SearchClient()
+        self.search_client = search_client or SearchClient(settings)
 
     def resolve_website(self, sponsor: Sponsor) -> str | None:
         candidates: list[str] = []

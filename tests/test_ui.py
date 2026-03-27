@@ -88,10 +88,10 @@ class FakeWorker:
 
 
 class FakeResult:
-    def __init__(self, csv_name: str, csv_bytes: bytes, rows=None) -> None:
+    def __init__(self, export_name: str, export_bytes: bytes, rows=None) -> None:
         self.rows = [] if rows is None else rows
-        self.csv_name = csv_name
-        self.csv_bytes = csv_bytes
+        self.export_name = export_name
+        self.export_bytes = export_bytes
 
     def dataframe(self):
         return "FRAME"
@@ -104,14 +104,14 @@ class FakeStreamlit:
         buttons=None,
         sources=None,
         keywords="ai,web3",
-        gemini_enabled=None,
+        qualification_enabled=None,
     ) -> None:
         self.sidebar = FakeSidebar()
         self.session_state = {}
         self.button_presses = buttons or {}
         self.sources = ["ethglobal"] if sources is None else sources
         self.keywords = keywords
-        self.gemini_enabled = gemini_enabled
+        self.qualification_enabled = qualification_enabled
         self.errors = []
         self.successes = []
         self.warnings = []
@@ -146,9 +146,9 @@ class FakeStreamlit:
         return self.keywords
 
     def checkbox(self, label, value=False, help=None):
-        if self.gemini_enabled is None:
+        if self.qualification_enabled is None:
             return value
-        return self.gemini_enabled
+        return self.qualification_enabled
 
     def number_input(self, label, min_value, max_value, value, step):
         return value
@@ -197,7 +197,7 @@ class FakeStreamlit:
 
 
 def _build_active_run(
-    csv_name: str,
+    export_name: str,
     *,
     status="completed",
     alive=False,
@@ -218,7 +218,7 @@ def _build_active_run(
         started_at=started_at,
         estimated_total_seconds=estimated_total_seconds,
         status=status,
-        result=FakeResult(csv_name, b"source\nethglobal\n", rows=rows),
+        result=FakeResult(export_name, b"excel-bytes", rows=rows),
     )
     return active_run
 
@@ -234,7 +234,7 @@ def test_render_env_status_displays_metrics(settings, monkeypatch) -> None:
     assert metrics[1].metrics[0] == ("Website precheck", "on")
     assert metrics[2].metrics[0] == ("SMTP precheck", "on")
     assert metrics[3].metrics[0] == ("Browser fallback", "on")
-    assert metrics[4].metrics[0] == ("Gemini fit", "off")
+    assert metrics[4].metrics[0] == ("Fit filter", "on")
 
 
 def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> None:
@@ -253,13 +253,13 @@ def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> N
 def test_render_start_displays_completed_result(
     settings, monkeypatch, tmp_path: Path
 ) -> None:
-    csv_name = "result.csv"
+    export_name = "result.xlsx"
     fake_st = FakeStreamlit(buttons={"Start": True})
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
     def fake_start(incoming_settings, selected_sources, keywords, limit_per_source):
-        active_run = _build_active_run(csv_name)
+        active_run = _build_active_run(export_name)
         fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
         return active_run
 
@@ -268,7 +268,7 @@ def test_render_start_displays_completed_result(
     ui.render()
 
     assert fake_st.successes == ["0 validated lead(s) are ready to download."]
-    assert fake_st.downloads == [csv_name]
+    assert fake_st.downloads == [export_name]
     source_columns = fake_st.columns_created[2]
     source_container = source_columns[0].containers[0]
     assert source_container.subheaders == ["ETHGLOBAL"]
@@ -281,17 +281,18 @@ def test_render_start_displays_completed_result(
     assert fake_st.multiselect_format_func("ethglobal") == "ETHGLOBAL"
 
 
-def test_render_sidebar_gemini_toggle_overrides_settings(settings, monkeypatch) -> None:
-    settings.gemini_api_key = "test-key"
-    fake_st = FakeStreamlit(buttons={"Start": True}, gemini_enabled=False)
+def test_render_sidebar_qualification_toggle_overrides_settings(
+    settings, monkeypatch
+) -> None:
+    fake_st = FakeStreamlit(buttons={"Start": True}, qualification_enabled=False)
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
     captured = {}
 
     def fake_start(incoming_settings, selected_sources, keywords, limit_per_source):
-        captured["gemini_enabled"] = incoming_settings.gemini_enabled
-        active_run = _build_active_run("result.csv")
+        captured["qualification_enabled"] = incoming_settings.qualification_enabled
+        active_run = _build_active_run("result.xlsx")
         fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
         return active_run
 
@@ -299,7 +300,7 @@ def test_render_sidebar_gemini_toggle_overrides_settings(settings, monkeypatch) 
 
     ui.render()
 
-    assert captured["gemini_enabled"] is False
+    assert captured["qualification_enabled"] is False
 
 
 def test_render_pause_button_updates_active_run_status(
@@ -309,7 +310,7 @@ def test_render_pause_button_updates_active_run_status(
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
     fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
-        "result.csv",
+        "result.xlsx",
         status="running",
         alive=True,
     )
@@ -328,7 +329,7 @@ def test_render_shows_runtime_estimate_while_running(
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
     monkeypatch.setattr(ui.time, "time", lambda: 30.0)
     fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
-        "result.csv",
+        "result.xlsx",
         status="running",
         alive=True,
         started_at=0.0,
@@ -376,7 +377,7 @@ def test_render_stop_button_requests_stop(
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
     fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
-        "result.csv",
+        "result.xlsx",
         status="running",
         alive=True,
     )

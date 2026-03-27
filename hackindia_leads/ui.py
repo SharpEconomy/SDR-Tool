@@ -81,12 +81,12 @@ def render() -> None:
         keywords_raw = st.text_input(
             "Themes", value=",".join(settings.default_keywords)
         )
-        settings.gemini_enabled = st.checkbox(
-            "Use Gemini qualification",
-            value=settings.gemini_enabled,
+        settings.qualification_enabled = st.checkbox(
+            "Use Fit Qualification",
+            value=settings.qualification_enabled,
             help=(
-                "Turn this off for bulk test runs when you want to skip Gemini "
-                "qualification and avoid quota usage."
+                "Turn this off for bulk test runs when you want to skip "
+                "search-based company qualification."
             ),
         )
         limit_per_source = st.number_input(
@@ -316,12 +316,14 @@ def _render_run_outcome(active_run: ActiveRunState) -> None:
                 "whether contacts failed the email precheck."
             )
         )
-    if active_run.result.csv_bytes:
+    if active_run.result.export_bytes:
         st.download_button(
-            "Download CSV",
-            data=active_run.result.csv_bytes,
-            file_name=active_run.result.csv_name,
-            mime="text/csv",
+            "Download Excel",
+            data=active_run.result.export_bytes,
+            file_name=active_run.result.export_name,
+            mime=(
+                "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
+            ),
             use_container_width=True,
         )
     frame = active_run.result.dataframe()
@@ -538,11 +540,11 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
         state.status = "Resolving contacts"
         return
 
-    if "Gemini qualified" in cleaned:
+    if "qualified sponsor" in cleaned:
         state.status = "Applying target fit"
         return
 
-    if "filtered sponsor" in cleaned and "Gemini fit" in cleaned:
+    if "filtered sponsor" in cleaned and "fit filter" in cleaned:
         state.status = "Filtered by target fit"
         state.filtered += 1
         return
@@ -587,8 +589,8 @@ def _render_env_status(settings: Settings) -> None:
     col3.metric("SMTP precheck", "on" if settings.smtp_precheck_required else "off")
     col4.metric("Browser fallback", "on" if settings.use_browser_fallback else "off")
     col5.metric(
-        "Gemini fit",
-        "on" if settings.gemini_enabled and settings.gemini_api_key else "off",
+        "Fit filter",
+        "on" if settings.qualification_enabled else "off",
     )
 
 

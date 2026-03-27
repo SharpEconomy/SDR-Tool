@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from hackindia_leads.services import search as search_module
 from hackindia_leads.services.search import SearchClient
 
@@ -50,3 +52,40 @@ def test_search_client_returns_empty_on_failure(monkeypatch) -> None:
     monkeypatch.setattr(search_module, "DDGS", lambda: BrokenDDGS())
 
     assert SearchClient().search("query") == []
+
+
+def test_search_client_uses_google_custom_search_when_configured(settings) -> None:
+    settings.google_search_api_key = "google-key"
+    settings.google_search_engine_id = "engine-id"
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict[str, object]:
+            return {
+                "items": [
+                    {
+                        "title": "Funding result",
+                        "link": "https://example.com/funding",
+                        "snippet": "Raised Series A",
+                    }
+                ]
+            }
+
+    captured = {}
+
+    def fake_get(url, params, timeout):
+        captured["url"] = url
+        captured["params"] = params
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    client = SearchClient(settings, session=SimpleNamespace(get=fake_get))
+
+    results = client.search("example funding", max_results=3)
+
+    assert [item.url for item in results] == ["https://example.com/funding"]
+    assert captured["params"]["key"] == "google-key"
+    assert captured["params"]["cx"] == "engine-id"
+    assert captured["params"]["num"] == 3

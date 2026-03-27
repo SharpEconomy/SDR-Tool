@@ -2,7 +2,7 @@
 
 Minimal Python app to find active hackathon sponsor companies, enrich likely
 decision-maker emails from public data, precheck them, validate sponsor
-websites, and prepare the final output as a downloadable CSV.
+websites, and prepare the final output as a downloadable Excel file.
 
 ## What it does
 
@@ -11,11 +11,11 @@ websites, and prepare the final output as a downloadable CSV.
 - Resolves and validates the sponsor's primary website and domain.
 - Uses public search results and sponsor websites to infer likely
   decision-makers.
-- Uses Gemini to qualify sponsors toward recently funded Tech/AI/Web3
-  companies that likely need developer adoption and market visibility, with a
-  US/India priority and global coverage.
+- Uses a non-LLM qualification pass to score sponsors for Tech/AI/Web3 fit,
+  recent funding signals, US/India priority, developer adoption need, and
+  market visibility.
 - Prechecks each email with syntax, MX, and SMTP validation before it is
-  written to CSV.
+  written to the Excel export.
 - Exports only accepted leads when `SMTP_PRECHECK_REQUIRED=true`.
 
 ## Important limits
@@ -38,13 +38,14 @@ notepad .env
 SMTP_FROM_EMAIL=hello@yourdomain.com
 WEBSITE_PRECHECK_REQUIRED=true
 SMTP_PRECHECK_REQUIRED=true
-GEMINI_ENABLED=true
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.0-flash
+QUALIFICATION_ENABLED=true
+GOOGLE_SEARCH_API_KEY=your_google_search_api_key
+GOOGLE_SEARCH_ENGINE_ID=your_programmable_search_engine_id
 ```
 
-Set `GEMINI_ENABLED=false` for bulk test runs when you want to skip Gemini
-qualification and avoid quota pressure.
+Set `QUALIFICATION_ENABLED=false` for bulk test runs when you want to skip
+company-fit qualification entirely. If Google Custom Search credentials are not
+set, the app falls back to DuckDuckGo Search.
 
 1. Install dependencies:
 
@@ -85,12 +86,12 @@ Notes:
 - Python is pinned to `3.13.2` for Render because `pandas==2.2.3` does not provide
   Python 3.14 wheels, which causes slow or stuck source builds during deploys.
 - `USE_BROWSER_FALLBACK=false` is set in `render.yaml` by default to avoid Playwright/Chromium deployment issues.
-- CSVs are kept in memory and exposed through the in-app download button only.
+- Excel files are kept in memory and exposed through the in-app download button only.
 - If you later want browser fallback on Render, you will need an additional Playwright/Chromium setup step and a compatible Render instance image.
 
 ## Output
 
-CSV files are generated in memory and downloaded from the UI.
+Excel files are generated in memory and downloaded from the UI.
 
 Expected columns:
 
