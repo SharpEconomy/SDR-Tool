@@ -13,6 +13,7 @@ from hackindia_leads.services.search import SearchClient
 from hackindia_leads.utils import (
     dedupe_keep_order,
     extract_domain,
+    is_likely_prize_label,
     looks_like_company_name,
     normalize_whitespace,
 )
@@ -113,9 +114,12 @@ class SourceAdapter(ABC):
             parent = heading.parent
             if parent is None:
                 continue
+            is_prize_section = any(
+                token in heading_text for token in ("prize", "bounty")
+            )
 
             for anchor in parent.find_all("a", href=True):
-                anchor_text = normalize_whitespace(anchor.get_text(" ", strip=True))
+                anchor_text = self._anchor_company_name(anchor)
                 href = urljoin(url, anchor["href"])
                 domain = extract_domain(href)
                 if looks_like_company_name(anchor_text):
@@ -123,11 +127,13 @@ class SourceAdapter(ABC):
                         Sponsor(name=anchor_text, website=href, evidence=heading_text)
                     )
                 elif domain and domain not in PLATFORM_DOMAINS:
-                    company = domain.split(".")[0].replace("-", " ").title()
+                    company = self._domain_to_company(domain)
                     sponsors.append(
                         Sponsor(name=company, website=href, evidence=heading_text)
                     )
 
+            if is_prize_section:
+                continue
             nearby_text = dedupe_keep_order(
                 [
                     normalize_whitespace(item.get_text(" ", strip=True))
@@ -135,7 +141,7 @@ class SourceAdapter(ABC):
                 ]
             )
             for item in nearby_text[:25]:
-                if looks_like_company_name(item):
+                if looks_like_company_name(item) and not is_likely_prize_label(item):
                     sponsors.append(Sponsor(name=item, evidence=heading_text))
         return self._dedupe_sponsors(sponsors)
 
@@ -179,6 +185,28 @@ class SourceAdapter(ABC):
             seen.add(key)
             output.append(sponsor)
         return output
+
+    def _anchor_company_name(self, anchor) -> str:
+        candidates = [
+            normalize_whitespace(anchor.get_text(" ", strip=True)),
+            normalize_whitespace(str(anchor.get("aria-label", ""))),
+            normalize_whitespace(str(anchor.get("title", ""))),
+        ]
+        for image in anchor.find_all("img"):
+            candidates.append(normalize_whitespace(str(image.get("alt", ""))))
+            candidates.append(normalize_whitespace(str(image.get("title", ""))))
+        for candidate in candidates:
+            if looks_like_company_name(candidate):
+                return candidate
+        return ""
+
+    def _domain_to_company(self, domain: str) -> str:
+        parts = [part for part in domain.split(".") if part]
+        if len(parts) >= 2:
+            root = parts[-2]
+        else:
+            root = parts[0]
+        return root.replace("-", " ").title()
 
 
 class SearchBackedSource(SourceAdapter):

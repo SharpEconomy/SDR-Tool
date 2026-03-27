@@ -13,7 +13,7 @@ from hackindia_leads.pipeline import LeadPipeline, PipelineControl, PipelineResu
 
 
 def test_pipeline_result_dataframe(settings) -> None:
-    result = PipelineResult(rows=[], csv_path=settings.results_dir / "empty.csv")
+    result = PipelineResult(rows=[], csv_name="empty.csv", csv_bytes=b"")
 
     frame = result.dataframe()
 
@@ -76,8 +76,10 @@ def test_pipeline_run_writes_only_accepted_leads(settings, monkeypatch) -> None:
 
     assert len(result.rows) == 1
     assert result.rows[0].decision_maker_email == "jane@ens.domains"
-    assert result.csv_path.exists()
-    csv_text = result.csv_path.read_text()
+    assert result.csv_name.startswith("hackindia_leads_")
+    assert result.csv_name.endswith(".csv")
+    assert result.csv_bytes.startswith(b"\xef\xbb\xbf")
+    csv_text = result.csv_bytes.decode("utf-8-sig")
     assert "jane@ens.domains" in csv_text
     assert "email_smtp_code" not in csv_text
     assert "email_score" not in csv_text
@@ -177,7 +179,8 @@ def test_pipeline_run_ignores_source_and_contact_errors(settings, monkeypatch) -
     result = pipeline.run(["broken"], ["web3"], 1)
 
     assert result.rows == []
-    assert result.csv_path.exists()
+    assert result.csv_name.endswith(".csv")
+    assert result.csv_bytes.startswith(b"\xef\xbb\xbf")
 
 
 def test_pipeline_run_stops_before_processing_sources(settings, monkeypatch) -> None:
@@ -199,4 +202,5 @@ def test_pipeline_run_stops_before_processing_sources(settings, monkeypatch) -> 
     result = pipeline.run(["ethglobal"], ["web3"], 1, control=control)
 
     assert result.rows == []
-    assert result.csv_path.exists()
+    assert result.csv_name.endswith(".csv")
+    assert result.csv_bytes.startswith(b"\xef\xbb\xbf")

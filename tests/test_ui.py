@@ -88,9 +88,10 @@ class FakeWorker:
 
 
 class FakeResult:
-    def __init__(self, csv_path: Path, rows=None) -> None:
+    def __init__(self, csv_name: str, csv_bytes: bytes, rows=None) -> None:
         self.rows = [] if rows is None else rows
-        self.csv_path = csv_path
+        self.csv_name = csv_name
+        self.csv_bytes = csv_bytes
 
     def dataframe(self):
         return "FRAME"
@@ -162,6 +163,7 @@ class FakeStreamlit:
 
     def dataframe(self, frame, use_container_width, height) -> None:
         self.dataframe_frame = frame
+        self.dataframe_height = height
         self.events.append("dataframe")
 
     def download_button(
@@ -181,7 +183,7 @@ class FakeStreamlit:
 
 
 def _build_active_run(
-    csv_path: Path,
+    csv_name: str,
     *,
     status="completed",
     alive=False,
@@ -202,7 +204,7 @@ def _build_active_run(
         started_at=started_at,
         estimated_total_seconds=estimated_total_seconds,
         status=status,
-        result=FakeResult(csv_path, rows=rows),
+        result=FakeResult(csv_name, b"source\nethglobal\n", rows=rows),
     )
     return active_run
 
@@ -236,14 +238,13 @@ def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> N
 def test_render_start_displays_completed_result(
     settings, monkeypatch, tmp_path: Path
 ) -> None:
-    csv_path = tmp_path / "result.csv"
-    csv_path.write_text("source\nethglobal\n")
+    csv_name = "result.csv"
     fake_st = FakeStreamlit(buttons={"Start": True})
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
     def fake_start(incoming_settings, selected_sources, keywords, limit_per_source):
-        active_run = _build_active_run(csv_path)
+        active_run = _build_active_run(csv_name)
         fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
         return active_run
 
@@ -251,12 +252,14 @@ def test_render_start_displays_completed_result(
 
     ui.render()
 
-    assert fake_st.successes == [f"Saved 0 validated leads to {csv_path}"]
-    assert fake_st.downloads == ["result.csv"]
+    assert fake_st.successes == ["0 validated lead(s) are ready to download."]
+    assert fake_st.downloads == [csv_name]
     source_columns = fake_st.columns_created[2]
     source_container = source_columns[0].containers[0]
     assert source_container.height == ui.SOURCE_PANEL_HEIGHT
     assert source_container.containers[0].height == ui.SOURCE_LOG_HEIGHT
+    assert fake_st.dataframe_height == ui._dataframe_height_for_rows(0)
+    assert fake_st.events.index("download") < fake_st.events.index("dataframe")
     assert fake_st.events.index("dataframe") < fake_st.events.index("container")
     assert fake_st.events.index("download") < fake_st.events.index("container")
 
@@ -268,7 +271,7 @@ def test_render_pause_button_updates_active_run_status(
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
     fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
-        tmp_path / "result.csv",
+        "result.csv",
         status="running",
         alive=True,
     )
@@ -287,7 +290,7 @@ def test_render_shows_runtime_estimate_while_running(
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
     monkeypatch.setattr(ui.time, "time", lambda: 30.0)
     fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
-        tmp_path / "result.csv",
+        "result.csv",
         status="running",
         alive=True,
         started_at=0.0,
@@ -299,6 +302,35 @@ def test_render_shows_runtime_estimate_while_running(
     assert any("Estimated time remaining: 1m 30s." in text for text in fake_st.infos)
 
 
+def test_render_shows_non_empty_loading_table_while_running(
+    settings, monkeypatch, tmp_path: Path
+) -> None:
+    fake_st = FakeStreamlit()
+    monkeypatch.setattr(ui, "st", fake_st)
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+    fake_st.session_state[ui.ACTIVE_RUN_KEY] = ui.ActiveRunState(
+        source_order=["ethglobal"],
+        source_states={"ethglobal": ui.SourceProgressState(name="ethglobal")},
+        progress_queue=Queue(),
+        controller=PipelineControl(),
+        worker=FakeWorker(alive=True),
+        started_at=0.0,
+        estimated_total_seconds=120,
+        status="running",
+        result=None,
+    )
+
+    ui.render()
+
+    assert not hasattr(fake_st, "dataframe_frame")
+    assert any("loading-table" in text for text, _ in fake_st.markdowns)
+    assert any(
+        column in text
+        for text, _ in fake_st.markdowns
+        for column in ui.PUBLIC_LEAD_COLUMNS
+    )
+
+
 def test_render_stop_button_requests_stop(
     settings, monkeypatch, tmp_path: Path
 ) -> None:
@@ -306,7 +338,7 @@ def test_render_stop_button_requests_stop(
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
     fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
-        tmp_path / "result.csv",
+        "result.csv",
         status="running",
         alive=True,
     )

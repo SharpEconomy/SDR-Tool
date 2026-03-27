@@ -8,12 +8,19 @@ from queue import Empty, Queue
 import streamlit as st
 
 from hackindia_leads.config import Settings
+from hackindia_leads.models import PUBLIC_LEAD_COLUMNS
 from hackindia_leads.pipeline import LeadPipeline, PipelineControl, PipelineResult
 
 SOURCE_PANEL_COLUMNS = 2
 SOURCE_PANEL_HEIGHT = 360
 SOURCE_LOG_HEIGHT = 190
 ACTIVE_RUN_KEY = "active_run"
+LOADING_TABLE_ROWS = 6
+TABLE_MAX_HEIGHT = 480
+TABLE_MIN_HEIGHT = 110
+TABLE_HEADER_HEIGHT = 40
+TABLE_ROW_HEIGHT = 35
+TABLE_VERTICAL_PADDING = 18
 
 
 @dataclass(slots=True)
@@ -278,18 +285,14 @@ def _render_run_outcome(active_run: ActiveRunState) -> None:
         )
 
     if active_run.result is None:
+        _render_loading_table()
         return
 
     rows = active_run.result.rows
     if active_run.status == "stopped":
-        st.warning(
-            (
-                f"Run stopped. Saved {len(rows)} validated leads to "
-                f"{active_run.result.csv_path}"
-            )
-        )
+        st.warning(f"Run stopped. {len(rows)} validated lead(s) are ready to download.")
     else:
-        st.success(f"Saved {len(rows)} validated leads to {active_run.result.csv_path}")
+        st.success(f"{len(rows)} validated lead(s) are ready to download.")
 
     if not rows:
         st.warning(
@@ -299,16 +302,68 @@ def _render_run_outcome(active_run: ActiveRunState) -> None:
                 "whether contacts failed the email precheck."
             )
         )
-    frame = active_run.result.dataframe()
-    st.dataframe(frame, use_container_width=True, height=480)
-    if active_run.result.csv_path.exists():
+    if active_run.result.csv_bytes:
         st.download_button(
             "Download CSV",
-            data=active_run.result.csv_path.read_bytes(),
-            file_name=active_run.result.csv_path.name,
+            data=active_run.result.csv_bytes,
+            file_name=active_run.result.csv_name,
             mime="text/csv",
             use_container_width=True,
         )
+    frame = active_run.result.dataframe()
+    st.dataframe(
+        frame,
+        use_container_width=True,
+        height=_dataframe_height_for_rows(len(rows)),
+    )
+
+
+def _render_loading_table() -> None:
+    st.caption("Output preview while leads are loading.")
+    header_cells = "".join(
+        f"<div class='loading-table__header-cell'>{column}</div>"
+        for column in PUBLIC_LEAD_COLUMNS
+    )
+    body_rows = []
+    for row_index in range(LOADING_TABLE_ROWS):
+        cells = []
+        for column_index, _ in enumerate(PUBLIC_LEAD_COLUMNS):
+            width_class = _loading_cell_width_class(row_index, column_index)
+            cells.append(
+                (
+                    "<div class='loading-table__cell'>"
+                    f"<span class='loading-table__bar {width_class}'></span>"
+                    "</div>"
+                )
+            )
+        body_rows.append(f"<div class='loading-table__row'>{''.join(cells)}</div>")
+    st.markdown(
+        (
+            "<div class='loading-table'>"
+            f"<div class='loading-table__header'>{header_cells}</div>"
+            f"<div class='loading-table__body'>{''.join(body_rows)}</div>"
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
+
+
+def _loading_cell_width_class(row_index: int, column_index: int) -> str:
+    width_variants = (
+        "loading-table__bar--short",
+        "loading-table__bar--medium",
+        "loading-table__bar--long",
+    )
+    return width_variants[(row_index + column_index) % len(width_variants)]
+
+
+def _dataframe_height_for_rows(row_count: int) -> int:
+    content_height = (
+        TABLE_HEADER_HEIGHT
+        + (max(0, row_count) * TABLE_ROW_HEIGHT)
+        + TABLE_VERTICAL_PADDING
+    )
+    return max(TABLE_MIN_HEIGHT, min(TABLE_MAX_HEIGHT, content_height))
 
 
 def _run_is_active(active_run: ActiveRunState | None) -> bool:
@@ -558,6 +613,92 @@ def _inject_styles() -> None:
         .source-metrics strong {
             color: #132238;
             font-size: 1rem;
+        }
+
+        .loading-table {
+            border: 1px solid #e1e7ef;
+            border-radius: 0.9rem;
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .loading-table__header,
+        .loading-table__row {
+            display: grid;
+            grid-template-columns: repeat(11, minmax(120px, 1fr));
+            gap: 0;
+        }
+
+        .loading-table__header {
+            background: #f6f8fb;
+            border-bottom: 1px solid #e1e7ef;
+        }
+
+        .loading-table__header-cell {
+            padding: 0.85rem 0.9rem;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #5f6b7a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-right: 1px solid #eef2f7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .loading-table__header-cell:last-child,
+        .loading-table__cell:last-child {
+            border-right: none;
+        }
+
+        .loading-table__body {
+            max-height: 480px;
+            overflow: auto;
+        }
+
+        .loading-table__row:not(:last-child) {
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .loading-table__cell {
+            padding: 0.95rem 0.9rem;
+            border-right: 1px solid #f2f5f9;
+        }
+
+        .loading-table__bar {
+            display: block;
+            height: 0.8rem;
+            border-radius: 999px;
+            background: linear-gradient(
+                90deg,
+                #e8edf4 0%,
+                #f5f8fb 45%,
+                #e8edf4 100%
+            );
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.2s ease-in-out infinite;
+        }
+
+        .loading-table__bar--short {
+            width: 48%;
+        }
+
+        .loading-table__bar--medium {
+            width: 68%;
+        }
+
+        .loading-table__bar--long {
+            width: 86%;
+        }
+
+        @keyframes loading-shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
         }
         </style>
         """,

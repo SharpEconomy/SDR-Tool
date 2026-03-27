@@ -15,7 +15,5 @@ services:
         value: "true"
       - key: SMTP_PRECHECK_REQUIRED
         value: "true"
-      - key: RESULTS_DIR
-        value: output
       - key: SMTP_FROM_EMAIL
         sync: false

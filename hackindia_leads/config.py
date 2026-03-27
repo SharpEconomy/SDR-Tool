@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -41,7 +40,6 @@ class Settings:
     max_enrichment_workers: int
     default_keywords: list[str]
     default_sources: list[str]
-    results_dir: Path
     use_browser_fallback: bool
     website_precheck_required: bool
     smtp_precheck_required: bool
@@ -49,8 +47,6 @@ class Settings:
 
     @classmethod
     def load(cls) -> "Settings":
-        results_dir = Path(os.getenv("RESULTS_DIR", "output")).resolve()
-        results_dir.mkdir(parents=True, exist_ok=True)
         return cls(
             smtp_from_email=os.getenv("SMTP_FROM_EMAIL", "").strip(),
             request_timeout_seconds=_as_int(os.getenv("REQUEST_TIMEOUT_SECONDS"), 20),
@@ -67,7 +63,6 @@ class Settings:
                 os.getenv("DEFAULT_SOURCES"),
                 ["ethglobal", "devpost", "dorahacks", "mlh"],
             ),
-            results_dir=results_dir,
             use_browser_fallback=_as_bool(os.getenv("USE_BROWSER_FALLBACK"), True),
             website_precheck_required=_as_bool(
                 os.getenv("WEBSITE_PRECHECK_REQUIRED"), True

@@ -55,6 +55,36 @@ def test_parse_event_extracts_sponsors_from_section() -> None:
     assert [s.name for s in event.sponsors] == ["ENS", "World"]
 
 
+def test_parse_event_ignores_prize_labels_and_uses_logo_alt_text() -> None:
+    html = """
+    <html>
+      <head><title>Prize Event</title></head>
+      <body>
+        <article>
+          <h2>Hackathon Sponsors</h2>
+          <a href="https://www.impetus.com">
+            <img alt="Impetus" src="/impetus.png" />
+          </a>
+          <a href="https://aws.amazon.com/">
+            <img alt="Amazon Web Services" src="/aws.png" />
+          </a>
+        </article>
+        <div class="prize">
+          <h3>1st Prize</h3>
+          <div>$ 10,000 in cash</div>
+          <div>1 winner</div>
+        </div>
+      </body>
+    </html>
+    """
+    source = DummySource(SimpleNamespace(), SimpleNamespace())
+
+    event = source.parse_event("https://events.example/1", html)
+
+    assert event is not None
+    assert [s.name for s in event.sponsors] == ["Impetus", "Amazon Web Services"]
+
+
 def test_extract_sponsors_from_jsonish() -> None:
     source = DummySource(SimpleNamespace(), SimpleNamespace())
     html = (

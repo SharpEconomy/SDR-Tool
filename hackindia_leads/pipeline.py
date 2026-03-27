@@ -5,7 +5,7 @@ from collections.abc import Callable
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
+from io import BytesIO
 
 import pandas as pd
 
@@ -21,7 +21,8 @@ from hackindia_leads.sources import build_sources
 @dataclass(slots=True)
 class PipelineResult:
     rows: list[Lead]
-    csv_path: Path
+    csv_name: str
+    csv_bytes: bytes
 
     def dataframe(self) -> pd.DataFrame:
         return pd.DataFrame(
@@ -315,13 +316,14 @@ class LeadPipeline:
         )
         return None
 
-    def _write_csv(self, leads: list[Lead]) -> Path:
+    def _build_csv(self, leads: list[Lead]) -> tuple[str, bytes]:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = self.settings.results_dir / f"hackindia_leads_{timestamp}.csv"
+        csv_name = f"hackindia_leads_{timestamp}.csv"
+        buffer = BytesIO()
         pd.DataFrame(
             [lead.as_export_row() for lead in leads], columns=PUBLIC_LEAD_COLUMNS
-        ).to_csv(path, index=False)
-        return path
+        ).to_csv(buffer, index=False, encoding="utf-8-sig")
+        return csv_name, buffer.getvalue()
 
     def _finish_run(
         self,
@@ -330,21 +332,24 @@ class LeadPipeline:
         *,
         stopped: bool,
     ) -> PipelineResult:
-        csv_path = self._write_csv(leads)
+        csv_name, csv_bytes = self._build_csv(leads)
         if stopped:
             self._emit(
                 progress_callback,
-                f"Run stopped with {len(leads)} validated lead(s). CSV: {csv_path}",
+                (
+                    f"Run stopped with {len(leads)} validated lead(s). "
+                    f"Download ready: {csv_name}"
+                ),
             )
         else:
             self._emit(
                 progress_callback,
                 (
                     f"Finished run with {len(leads)} validated lead(s). "
-                    f"CSV: {csv_path}"
+                    f"Download ready: {csv_name}"
                 ),
             )
-        return PipelineResult(rows=leads, csv_path=csv_path)
+        return PipelineResult(rows=leads, csv_name=csv_name, csv_bytes=csv_bytes)
 
     def _checkpoint(self, control: PipelineControl | None) -> bool:
         if control is None:

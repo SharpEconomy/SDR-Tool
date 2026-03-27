@@ -2,7 +2,7 @@
 
 Minimal Python app to find active hackathon sponsor companies, enrich likely
 decision-maker emails from public data, precheck them, validate sponsor
-websites, and save the final output into CSV.
+websites, and prepare the final output as a downloadable CSV.
 
 ## What it does
 
@@ -76,12 +76,12 @@ Notes:
 - Python is pinned to `3.13.2` for Render because `pandas==2.2.3` does not provide
   Python 3.14 wheels, which causes slow or stuck source builds during deploys.
 - `USE_BROWSER_FALLBACK=false` is set in `render.yaml` by default to avoid Playwright/Chromium deployment issues.
-- CSVs are written to the service filesystem under `output/`, which is ephemeral on Render. Use the in-app download button to retrieve files.
+- CSVs are kept in memory and exposed through the in-app download button only.
 - If you later want browser fallback on Render, you will need an additional Playwright/Chromium setup step and a compatible Render instance image.
 
 ## Output
 
-CSV files are written into `output/`.
+CSV files are generated in memory and downloaded from the UI.
 
 Expected columns:
 
