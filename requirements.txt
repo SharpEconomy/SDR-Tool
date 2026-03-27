@@ -7,7 +7,7 @@ pandas==2.2.3
 playwright==1.52.0
 python-dotenv==1.1.0
 requests==2.32.3
-streamlit==1.44.1
+streamlit==1.47.0
 black==26.3.1
 isort==6.1.0
 flake8==7.3.0

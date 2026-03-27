@@ -85,6 +85,8 @@ Notes:
 
 - Python is pinned to `3.13.2` for Render because `pandas==2.2.3` does not provide
   Python 3.14 wheels, which causes slow or stuck source builds during deploys.
+- `streamlit==1.47.0` is pinned because older 1.44.x builds can hit the
+  upstream `SessionInfo` websocket race on hosted deployments like Render.
 - `USE_BROWSER_FALLBACK=false` is set in `render.yaml` by default to avoid Playwright/Chromium deployment issues.
 - Excel files are kept in memory and exposed through the in-app download button only.
 - If you later want browser fallback on Render, you will need an additional Playwright/Chromium setup step and a compatible Render instance image.
