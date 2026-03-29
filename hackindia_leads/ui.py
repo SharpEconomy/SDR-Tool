@@ -128,8 +128,6 @@ def render() -> None:
             disabled=not _can_stop(active_run),
         )
         st.caption(f"Run state: {_describe_run_state(active_run)}")
-        st.caption("Environment status")
-        _render_env_status(settings)
 
     if start_clicked:
         custom_urls = _parse_custom_urls(custom_urls_raw)
@@ -172,6 +170,8 @@ def render() -> None:
         else:
             active_run.controller.pause()
             active_run.status = "paused"
+        st.rerun()
+        return
 
     if stop_clicked and active_run is not None:
         active_run.controller.stop()
@@ -654,21 +654,6 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
 
     if "validating '" in cleaned:
         state.status = "Validating email"
-
-
-def _render_env_status(settings: Settings) -> None:
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    col1.metric("SMTP sender", "set" if settings.smtp_from_email else "missing")
-    col2.metric(
-        "Website precheck", "on" if settings.website_precheck_required else "off"
-    )
-    col3.metric("SMTP precheck", "on" if settings.smtp_precheck_required else "off")
-    col4.metric("Browser fallback", "on" if settings.use_browser_fallback else "off")
-    col5.metric(
-        "Fit filter",
-        "on" if settings.qualification_enabled else "off",
-    )
-    col6.metric("Claude key", "set" if settings.anthropic_api_key else "missing")
 
 
 def _inject_styles() -> None:

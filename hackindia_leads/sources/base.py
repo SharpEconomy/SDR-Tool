@@ -216,13 +216,27 @@ class SearchBackedSource(SourceAdapter):
     def discover_event_urls(self, keywords: list[str], limit: int) -> list[str]:
         urls: list[str] = []
         per_keyword = max(3, limit)
+        ranked_urls: list[tuple[int, str]] = []
+        seen: set[str] = set()
         for keyword in keywords:
             query = self.query_format.format(keyword=keyword)
             for result in self.search_client.search(query, max_results=per_keyword):
-                if self.domain not in result.url:
+                if not self.accepts_event_url(result.url):
                     continue
-                if result.url not in urls:
-                    urls.append(result.url)
-                if len(urls) >= limit:
-                    return urls
+                if result.url in seen:
+                    continue
+                seen.add(result.url)
+                ranked_urls.append((self.url_priority(result.url), result.url))
+
+        ranked_urls.sort(key=lambda item: (item[0], item[1]))
+        for _, url in ranked_urls:
+            urls.append(url)
+            if len(urls) >= limit:
+                break
         return urls
+
+    def accepts_event_url(self, url: str) -> bool:
+        return self.domain in url
+
+    def url_priority(self, url: str) -> int:
+        return 100

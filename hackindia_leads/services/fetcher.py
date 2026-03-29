@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import asyncio
+import sys
 import threading
+import warnings
 from dataclasses import dataclass
 
 import requests
@@ -54,6 +57,9 @@ class PageFetcher:
         )
 
     def _fetch_with_browser(self, url: str) -> FetchResult | None:
+        if not self._prepare_browser_runtime():
+            return None
+
         try:
             from playwright.sync_api import sync_playwright
         except Exception:
@@ -62,16 +68,46 @@ class PageFetcher:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
-                page = browser.new_page(user_agent=USER_AGENT)
-                page.goto(
-                    url,
-                    wait_until="networkidle",
-                    timeout=self.settings.request_timeout_seconds * 1000,
-                )
-                html = page.content()
-                browser.close()
+                try:
+                    page = browser.new_page(user_agent=USER_AGENT)
+                    page.goto(
+                        url,
+                        wait_until="networkidle",
+                        timeout=self.settings.request_timeout_seconds * 1000,
+                    )
+                    html = page.content()
+                finally:
+                    browser.close()
                 return FetchResult(
                     url=url, status_code=200, text=html, used_browser=True
                 )
         except Exception:
             return None
+
+    def _prepare_browser_runtime(self) -> bool:
+        if sys.platform != "win32":
+            return True
+
+        get_policy = getattr(asyncio, "get_event_loop_policy", None)
+        proactor_policy = getattr(asyncio, "WindowsProactorEventLoopPolicy", None)
+        set_policy = getattr(asyncio, "set_event_loop_policy", None)
+        if get_policy is None or proactor_policy is None or set_policy is None:
+            return True
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            try:
+                policy = get_policy()
+            except Exception:
+                return True
+
+        if "selector" not in type(policy).__name__.lower():
+            return True
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            try:
+                set_policy(proactor_policy())
+            except Exception:
+                return False
+        return True

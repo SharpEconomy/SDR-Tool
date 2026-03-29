@@ -272,6 +272,29 @@ class LeadPipeline:
                     ),
                 )
                 return []
+        except Exception as exc:
+            self._emit(
+                progress_callback,
+                f"{source_name}: skipped sponsor '{sponsor.name}' ({exc})",
+            )
+            return []
+
+        qualification = self._qualify_sponsor(
+            source_name,
+            event,
+            sponsor,
+            website,
+            domain,
+            progress_callback,
+        )
+        if qualification is not None and not qualification.accepted:
+            self._emit(
+                progress_callback,
+                f"{source_name}: filtered sponsor '{sponsor.name}' by fit filter",
+            )
+            return []
+
+        try:
             contacts = self.enricher.find_contact_candidates(sponsor, website, domain)
         except Exception as exc:
             self._emit(
@@ -286,6 +309,7 @@ class LeadPipeline:
             sponsor,
             website,
             domain,
+            qualification,
             contacts,
             progress_callback,
             control,
@@ -298,6 +322,7 @@ class LeadPipeline:
         sponsor: Sponsor,
         website: str | None,
         domain: str | None,
+        qualification: CompanyQualification | None,
         contacts: list[ContactCandidate],
         progress_callback: Callable[[str], None] | None,
         control: PipelineControl | None,
@@ -320,21 +345,6 @@ class LeadPipeline:
             self._emit(
                 progress_callback,
                 f"{source_name}: filtered out '{sponsor.name}' during precheck",
-            )
-            return []
-
-        qualification = self._qualify_sponsor(
-            source_name,
-            event,
-            sponsor,
-            website,
-            domain,
-            progress_callback,
-        )
-        if qualification is not None and not qualification.accepted:
-            self._emit(
-                progress_callback,
-                (f"{source_name}: filtered sponsor '{sponsor.name}' " "by fit filter"),
             )
             return []
 

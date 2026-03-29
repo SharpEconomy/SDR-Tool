@@ -162,6 +162,30 @@ def test_browser_flags_for_sources(settings) -> None:
     assert MLHSource(fetcher, search_client).should_use_browser("x") is True
 
 
+def test_devpost_accepts_only_event_subdomains() -> None:
+    source = DevpostSource(SimpleNamespace(), SimpleNamespace())
+
+    assert source.accepts_event_url("https://hack4ai.devpost.com/") is True
+    assert source.accepts_event_url("https://devpost.com/hackathons") is False
+    assert source.accepts_event_url("https://info.devpost.com/blog/x") is False
+
+
+def test_dorahacks_accepts_event_detail_pages_only() -> None:
+    source = DoraHacksSource(SimpleNamespace(), SimpleNamespace())
+
+    assert (
+        source.accepts_event_url("https://dorahacks.io/hackathon/p4w3/detail") is True
+    )
+    assert (
+        source.accepts_event_url(
+            "https://dorahacks.io/hackathon/origintrail-scaling-trust-ai"
+        )
+        is True
+    )
+    assert source.accepts_event_url("https://dorahacks.io/hackathon") is False
+    assert source.accepts_event_url("https://dorahacks.io/") is False
+
+
 def test_mlh_discover_event_urls_merges_listing_and_search() -> None:
     fetched_urls = []
 

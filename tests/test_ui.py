@@ -232,21 +232,6 @@ def _build_active_run(
     return active_run
 
 
-def test_render_env_status_displays_metrics(settings, monkeypatch) -> None:
-    fake_st = FakeStreamlit(sources=settings.default_sources)
-    monkeypatch.setattr(ui, "st", fake_st)
-
-    ui._render_env_status(settings)
-
-    metrics = fake_st.columns_created[0]
-    assert metrics[0].metrics[0] == ("SMTP sender", "set")
-    assert metrics[1].metrics[0] == ("Website precheck", "on")
-    assert metrics[2].metrics[0] == ("SMTP precheck", "on")
-    assert metrics[3].metrics[0] == ("Browser fallback", "on")
-    assert metrics[4].metrics[0] == ("Fit filter", "on")
-    assert metrics[5].metrics[0] == ("Claude key", "set")
-
-
 def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> None:
     fake_st = FakeStreamlit(buttons={"Start": True})
     monkeypatch.setattr(ui, "st", fake_st)
@@ -320,7 +305,7 @@ def test_render_start_displays_completed_result(
     assert fake_st.successes == ["0 validated lead(s) are ready to download."]
     assert "Run finished in 0s. Output table is ready." in fake_st.infos
     assert fake_st.downloads == [export_name]
-    source_columns = fake_st.columns_created[2]
+    source_columns = fake_st.columns_created[1]
     source_container = source_columns[0].containers[0]
     assert source_container.subheaders == ["ETHGLOBAL"]
     assert source_container.height == ui.SOURCE_PANEL_HEIGHT
@@ -466,6 +451,7 @@ def test_render_pause_button_updates_active_run_status(
 
     active_run = fake_st.session_state[ui.ACTIVE_RUN_KEY]
     assert active_run.status == "paused"
+    assert fake_st.rerun_called == 1
 
 
 def test_render_shows_runtime_estimate_while_running(

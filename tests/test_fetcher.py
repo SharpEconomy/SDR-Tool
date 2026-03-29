@@ -60,6 +60,21 @@ def test_fetch_uses_requests_response(settings, monkeypatch) -> None:
     assert result.used_browser is False
 
 
+def test_fetch_falls_back_to_requests_when_browser_runtime_is_unavailable(
+    settings, monkeypatch
+) -> None:
+    fetcher = PageFetcher(settings)
+    response = SimpleNamespace(status_code=200, text="payload")
+    monkeypatch.setattr(fetcher, "_prepare_browser_runtime", lambda: False)
+    monkeypatch.setattr(fetcher._get_session(), "get", lambda url, timeout: response)
+
+    result = fetcher.fetch("https://example.com", prefer_browser=True)
+
+    assert result.status_code == 200
+    assert result.text == "payload"
+    assert result.used_browser is False
+
+
 def test_fetch_returns_empty_result_on_request_error(settings, monkeypatch) -> None:
     fetcher = PageFetcher(settings)
 
