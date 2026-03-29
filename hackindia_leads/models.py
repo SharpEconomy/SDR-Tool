@@ -92,6 +92,13 @@ class CompanyQualification:
 
 
 @dataclass(slots=True)
+class ContactReview:
+    accepted: bool
+    score: int
+    notes: str | None
+
+
+@dataclass(slots=True)
 class Lead:
     source: str
     event_name: str
@@ -118,6 +125,9 @@ class Lead:
     qualification_notes: str | None
     qualification_score: int
     qualification_accepted: bool
+    contact_review_notes: str | None
+    contact_review_score: int
+    contact_review_accepted: bool
 
     def as_row(self) -> dict[str, Any]:
         return {
@@ -146,6 +156,9 @@ class Lead:
             "qualification_notes": self.qualification_notes,
             "qualification_score": self.qualification_score,
             "qualification_accepted": self.qualification_accepted,
+            "contact_review_notes": self.contact_review_notes,
+            "contact_review_score": self.contact_review_score,
+            "contact_review_accepted": self.contact_review_accepted,
         }
 
     def as_export_row(self) -> dict[str, Any]:

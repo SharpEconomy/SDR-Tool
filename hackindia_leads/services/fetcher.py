@@ -35,11 +35,7 @@ class PageFetcher:
         return session
 
     def fetch(self, url: str, prefer_browser: bool = False) -> FetchResult:
-        if (
-            prefer_browser
-            and self.settings.use_browser_fallback
-            and threading.current_thread() is threading.main_thread()
-        ):
+        if prefer_browser and self.settings.use_browser_fallback:
             browser_result = self._fetch_with_browser(url)
             if browser_result is not None:
                 return browser_result

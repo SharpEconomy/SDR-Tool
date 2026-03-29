@@ -22,6 +22,11 @@ def settings() -> Settings:
         smtp_precheck_required=True,
         min_validation_score=2,
         qualification_enabled=True,
+        use_claude_qualification=True,
+        anthropic_api_key="test-anthropic-key",
+        anthropic_model="claude-sonnet-4-20250514",
+        qualification_recent_months=6,
+        qualification_preferred_recent_months=3,
         google_search_api_key="",
         google_search_engine_id="",
     )

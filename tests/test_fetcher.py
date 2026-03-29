@@ -22,29 +22,30 @@ def test_fetch_uses_browser_result_when_available(settings, monkeypatch) -> None
     assert result is browser_result
 
 
-def test_fetch_skips_browser_fallback_off_main_thread(settings, monkeypatch) -> None:
+def test_fetch_uses_browser_fallback_off_main_thread(settings, monkeypatch) -> None:
     fetcher = PageFetcher(settings)
-    response = SimpleNamespace(status_code=200, text="payload")
+    browser_result = FetchResult(
+        url="https://example.com",
+        status_code=200,
+        text="<html>browser</html>",
+        used_browser=True,
+    )
     monkeypatch.setattr(
         fetcher,
         "_fetch_with_browser",
-        lambda url: (_ for _ in ()).throw(RuntimeError("should not run")),
-    )
-    monkeypatch.setattr(fetcher._get_session(), "get", lambda url, timeout: response)
-    fake_thread = object()
-    monkeypatch.setattr(
-        "hackindia_leads.services.fetcher.threading.current_thread",
-        lambda: fake_thread,
+        lambda url: browser_result,
     )
     monkeypatch.setattr(
-        "hackindia_leads.services.fetcher.threading.main_thread",
-        lambda: object(),
+        fetcher._get_session(),
+        "get",
+        lambda url, timeout: (_ for _ in ()).throw(
+            RuntimeError("requests should not run")
+        ),
     )
 
     result = fetcher.fetch("https://example.com", prefer_browser=True)
 
-    assert result.status_code == 200
-    assert result.used_browser is False
+    assert result is browser_result
 
 
 def test_fetch_uses_requests_response(settings, monkeypatch) -> None:

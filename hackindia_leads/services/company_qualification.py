@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-import re
 import threading
 from dataclasses import dataclass
-from datetime import datetime
+from typing import Any
 
 from hackindia_leads.config import Settings
-from hackindia_leads.models import CompanyQualification, Event, Sponsor
+from hackindia_leads.models import (
+    CompanyQualification,
+    ContactCandidate,
+    ContactReview,
+    EmailValidation,
+    Event,
+    Sponsor,
+)
+from hackindia_leads.services.claude import ClaudeQualificationClient
 from hackindia_leads.services.search import SearchClient, SearchResult
 
 AI_KEYWORDS = {
@@ -41,21 +48,6 @@ TECH_KEYWORDS = {
     "saas",
     "software",
 }
-DEVELOPER_ADOPTION_KEYWORDS = {
-    "api",
-    "sdk",
-    "developer",
-    "developers",
-    "devrel",
-    "developer relations",
-    "docs",
-    "documentation",
-    "integrations",
-    "ecosystem",
-    "community",
-    "platform",
-    "open source",
-}
 VISIBILITY_KEYWORDS = {
     "launch",
     "launched",
@@ -83,6 +75,21 @@ FUNDING_KEYWORDS = {
     "investors",
     "valuation",
 }
+DEVELOPER_ADOPTION_KEYWORDS = {
+    "api",
+    "sdk",
+    "developer",
+    "developers",
+    "devrel",
+    "developer relations",
+    "docs",
+    "documentation",
+    "integrations",
+    "ecosystem",
+    "community",
+    "platform",
+    "open source",
+}
 US_HINTS = {
     "united states",
     "usa",
@@ -109,7 +116,6 @@ INDIA_HINTS = {
     "chennai",
     "noida",
 }
-YEAR_RE = re.compile(r"\b(20\d{2})\b")
 
 
 @dataclass(slots=True)
@@ -118,10 +124,9 @@ class _QualificationContext:
     event: Event
     website: str | None
     domain: str | None
-    funding_results: list[SearchResult]
+    recent_decision_results: list[SearchResult]
     location_results: list[SearchResult]
     adoption_results: list[SearchResult]
-    visibility_results: list[SearchResult]
 
     @property
     def combined_text(self) -> str:
@@ -141,13 +146,22 @@ class _QualificationContext:
     def all_results(self) -> list[SearchResult]:
         deduped: dict[str, SearchResult] = {}
         for result in (
-            self.funding_results
-            + self.location_results
-            + self.adoption_results
-            + self.visibility_results
+            self.recent_decision_results + self.location_results + self.adoption_results
         ):
             deduped.setdefault(result.url, result)
         return list(deduped.values())
+
+
+@dataclass(slots=True)
+class _RuleHints:
+    company_segment: str
+    segment_score: int
+    company_location: str | None
+    location_priority: str
+    location_score: int
+    developer_adoption_need: bool
+    developer_adoption_score: int
+    notes: list[str]
 
 
 class CompanyQualifier:
@@ -155,9 +169,12 @@ class CompanyQualifier:
         self,
         settings: Settings,
         search_client: SearchClient | None = None,
+        claude_client: ClaudeQualificationClient | None = None,
     ) -> None:
         self.settings = settings
         self.search_client = search_client or SearchClient(settings)
+        self.claude_client = claude_client or ClaudeQualificationClient(settings)
+        self._context_cache: dict[tuple[str, str], _QualificationContext] = {}
         self._cache: dict[tuple[str, str], CompanyQualification] = {}
         self._cache_lock = threading.Lock()
 
@@ -177,14 +194,58 @@ class CompanyQualifier:
         if cached is not None:
             return cached
 
-        context = self._build_context(sponsor, event, website, domain)
-        qualification = self._score_context(context)
+        context = self._get_context(cache_key, sponsor, event, website, domain)
+        qualification = self._qualify_context(context)
         with self._cache_lock:
             self._cache[cache_key] = qualification
         return qualification
 
     def is_enabled(self) -> bool:
         return self.settings.qualification_enabled
+
+    def review_contacts(
+        self,
+        sponsor: Sponsor,
+        event: Event,
+        website: str | None,
+        domain: str | None,
+        qualification: CompanyQualification,
+        contacts: list[ContactCandidate],
+        validations_by_email: dict[str, EmailValidation],
+    ) -> dict[str, ContactReview]:
+        if not contacts:
+            return {}
+
+        cache_key = self._cache_key(sponsor, domain)
+        context = self._get_context(cache_key, sponsor, event, website, domain)
+        if self._should_use_claude():
+            try:
+                return self._claude_contact_review(
+                    context,
+                    qualification,
+                    contacts,
+                    validations_by_email,
+                )
+            except Exception:
+                return self._fallback_contact_review(
+                    contacts,
+                    validations_by_email,
+                    "rule-based contact fallback used after Claude error",
+                )
+
+        if self.settings.use_claude_qualification:
+            fallback_note = (
+                "rule-based contact fallback used because Claude is unavailable"
+            )
+        else:
+            fallback_note = (
+                "rule-based contact fallback used because Claude is disabled"
+            )
+        return self._fallback_contact_review(
+            contacts,
+            validations_by_email,
+            fallback_note,
+        )
 
     def _build_context(
         self,
@@ -198,81 +259,298 @@ class CompanyQualifier:
             event=event,
             website=website,
             domain=domain,
-            funding_results=self.search_client.search(
-                f'"{sponsor.name}" raised funding OR series OR seed',
-                max_results=4,
+            recent_decision_results=self.search_client.search(
+                (
+                    f'"{sponsor.name}" raised funding OR series OR seed OR launch '
+                    "OR partnership OR ecosystem OR community OR api OR sdk"
+                ),
+                max_results=6,
+                recent_months=self.settings.qualification_recent_months,
             ),
             location_results=self.search_client.search(
-                f'"{sponsor.name}" headquarters OR based in',
+                f'"{sponsor.name}" headquarters OR based in OR office',
                 max_results=4,
             ),
             adoption_results=self.search_client.search(
-                f'"{sponsor.name}" api sdk developers docs ecosystem',
-                max_results=4,
-            ),
-            visibility_results=self.search_client.search(
-                f'"{sponsor.name}" launch partnerships community growth',
+                f'"{sponsor.name}" api sdk developers docs ecosystem open source',
                 max_results=4,
             ),
         )
 
-    def _score_context(self, context: _QualificationContext) -> CompanyQualification:
-        notes: list[str] = []
+    def _get_context(
+        self,
+        cache_key: tuple[str, str],
+        sponsor: Sponsor,
+        event: Event,
+        website: str | None,
+        domain: str | None,
+    ) -> _QualificationContext:
+        with self._cache_lock:
+            cached = self._context_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        context = self._build_context(sponsor, event, website, domain)
+        with self._cache_lock:
+            self._context_cache[cache_key] = context
+        return context
+
+    def _qualify_context(self, context: _QualificationContext) -> CompanyQualification:
+        hints = self._build_rule_hints(context)
+        if self._should_use_claude():
+            try:
+                return self._claude_qualification(context, hints)
+            except Exception:
+                return self._fallback_qualification(
+                    context,
+                    hints,
+                    "rule-based fallback used after Claude error",
+                )
+        if self.settings.use_claude_qualification:
+            fallback_note = "rule-based fallback used because Claude is unavailable"
+        else:
+            fallback_note = "rule-based fallback used because Claude is disabled"
+        return self._fallback_qualification(
+            context,
+            hints,
+            fallback_note,
+        )
+
+    def _build_rule_hints(self, context: _QualificationContext) -> _RuleHints:
         text = context.combined_text
-
         company_segment, segment_score = self._segment_signal(text)
-        if company_segment != "Other":
-            notes.append(f"{company_segment} fit")
-
-        recently_funded, funding_signal, funding_score = self._funding_signal(context)
-        if funding_signal:
-            notes.append(funding_signal)
-
         company_location, location_priority, location_score = self._location_signal(
             context
         )
-        if company_location:
-            notes.append(f"location: {company_location}")
-
-        developer_adoption_need, developer_score = self._keyword_score(
-            text,
-            DEVELOPER_ADOPTION_KEYWORDS,
-            threshold=2,
+        developer_adoption_need, developer_adoption_score = (
+            self._developer_adoption_signal(text)
         )
-        if developer_adoption_need:
-            notes.append("developer adoption signal")
-
-        market_visibility_need, visibility_score = self._visibility_signal(context)
-        if market_visibility_need:
-            notes.append("market visibility signal")
-
-        score = (
-            segment_score
-            + funding_score
-            + location_score
-            + developer_score
-            + visibility_score
+        notes = self._hint_notes(
+            company_segment,
+            company_location,
+            developer_adoption_need,
         )
-        accepted = bool(
-            company_segment != "Other"
-            and score >= 6
-            and (developer_adoption_need or market_visibility_need)
+        return _RuleHints(
+            company_segment=company_segment,
+            segment_score=segment_score,
+            company_location=company_location,
+            location_priority=location_priority,
+            location_score=location_score,
+            developer_adoption_need=developer_adoption_need,
+            developer_adoption_score=developer_adoption_score,
+            notes=notes,
         )
-        if not notes:
+
+    def _claude_qualification(
+        self,
+        context: _QualificationContext,
+        hints: _RuleHints,
+    ) -> CompanyQualification:
+        recent_evidence = [
+            self._serialize_result(result) for result in context.recent_decision_results
+        ]
+        decision = self.claude_client.qualify(
+            {
+                "sponsor_name": context.sponsor.name,
+                "sponsor_website": context.website,
+                "sponsor_domain": context.domain,
+                "event_title": context.event.title,
+                "event_summary": context.event.summary,
+                "rule_hints": {
+                    "company_segment": hints.company_segment,
+                    "company_location": hints.company_location,
+                    "location_priority": hints.location_priority,
+                    "developer_adoption_need": hints.developer_adoption_need,
+                },
+                "recent_data_policy": {
+                    "decision_window_months": self.settings.qualification_recent_months,
+                    "preferred_window_months": min(
+                        self.settings.qualification_recent_months,
+                        self.settings.qualification_preferred_recent_months,
+                    ),
+                },
+                "recent_evidence": recent_evidence,
+            }
+        )
+
+        notes = list(hints.notes)
+        if decision["qualification_notes"]:
+            notes.append(decision["qualification_notes"])
+        elif not notes:
             notes.append("insufficient qualification signals")
 
         return CompanyQualification(
-            company_segment=company_segment,
+            company_segment=hints.company_segment,
+            recently_funded=bool(decision["recently_funded"]),
+            recent_funding_signal=decision["recent_funding_signal"],
+            company_location=hints.company_location,
+            location_priority=hints.location_priority,
+            developer_adoption_need=hints.developer_adoption_need,
+            market_visibility_need=bool(decision["market_visibility_need"]),
+            qualification_notes="; ".join(notes),
+            score=int(decision["score"]),
+            accepted=bool(decision["accepted"]),
+        )
+
+    def _fallback_qualification(
+        self,
+        context: _QualificationContext,
+        hints: _RuleHints,
+        fallback_note: str,
+    ) -> CompanyQualification:
+        notes = list(hints.notes)
+        recently_funded, recent_funding_signal, funding_score = (
+            self._recent_funding_signal(context)
+        )
+        if recent_funding_signal:
+            notes.append(recent_funding_signal)
+
+        market_visibility_need, visibility_score = self._market_visibility_signal(
+            context
+        )
+        if market_visibility_need:
+            notes.append("market visibility signal")
+
+        has_recent_evidence = bool(context.recent_decision_results)
+        score = min(
+            100,
+            (
+                hints.segment_score
+                + hints.location_score
+                + hints.developer_adoption_score
+                + funding_score
+                + visibility_score
+            )
+            * 10,
+        )
+        accepted = bool(
+            has_recent_evidence
+            and hints.company_segment != "Other"
+            and score >= 60
+            and (recently_funded or market_visibility_need)
+        )
+        if not notes:
+            notes.append("insufficient qualification signals")
+        notes.append(fallback_note)
+
+        return CompanyQualification(
+            company_segment=hints.company_segment,
             recently_funded=recently_funded,
-            recent_funding_signal=funding_signal,
-            company_location=company_location,
-            location_priority=location_priority,
-            developer_adoption_need=developer_adoption_need,
+            recent_funding_signal=recent_funding_signal,
+            company_location=hints.company_location,
+            location_priority=hints.location_priority,
+            developer_adoption_need=hints.developer_adoption_need,
             market_visibility_need=market_visibility_need,
             qualification_notes="; ".join(notes),
             score=score,
             accepted=accepted,
         )
+
+    def _claude_contact_review(
+        self,
+        context: _QualificationContext,
+        qualification: CompanyQualification,
+        contacts: list[ContactCandidate],
+        validations_by_email: dict[str, EmailValidation],
+    ) -> dict[str, ContactReview]:
+        response = self.claude_client.review_contacts(
+            {
+                "sponsor_name": context.sponsor.name,
+                "sponsor_website": context.website,
+                "sponsor_domain": context.domain,
+                "event_title": context.event.title,
+                "event_summary": context.event.summary,
+                "sponsor_review": {
+                    "accepted": qualification.accepted,
+                    "score": qualification.score,
+                    "company_segment": qualification.company_segment,
+                    "company_location": qualification.company_location,
+                    "location_priority": qualification.location_priority,
+                    "developer_adoption_need": qualification.developer_adoption_need,
+                    "market_visibility_need": qualification.market_visibility_need,
+                    "qualification_notes": qualification.qualification_notes,
+                },
+                "recent_evidence": [
+                    self._serialize_result(result)
+                    for result in context.recent_decision_results
+                ],
+                "max_selected": self.settings.max_contacts_per_company,
+                "contacts": [
+                    {
+                        "full_name": contact.full_name,
+                        "title": contact.title,
+                        "email": contact.email,
+                        "source": contact.source,
+                        "linkedin_url": contact.linkedin_url,
+                        "confidence": contact.confidence,
+                        "email_validation": self._serialize_validation(
+                            validations_by_email[contact.email]
+                        ),
+                    }
+                    for contact in contacts
+                ],
+            }
+        )
+
+        selection_notes = response.get("selection_notes", "")
+        reviews: dict[str, ContactReview] = {}
+        for item in response.get("contacts", []):
+            email = str(item.get("email", "")).strip().lower()
+            if not email:
+                continue
+            note = str(item.get("reason", "")).strip()
+            if selection_notes:
+                note = f"{note}; {selection_notes}" if note else selection_notes
+            reviews[email] = ContactReview(
+                accepted=bool(item.get("accepted")),
+                score=max(0, min(int(item.get("score", 0)), 100)),
+                notes=note or None,
+            )
+
+        default_note = (
+            selection_notes or "contact rejected because Claude returned no decision"
+        )
+        for contact in contacts:
+            reviews.setdefault(
+                contact.email.lower(),
+                ContactReview(
+                    accepted=False,
+                    score=0,
+                    notes=default_note,
+                ),
+            )
+        return reviews
+
+    def _fallback_contact_review(
+        self,
+        contacts: list[ContactCandidate],
+        validations_by_email: dict[str, EmailValidation],
+        fallback_note: str,
+    ) -> dict[str, ContactReview]:
+        ordered_contacts = sorted(
+            contacts,
+            key=self._contact_sort_key,
+            reverse=True,
+        )
+        accepted_emails = {
+            contact.email.lower()
+            for contact in ordered_contacts[: self.settings.max_contacts_per_company]
+        }
+        reviews: dict[str, ContactReview] = {}
+        for contact in contacts:
+            email = contact.email.lower()
+            validation = validations_by_email[contact.email]
+            base_score = max(0, min((contact.confidence or 0), 100))
+            if validation.accepted:
+                base_score = min(100, base_score + 10)
+            if contact.linkedin_url:
+                base_score = min(100, base_score + 5)
+            reviews[email] = ContactReview(
+                accepted=email in accepted_emails,
+                score=base_score,
+                notes=fallback_note,
+            )
+        return reviews
 
     def _segment_signal(self, text: str) -> tuple[str, int]:
         if self._contains_any(text, WEB3_KEYWORDS):
@@ -282,20 +560,6 @@ class CompanyQualifier:
         if self._contains_any(text, TECH_KEYWORDS):
             return "Tech", 2
         return "Other", 0
-
-    def _funding_signal(
-        self, context: _QualificationContext
-    ) -> tuple[bool, str | None, int]:
-        recent_years = {datetime.now().year - offset for offset in range(0, 3)}
-        for result in context.funding_results:
-            content = f"{result.title} {result.snippet}".lower()
-            if not self._contains_any(content, FUNDING_KEYWORDS):
-                continue
-            years = {int(match.group(1)) for match in YEAR_RE.finditer(content)}
-            if years & recent_years:
-                return True, self._best_signal_text(result), 3
-            return True, self._best_signal_text(result), 2
-        return False, None, 0
 
     def _location_signal(
         self, context: _QualificationContext
@@ -310,18 +574,43 @@ class CompanyQualifier:
             return "Global", "Global", 1
         return None, "Unknown", 0
 
-    def _visibility_signal(self, context: _QualificationContext) -> tuple[bool, int]:
-        text = context.combined_text
-        matched, keyword_score = self._keyword_score(
-            text,
-            VISIBILITY_KEYWORDS,
-            threshold=2,
-        )
-        if matched:
-            return True, keyword_score
-        if context.event.source and context.sponsor.evidence:
-            return True, 1
-        return False, 0
+    def _developer_adoption_signal(self, text: str) -> tuple[bool, int]:
+        return self._keyword_score(text, DEVELOPER_ADOPTION_KEYWORDS, threshold=2)
+
+    def _recent_funding_signal(
+        self,
+        context: _QualificationContext,
+    ) -> tuple[bool, str | None, int]:
+        for result in context.recent_decision_results:
+            content = f"{result.title} {result.snippet}".lower()
+            if self._contains_any(content, FUNDING_KEYWORDS):
+                return True, self._best_signal_text(result), 3
+        return False, None, 0
+
+    def _market_visibility_signal(
+        self,
+        context: _QualificationContext,
+    ) -> tuple[bool, int]:
+        recent_text = " ".join(
+            f"{result.title} {result.snippet}"
+            for result in context.recent_decision_results
+        ).lower()
+        return self._keyword_score(recent_text, VISIBILITY_KEYWORDS, threshold=2)
+
+    def _hint_notes(
+        self,
+        company_segment: str,
+        company_location: str | None,
+        developer_adoption_need: bool,
+    ) -> list[str]:
+        notes: list[str] = []
+        if company_segment != "Other":
+            notes.append(f"{company_segment} fit")
+        if company_location:
+            notes.append(f"location: {company_location}")
+        if developer_adoption_need:
+            notes.append("developer adoption signal")
+        return notes
 
     def _keyword_score(
         self,
@@ -337,13 +626,50 @@ class CompanyQualifier:
             return True, 1
         return False, 0
 
-    def _contains_any(self, text: str, keywords: set[str]) -> bool:
-        return any(keyword in text for keyword in keywords)
-
     def _best_signal_text(self, result: SearchResult) -> str:
         return (result.title or result.snippet or result.url).strip() or result.url
+
+    def _should_use_claude(self) -> bool:
+        return (
+            self.settings.use_claude_qualification
+            and self.claude_client.is_configured()
+        )
+
+    def _serialize_result(self, result: SearchResult) -> dict[str, Any]:
+        return {
+            "title": result.title,
+            "url": result.url,
+            "snippet": result.snippet,
+            "published_at": (
+                result.published_at.isoformat()
+                if result.published_at is not None
+                else None
+            ),
+        }
+
+    def _contains_any(self, text: str, keywords: set[str]) -> bool:
+        return any(keyword in text for keyword in keywords)
 
     def _cache_key(self, sponsor: Sponsor, domain: str | None) -> tuple[str, str]:
         company = sponsor.name.strip().lower()
         normalized_domain = (domain or "").strip().lower()
         return company, normalized_domain
+
+    def _serialize_validation(self, validation: EmailValidation) -> dict[str, Any]:
+        return {
+            "syntax_valid": validation.syntax_valid,
+            "mx_valid": validation.mx_valid,
+            "smtp_code": validation.smtp_code,
+            "smtp_message": validation.smtp_message,
+            "score": validation.score,
+            "accepted": validation.accepted,
+        }
+
+    def _contact_sort_key(self, contact: ContactCandidate) -> tuple[int, int, int]:
+        source_rank = 2 if contact.source == "public-search-email" else 1
+        linkedin_rank = 1 if contact.linkedin_url else 0
+        return (
+            source_rank,
+            linkedin_rank,
+            contact.confidence or 0,
+        )

@@ -104,14 +104,16 @@ class FakeStreamlit:
         buttons=None,
         sources=None,
         keywords="ai,web3",
-        qualification_enabled=None,
+        custom_urls="",
+        use_claude_qualification=None,
     ) -> None:
         self.sidebar = FakeSidebar()
         self.session_state = {}
         self.button_presses = buttons or {}
         self.sources = ["ethglobal"] if sources is None else sources
         self.keywords = keywords
-        self.qualification_enabled = qualification_enabled
+        self.custom_urls = custom_urls
+        self.use_claude_qualification = use_claude_qualification
         self.errors = []
         self.successes = []
         self.warnings = []
@@ -145,10 +147,13 @@ class FakeStreamlit:
     def text_input(self, label, value):
         return self.keywords
 
+    def text_area(self, label, value="", help=None, height=None):
+        return self.custom_urls
+
     def checkbox(self, label, value=False, help=None):
-        if self.qualification_enabled is None:
+        if self.use_claude_qualification is None:
             return value
-        return self.qualification_enabled
+        return self.use_claude_qualification
 
     def number_input(self, label, min_value, max_value, value, step):
         return value
@@ -204,6 +209,8 @@ def _build_active_run(
     rows=None,
     started_at=0.0,
     estimated_total_seconds=120,
+    finished_at=None,
+    completion_notice_shown=False,
 ) -> ui.ActiveRunState:
     source_states = {"ethglobal": ui.SourceProgressState(name="ethglobal")}
     controller = PipelineControl()
@@ -219,6 +226,8 @@ def _build_active_run(
         estimated_total_seconds=estimated_total_seconds,
         status=status,
         result=FakeResult(export_name, b"excel-bytes", rows=rows),
+        finished_at=finished_at,
+        completion_notice_shown=completion_notice_shown,
     )
     return active_run
 
@@ -235,6 +244,7 @@ def test_render_env_status_displays_metrics(settings, monkeypatch) -> None:
     assert metrics[2].metrics[0] == ("SMTP precheck", "on")
     assert metrics[3].metrics[0] == ("Browser fallback", "on")
     assert metrics[4].metrics[0] == ("Fit filter", "on")
+    assert metrics[5].metrics[0] == ("Claude key", "set")
 
 
 def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> None:
@@ -250,6 +260,39 @@ def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> N
     ]
 
 
+def test_render_warns_and_starts_when_claude_key_missing(settings, monkeypatch) -> None:
+    fake_st = FakeStreamlit(buttons={"Start": True})
+    monkeypatch.setattr(ui, "st", fake_st)
+    settings.anthropic_api_key = ""
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+
+    captured = {"started": False}
+
+    def fake_start(
+        incoming_settings,
+        selected_sources,
+        keywords,
+        limit_per_source,
+        custom_urls,
+    ):
+        captured["started"] = True
+        active_run = _build_active_run("result.xlsx")
+        fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
+        return active_run
+
+    monkeypatch.setattr(ui, "_start_background_run", fake_start)
+
+    ui.render()
+
+    assert captured["started"] is True
+    assert fake_st.warnings[:1] == [
+        (
+            "ANTHROPIC_API_KEY is not set. Using the non-LLM "
+            "fallback flow for sponsor and contact review in this run."
+        )
+    ]
+
+
 def test_render_start_displays_completed_result(
     settings, monkeypatch, tmp_path: Path
 ) -> None:
@@ -257,8 +300,15 @@ def test_render_start_displays_completed_result(
     fake_st = FakeStreamlit(buttons={"Start": True})
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+    monkeypatch.setattr(ui.time, "time", lambda: 0.0)
 
-    def fake_start(incoming_settings, selected_sources, keywords, limit_per_source):
+    def fake_start(
+        incoming_settings,
+        selected_sources,
+        keywords,
+        limit_per_source,
+        custom_urls,
+    ):
         active_run = _build_active_run(export_name)
         fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
         return active_run
@@ -268,6 +318,7 @@ def test_render_start_displays_completed_result(
     ui.render()
 
     assert fake_st.successes == ["0 validated lead(s) are ready to download."]
+    assert "Run finished in 0s. Output table is ready." in fake_st.infos
     assert fake_st.downloads == [export_name]
     source_columns = fake_st.columns_created[2]
     source_container = source_columns[0].containers[0]
@@ -281,17 +332,43 @@ def test_render_start_displays_completed_result(
     assert fake_st.multiselect_format_func("ethglobal") == "ETHGLOBAL"
 
 
+def test_render_shows_completion_text_once(settings, monkeypatch) -> None:
+    fake_st = FakeStreamlit()
+    monkeypatch.setattr(ui, "st", fake_st)
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+    fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
+        "result.xlsx",
+        status="completed",
+        alive=False,
+        started_at=0.0,
+        finished_at=125.0,
+    )
+
+    ui.render()
+    ui.render()
+
+    assert fake_st.infos.count("Run finished in 2m 5s. Output table is ready.") == 1
+
+
 def test_render_sidebar_qualification_toggle_overrides_settings(
     settings, monkeypatch
 ) -> None:
-    fake_st = FakeStreamlit(buttons={"Start": True}, qualification_enabled=False)
+    fake_st = FakeStreamlit(buttons={"Start": True}, use_claude_qualification=False)
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
     captured = {}
 
-    def fake_start(incoming_settings, selected_sources, keywords, limit_per_source):
-        captured["qualification_enabled"] = incoming_settings.qualification_enabled
+    def fake_start(
+        incoming_settings,
+        selected_sources,
+        keywords,
+        limit_per_source,
+        custom_urls,
+    ):
+        captured["use_claude_qualification"] = (
+            incoming_settings.use_claude_qualification
+        )
         active_run = _build_active_run("result.xlsx")
         fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
         return active_run
@@ -300,7 +377,77 @@ def test_render_sidebar_qualification_toggle_overrides_settings(
 
     ui.render()
 
-    assert captured["qualification_enabled"] is False
+    assert captured["use_claude_qualification"] is False
+
+
+def test_render_does_not_warn_when_claude_is_disabled(settings, monkeypatch) -> None:
+    fake_st = FakeStreamlit(
+        buttons={"Start": True},
+        use_claude_qualification=False,
+    )
+    monkeypatch.setattr(ui, "st", fake_st)
+    settings.anthropic_api_key = ""
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+
+    def fake_start(
+        incoming_settings,
+        selected_sources,
+        keywords,
+        limit_per_source,
+        custom_urls,
+    ):
+        active_run = _build_active_run("result.xlsx")
+        fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
+        return active_run
+
+    monkeypatch.setattr(ui, "_start_background_run", fake_start)
+
+    ui.render()
+
+    assert not any("ANTHROPIC_API_KEY is not set" in text for text in fake_st.warnings)
+
+
+def test_render_starts_with_custom_urls_only(settings, monkeypatch) -> None:
+    fake_st = FakeStreamlit(
+        buttons={"Start": True},
+        sources=[],
+        custom_urls="demo.example/event\nhttps://two.example/hackathon",
+    )
+    monkeypatch.setattr(ui, "st", fake_st)
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+
+    captured = {}
+
+    def fake_start(
+        incoming_settings,
+        selected_sources,
+        keywords,
+        limit_per_source,
+        custom_urls,
+    ):
+        captured["selected_sources"] = selected_sources
+        captured["custom_urls"] = custom_urls
+        active_run = _build_active_run("result.xlsx")
+        fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
+        return active_run
+
+    monkeypatch.setattr(ui, "_start_background_run", fake_start)
+
+    ui.render()
+
+    assert captured["selected_sources"] == ["custom"]
+    assert captured["custom_urls"] == [
+        "https://demo.example/event",
+        "https://two.example/hackathon",
+    ]
+
+
+def test_parse_custom_urls_normalizes_and_dedupes() -> None:
+    parsed = ui._parse_custom_urls(
+        "demo.example/event\nhttps://demo.example/event\nbad\n"
+    )
+
+    assert parsed == ["https://demo.example/event"]
 
 
 def test_render_pause_button_updates_active_run_status(
@@ -339,6 +486,20 @@ def test_render_shows_runtime_estimate_while_running(
     ui.render()
 
     assert any("Estimated time remaining: 1m 30s." in text for text in fake_st.infos)
+
+
+def test_estimate_total_seconds_increases_with_expensive_checks(settings) -> None:
+    baseline = ui._estimate_total_seconds(settings, 2, 3)
+
+    settings.use_claude_qualification = False
+    settings.qualification_enabled = False
+    settings.smtp_precheck_required = False
+    settings.website_precheck_required = False
+    settings.use_browser_fallback = False
+
+    lighter = ui._estimate_total_seconds(settings, 2, 3)
+
+    assert baseline > lighter
 
 
 def test_render_shows_non_empty_loading_table_while_running(

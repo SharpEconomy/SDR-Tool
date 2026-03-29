@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from hackindia_leads.sources.base import SearchBackedSource
 
@@ -15,8 +16,10 @@ class MLHSource(SearchBackedSource):
 
     def discover_event_urls(self, keywords: list[str], limit: int) -> list[str]:
         base_urls: list[str] = []
-        listing = self.fetcher.fetch("https://mlh.io/seasons/2026/events")
-        if listing.text:
+        for season_year in self._season_years():
+            listing = self.fetcher.fetch(f"https://mlh.io/seasons/{season_year}/events")
+            if not listing.text:
+                continue
             base_urls.extend(
                 re.findall(
                     r'href="(https://(?:events|organize)\.mlh\.io/events/[^"]+)"',
@@ -38,3 +41,7 @@ class MLHSource(SearchBackedSource):
 
     def should_use_browser(self, url: str) -> bool:
         return True
+
+    def _season_years(self) -> list[int]:
+        current_year = date.today().year
+        return [current_year, current_year + 1, current_year - 1]

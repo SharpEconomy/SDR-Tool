@@ -45,11 +45,30 @@ class Settings:
     smtp_precheck_required: bool
     min_validation_score: int
     qualification_enabled: bool
+    use_claude_qualification: bool
+    anthropic_api_key: str
+    anthropic_model: str
+    qualification_recent_months: int
+    qualification_preferred_recent_months: int
     google_search_api_key: str
     google_search_engine_id: str
 
     @classmethod
     def load(cls) -> "Settings":
+        qualification_recent_months = max(
+            3,
+            _as_int(os.getenv("QUALIFICATION_RECENT_MONTHS"), 6),
+        )
+        qualification_preferred_recent_months = max(
+            1,
+            min(
+                qualification_recent_months,
+                _as_int(
+                    os.getenv("QUALIFICATION_PREFERRED_RECENT_MONTHS"),
+                    3,
+                ),
+            ),
+        )
         return cls(
             smtp_from_email=os.getenv("SMTP_FROM_EMAIL", "").strip(),
             request_timeout_seconds=_as_int(os.getenv("REQUEST_TIMEOUT_SECONDS"), 20),
@@ -75,6 +94,19 @@ class Settings:
             qualification_enabled=_as_bool(
                 os.getenv("QUALIFICATION_ENABLED"),
                 True,
+            ),
+            use_claude_qualification=_as_bool(
+                os.getenv("USE_CLAUDE_QUALIFICATION"),
+                True,
+            ),
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", "").strip(),
+            anthropic_model=os.getenv(
+                "ANTHROPIC_MODEL",
+                "claude-sonnet-4-20250514",
+            ).strip(),
+            qualification_recent_months=qualification_recent_months,
+            qualification_preferred_recent_months=(
+                qualification_preferred_recent_months
             ),
             google_search_api_key=os.getenv("GOOGLE_SEARCH_API_KEY", "").strip(),
             google_search_engine_id=os.getenv("GOOGLE_SEARCH_ENGINE_ID", "").strip(),

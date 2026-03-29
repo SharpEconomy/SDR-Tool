@@ -53,6 +53,11 @@ def test_settings_load_reads_env(monkeypatch) -> None:
         "SMTP_PRECHECK_REQUIRED": "true",
         "MIN_VALIDATION_SCORE": "3",
         "QUALIFICATION_ENABLED": "false",
+        "USE_CLAUDE_QUALIFICATION": "false",
+        "ANTHROPIC_API_KEY": "anthropic-key",
+        "ANTHROPIC_MODEL": "claude-test-model",
+        "QUALIFICATION_RECENT_MONTHS": "5",
+        "QUALIFICATION_PREFERRED_RECENT_MONTHS": "2",
         "GOOGLE_SEARCH_API_KEY": "google-key",
         "GOOGLE_SEARCH_ENGINE_ID": "search-engine-id",
     }
@@ -75,5 +80,10 @@ def test_settings_load_reads_env(monkeypatch) -> None:
     assert loaded.smtp_precheck_required is True
     assert loaded.min_validation_score == 3
     assert loaded.qualification_enabled is False
+    assert loaded.use_claude_qualification is False
+    assert loaded.anthropic_api_key == "anthropic-key"
+    assert loaded.anthropic_model == "claude-test-model"
+    assert loaded.qualification_recent_months == 5
+    assert loaded.qualification_preferred_recent_months == 2
     assert loaded.google_search_api_key == "google-key"
     assert loaded.google_search_engine_id == "search-engine-id"

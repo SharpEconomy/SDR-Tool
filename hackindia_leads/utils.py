@@ -56,7 +56,7 @@ def is_likely_prize_label(value: str) -> bool:
     )
     if any(fragment in lowered for fragment in blocked_fragments):
         return True
-    return bool(re.search(r"[$€£₹]\s*\d", cleaned))
+    return bool(re.search(r"[$\u20ac\u00a3\u20b9]\s*\d", cleaned))
 
 
 def looks_like_company_name(value: str) -> bool:

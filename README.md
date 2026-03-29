@@ -11,9 +11,11 @@ websites, and prepare the final output as a downloadable Excel file.
 - Resolves and validates the sponsor's primary website and domain.
 - Uses public search results and sponsor websites to infer likely
   decision-makers.
-- Uses a non-LLM qualification pass to score sponsors for Tech/AI/Web3 fit,
-  recent funding signals, US/India priority, developer adoption need, and
-  market visibility.
+- Uses a Claude-backed qualification pass for the final fit decision.
+- Keeps Tech/AI/Web3 fit, US/India priority, and part of the developer
+  adoption signal as deterministic rule-based hints.
+- Restricts final qualification evidence to recent public data, with a 6-month
+  window and a 3-month preference.
 - Prechecks each email with syntax, MX, and SMTP validation before it is
   written to the Excel export.
 - Exports only accepted leads when `SMTP_PRECHECK_REQUIRED=true`.
@@ -39,13 +41,19 @@ SMTP_FROM_EMAIL=hello@yourdomain.com
 WEBSITE_PRECHECK_REQUIRED=true
 SMTP_PRECHECK_REQUIRED=true
 QUALIFICATION_ENABLED=true
+ANTHROPIC_API_KEY=your_anthropic_api_key
+ANTHROPIC_MODEL=claude-sonnet-4-20250514
+QUALIFICATION_RECENT_MONTHS=6
+QUALIFICATION_PREFERRED_RECENT_MONTHS=3
 GOOGLE_SEARCH_API_KEY=your_google_search_api_key
 GOOGLE_SEARCH_ENGINE_ID=your_programmable_search_engine_id
 ```
 
 Set `QUALIFICATION_ENABLED=false` for bulk test runs when you want to skip
-company-fit qualification entirely. If Google Custom Search credentials are not
-set, the app falls back to DuckDuckGo Search.
+company-fit qualification entirely. When qualification is enabled, the app
+expects an Anthropic API key in `.env`. If Google Custom Search credentials are
+not set, the app falls back to DuckDuckGo Search and still applies the same
+freshness filter to dated results.
 
 1. Install dependencies:
 
@@ -59,37 +67,6 @@ playwright install chromium
 ```bash
 streamlit run app.py
 ```
-
-## Deploy to Render
-
-This repo now includes a Render blueprint in `render.yaml`.
-
-Steps:
-
-1. Push this repo to GitHub.
-1. In Render, create a new Blueprint service from the repo.
-1. Render will pick up:
-
-```text
-Build Command: pip install -r requirements.txt
-Start Command: streamlit run app.py --server.address 0.0.0.0 --server.port $PORT --server.headless true
-```
-
-1. In the Render dashboard, set:
-
-```dotenv
-SMTP_FROM_EMAIL=hello@yourdomain.com
-```
-
-Notes:
-
-- Python is pinned to `3.13.2` for Render because `pandas==2.2.3` does not provide
-  Python 3.14 wheels, which causes slow or stuck source builds during deploys.
-- `streamlit==1.47.0` is pinned because older 1.44.x builds can hit the
-  upstream `SessionInfo` websocket race on hosted deployments like Render.
-- `USE_BROWSER_FALLBACK=false` is set in `render.yaml` by default to avoid Playwright/Chromium deployment issues.
-- Excel files are kept in memory and exposed through the in-app download button only.
-- If you later want browser fallback on Render, you will need an additional Playwright/Chromium setup step and a compatible Render instance image.
 
 ## Output
 

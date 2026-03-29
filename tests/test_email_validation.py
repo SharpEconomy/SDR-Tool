@@ -49,3 +49,32 @@ def test_resolve_mx_returns_empty_on_error(settings, monkeypatch) -> None:
     monkeypatch.setattr(email_module.dns.resolver, "resolve", broken)
 
     assert service._resolve_mx("example.com") == []
+
+
+def test_validate_can_skip_mx_and_smtp(settings, monkeypatch) -> None:
+    service = EmailValidatorService(settings)
+    monkeypatch.setattr(
+        email_module,
+        "validate_email",
+        lambda email, check_deliverability: SimpleNamespace(domain="example.com"),
+    )
+    monkeypatch.setattr(
+        service,
+        "_resolve_mx",
+        lambda domain: (_ for _ in ()).throw(RuntimeError("MX should not run")),
+    )
+    monkeypatch.setattr(
+        service,
+        "_smtp_probe",
+        lambda email, host: (_ for _ in ()).throw(RuntimeError("SMTP should not run")),
+    )
+
+    result = service.validate(
+        "hello@example.com",
+        include_mx_lookup=False,
+        include_smtp_probe=False,
+    )
+
+    assert result.syntax_valid is True
+    assert result.mx_valid is False
+    assert result.smtp_code is None

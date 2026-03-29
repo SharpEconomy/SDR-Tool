@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from hackindia_leads.services.fetcher import FetchResult
 from hackindia_leads.services.search import SearchResult
 from hackindia_leads.sources.base import SearchBackedSource, SourceAdapter
+from hackindia_leads.sources.custom import CustomWebsiteSource
 from hackindia_leads.sources.devpost import DevpostSource
 from hackindia_leads.sources.dorahacks import DoraHacksSource
 from hackindia_leads.sources.ethglobal import EthGlobalSource
@@ -113,6 +114,25 @@ def test_search_backed_source_filters_and_dedupes_urls() -> None:
     assert urls == ["https://example.com/a"]
 
 
+def test_custom_source_normalizes_and_dedupes_urls() -> None:
+    source = CustomWebsiteSource(
+        SimpleNamespace(),
+        SimpleNamespace(),
+        [
+            "demo.example/event",
+            "https://demo.example/event",
+            "https://two.example/hackathon?x=1",
+        ],
+    )
+
+    urls = source.discover_event_urls([], 10)
+
+    assert urls == [
+        "https://demo.example/event",
+        "https://two.example/hackathon?x=1",
+    ]
+
+
 def test_ethglobal_discover_event_urls_filters_blocked_tokens(settings) -> None:
     fetcher = SimpleNamespace(
         fetch=lambda url: FetchResult(
@@ -143,15 +163,20 @@ def test_browser_flags_for_sources(settings) -> None:
 
 
 def test_mlh_discover_event_urls_merges_listing_and_search() -> None:
+    fetched_urls = []
+
     fetcher = SimpleNamespace(
-        fetch=lambda url: FetchResult(
-            url=url,
-            status_code=200,
-            text=(
-                '<a href="https://events.mlh.io/events/1">One</a>'
-                '<a href="https://events.mlh.io/events/1">One Dup</a>'
-            ),
-            used_browser=False,
+        fetch=lambda url: (
+            fetched_urls.append(url)
+            or FetchResult(
+                url=url,
+                status_code=200,
+                text=(
+                    '<a href="https://events.mlh.io/events/1">One</a>'
+                    '<a href="https://events.mlh.io/events/1">One Dup</a>'
+                ),
+                used_browser=False,
+            )
         )
     )
     search_client = SimpleNamespace(
@@ -167,9 +192,20 @@ def test_mlh_discover_event_urls_merges_listing_and_search() -> None:
         "https://events.mlh.io/events/1",
         "https://events.mlh.io/events/2",
     ]
+    assert any("/seasons/" in url for url in fetched_urls)
 
 
 def test_build_sources_returns_expected_keys(settings) -> None:
     sources = build_sources(SimpleNamespace(), SimpleNamespace())
 
     assert set(sources.keys()) == {"ethglobal", "devpost", "dorahacks", "mlh"}
+
+
+def test_build_sources_includes_custom_when_urls_are_present(settings) -> None:
+    sources = build_sources(
+        SimpleNamespace(),
+        SimpleNamespace(),
+        ["demo.example/event"],
+    )
+
+    assert "custom" in sources

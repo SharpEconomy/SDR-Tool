@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import threading
 import time
+from datetime import date, timedelta
 from io import BytesIO
 from types import SimpleNamespace
 
@@ -11,11 +12,60 @@ from hackindia_leads.models import (
     PUBLIC_LEAD_COLUMNS,
     CompanyQualification,
     ContactCandidate,
+    ContactReview,
     EmailValidation,
     Event,
     Sponsor,
 )
 from hackindia_leads.pipeline import LeadPipeline, PipelineControl, PipelineResult
+from hackindia_leads.services.company_qualification import CompanyQualifier
+from hackindia_leads.services.search import SearchResult
+
+
+class _BrokenClaudeClient:
+    def is_configured(self) -> bool:
+        return True
+
+    def qualify(self, payload: dict[str, object]) -> dict[str, object]:
+        raise RuntimeError("claude unavailable")
+
+    def review_contacts(self, payload: dict[str, object]) -> dict[str, object]:
+        raise RuntimeError("claude unavailable")
+
+
+def _fallback_search_results(
+    query: str, recent_months: int | None = None
+) -> list[SearchResult]:
+    lowered = query.lower()
+    recent_date = date.today() - timedelta(days=25)
+    if "raised funding" in lowered or "series" in lowered or "seed" in lowered:
+        return [
+            SearchResult(
+                title="ENS raises Series A",
+                url="https://news.example/ens-funding",
+                snippet="ENS announced Series A funding and ecosystem expansion.",
+                published_at=recent_date if recent_months is not None else None,
+            )
+        ]
+    if "headquarters" in lowered or "based in" in lowered:
+        return [
+            SearchResult(
+                title="ENS headquarters",
+                url="https://ens.domains/about",
+                snippet="ENS is based in New York, United States.",
+                published_at=None,
+            )
+        ]
+    return [
+        SearchResult(
+            title="ENS developer platform",
+            url="https://ens.domains/developers",
+            snippet=(
+                "APIs, SDKs, docs, integrations, and a growing " "developer ecosystem."
+            ),
+            published_at=None,
+        )
+    ]
 
 
 def _build_event(
@@ -122,6 +172,7 @@ def test_pipeline_result_dataframe() -> None:
 
 
 def test_pipeline_run_writes_only_accepted_leads(settings, monkeypatch) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
     _stub_source_events(
         pipeline,
@@ -156,6 +207,7 @@ def test_pipeline_run_writes_only_accepted_leads(settings, monkeypatch) -> None:
 
 
 def test_pipeline_run_dedupes_duplicate_sponsors(settings, monkeypatch) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
     events = [
         _build_event(),
@@ -176,6 +228,73 @@ def test_pipeline_run_dedupes_duplicate_sponsors(settings, monkeypatch) -> None:
 
     assert len(result.rows) == 1
     assert result.rows[0].sponsor_company == "ENS"
+
+
+def test_pipeline_run_keeps_multiple_contacts_per_sponsor(
+    settings, monkeypatch
+) -> None:
+    settings.qualification_enabled = False
+    settings.max_contacts_per_company = 2
+    pipeline = LeadPipeline(settings)
+    _stub_source_events(pipeline, [_build_event()])
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[
+            _build_contact(email="first@ens.domains", linkedin_url=None),
+            _build_contact(email="second@ens.domains", linkedin_url=None),
+            _build_contact(email="third@ens.domains", linkedin_url=None),
+        ],
+    )
+    monkeypatch.setattr(
+        pipeline.validator,
+        "validate",
+        lambda email: _build_validation(),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert [row.decision_maker_email for row in result.rows] == [
+        "first@ens.domains",
+        "second@ens.domains",
+    ]
+
+
+def test_pipeline_run_dedupes_duplicate_linkedin_urls(settings, monkeypatch) -> None:
+    settings.qualification_enabled = False
+    settings.max_contacts_per_company = 3
+    pipeline = LeadPipeline(settings)
+    _stub_source_events(pipeline, [_build_event()])
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[
+            _build_contact(
+                email="first@ens.domains",
+                linkedin_url="https://linkedin.com/in/jane-doe/",
+            ),
+            _build_contact(
+                email="second@ens.domains",
+                linkedin_url="https://linkedin.com/in/jane-doe?trk=public_profile",
+            ),
+            _build_contact(
+                email="third@ens.domains",
+                linkedin_url="https://linkedin.com/in/john-doe",
+            ),
+        ],
+    )
+    monkeypatch.setattr(
+        pipeline.validator,
+        "validate",
+        lambda email: _build_validation(),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert [row.decision_maker_email for row in result.rows] == [
+        "first@ens.domains",
+        "third@ens.domains",
+    ]
 
 
 def test_pipeline_run_filters_sponsor_with_failed_fit_check(
@@ -217,6 +336,68 @@ def test_pipeline_run_filters_sponsor_with_failed_fit_check(
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
     assert result.rows == []
+
+
+def test_pipeline_run_falls_back_when_claude_is_not_configured(
+    settings, monkeypatch
+) -> None:
+    settings.anthropic_api_key = ""
+    pipeline = LeadPipeline(settings)
+    monkeypatch.setattr(
+        pipeline.qualifier.search_client,
+        "search",
+        lambda query, max_results, recent_months=None: _fallback_search_results(
+            query,
+            recent_months,
+        ),
+    )
+    _stub_source_events(pipeline, [_build_event()])
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact(linkedin_url=None)],
+        validation=_build_validation(),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert len(result.rows) == 1
+    assert "rule-based fallback used because Claude is unavailable" in (
+        result.rows[0].qualification_notes or ""
+    )
+    assert "rule-based contact fallback used because Claude is unavailable" in (
+        result.rows[0].contact_review_notes or ""
+    )
+
+
+def test_pipeline_run_falls_back_when_claude_errors(settings, monkeypatch) -> None:
+    pipeline = LeadPipeline(settings)
+    pipeline.qualifier = CompanyQualifier(
+        settings,
+        SimpleNamespace(
+            search=lambda query, max_results, recent_months=None: (
+                _fallback_search_results(query, recent_months)
+            )
+        ),
+        _BrokenClaudeClient(),
+    )
+    _stub_source_events(pipeline, [_build_event()])
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact(linkedin_url=None)],
+        validation=_build_validation(),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert len(result.rows) == 1
+    assert "rule-based fallback used after Claude error" in (
+        result.rows[0].qualification_notes or ""
+    )
+    assert "rule-based contact fallback used after Claude error" in (
+        result.rows[0].contact_review_notes or ""
+    )
 
 
 def test_pipeline_run_skips_qualification_when_disabled(settings, monkeypatch) -> None:
@@ -314,6 +495,18 @@ def test_pipeline_run_sorts_us_and_india_fit_first(settings, monkeypatch) -> Non
             accepted=True,
         ),
     )
+    monkeypatch.setattr(
+        pipeline.qualifier,
+        "review_contacts",
+        lambda sponsor, event, website, domain, qualification, contacts, validations: {
+            contact.email.lower(): ContactReview(
+                accepted=True,
+                score=80,
+                notes="Accepted by contact review.",
+            )
+            for contact in contacts
+        },
+    )
 
     result = pipeline.run(["ethglobal"], ["ai"], 2)
 
@@ -324,6 +517,7 @@ def test_pipeline_run_sorts_us_and_india_fit_first(settings, monkeypatch) -> Non
 def test_pipeline_run_skips_unaccepted_when_precheck_required(
     settings, monkeypatch
 ) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
     _stub_source_events(
         pipeline,
@@ -345,7 +539,43 @@ def test_pipeline_run_skips_unaccepted_when_precheck_required(
     assert result.rows == []
 
 
+def test_pipeline_run_skips_network_precheck_when_disabled(
+    settings, monkeypatch
+) -> None:
+    settings.qualification_enabled = False
+    settings.smtp_precheck_required = False
+    pipeline = LeadPipeline(settings)
+    _stub_source_events(pipeline, [_build_event()])
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[_build_contact(linkedin_url=None)],
+    )
+    captured = {}
+
+    def validate(email: str, **kwargs) -> EmailValidation:
+        captured["kwargs"] = kwargs
+        return EmailValidation(
+            syntax_valid=True,
+            mx_valid=False,
+            smtp_code=None,
+            smtp_message=None,
+        )
+
+    monkeypatch.setattr(pipeline.validator, "validate", validate)
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert len(result.rows) == 1
+    assert captured["kwargs"] == {
+        "include_mx_lookup": False,
+        "include_smtp_probe": False,
+    }
+    assert result.rows[0].email_accepted is False
+
+
 def test_pipeline_run_skips_invalid_website(settings, monkeypatch) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
     _stub_source_events(
         pipeline,
@@ -362,78 +592,63 @@ def test_pipeline_run_skips_invalid_website(settings, monkeypatch) -> None:
     assert result.rows == []
 
 
-def test_pipeline_runs_sponsor_checks_in_parallel(settings, monkeypatch) -> None:
+def test_pipeline_run_keeps_only_claude_accepted_contacts(
+    settings, monkeypatch
+) -> None:
     pipeline = LeadPipeline(settings)
     _stub_source_events(pipeline, [_build_event()])
-
-    active_calls = {"count": 0, "peak": 0}
-    lock = threading.Lock()
-
-    def track_concurrency(result):
-        def runner(*args, **kwargs):
-            with lock:
-                active_calls["count"] += 1
-                active_calls["peak"] = max(
-                    active_calls["peak"],
-                    active_calls["count"],
-                )
-            try:
-                time.sleep(0.05)
-                return result
-            finally:
-                with lock:
-                    active_calls["count"] -= 1
-
-        return runner
-
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "resolve_website",
-        lambda sponsor: "https://ens.domains",
-    )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "resolve_domain",
-        lambda sponsor, website: "ens.domains",
-    )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "validate_website",
-        track_concurrency(True),
-    )
-    monkeypatch.setattr(
-        pipeline.qualifier,
-        "qualify",
-        track_concurrency(
-            CompanyQualification(
-                company_segment="Web3",
-                recently_funded=True,
-                recent_funding_signal="Raised recently",
-                company_location="New York, US",
-                location_priority="US",
-                developer_adoption_need=True,
-                market_visibility_need=True,
-                qualification_notes="Good fit",
-                score=90,
-                accepted=True,
-            )
-        ),
-    )
-    monkeypatch.setattr(
-        pipeline.enricher,
-        "find_contact_candidates",
-        lambda sponsor, website, domain: [_build_contact()],
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        contacts=[
+            _build_contact(email="first@ens.domains", linkedin_url=None),
+            _build_contact(email="second@ens.domains", linkedin_url=None),
+        ],
     )
     monkeypatch.setattr(
         pipeline.validator,
         "validate",
         lambda email: _build_validation(),
     )
+    monkeypatch.setattr(
+        pipeline.qualifier,
+        "qualify",
+        lambda sponsor, event, website, domain: CompanyQualification(
+            company_segment="Web3",
+            recently_funded=True,
+            recent_funding_signal="Raised recently",
+            company_location="New York, US",
+            location_priority="US",
+            developer_adoption_need=True,
+            market_visibility_need=True,
+            qualification_notes="Good fit",
+            score=90,
+            accepted=True,
+        ),
+    )
+    monkeypatch.setattr(
+        pipeline.qualifier,
+        "review_contacts",
+        lambda sponsor, event, website, domain, qualification, contacts, validations: {
+            "first@ens.domains": ContactReview(
+                accepted=False,
+                score=10,
+                notes="Generic fallback contact.",
+            ),
+            "second@ens.domains": ContactReview(
+                accepted=True,
+                score=95,
+                notes="Best decision-maker match.",
+            ),
+        },
+    )
 
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
     assert len(result.rows) == 1
-    assert active_calls["peak"] > 1
+    assert result.rows[0].decision_maker_email == "second@ens.domains"
+    assert result.rows[0].contact_review_accepted is True
+    assert result.rows[0].contact_review_score == 95
 
 
 def test_pipeline_validates_contacts_in_parallel(settings, monkeypatch) -> None:
@@ -479,12 +694,14 @@ def test_pipeline_validates_contacts_in_parallel(settings, monkeypatch) -> None:
 
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
-    assert len(result.rows) == 1
+    assert len(result.rows) == 2
     assert result.rows[0].decision_maker_email == "first@ens.domains"
+    assert result.rows[1].decision_maker_email == "second@ens.domains"
     assert active_calls["peak"] > 1
 
 
 def test_pipeline_run_ignores_source_and_contact_errors(settings) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
     pipeline.sources = {
         "broken": SimpleNamespace(
@@ -502,6 +719,7 @@ def test_pipeline_run_ignores_source_and_contact_errors(settings) -> None:
 
 
 def test_pipeline_run_stops_before_processing_sources(settings, monkeypatch) -> None:
+    settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
     _stub_source_events(
         pipeline,

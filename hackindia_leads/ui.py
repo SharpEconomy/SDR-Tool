@@ -10,6 +10,7 @@ import streamlit as st
 from hackindia_leads.config import Settings
 from hackindia_leads.models import PUBLIC_LEAD_COLUMNS
 from hackindia_leads.pipeline import LeadPipeline, PipelineControl, PipelineResult
+from hackindia_leads.sources.custom import normalize_custom_urls
 
 SOURCE_PANEL_COLUMNS = 2
 SOURCE_PANEL_HEIGHT = 360
@@ -51,6 +52,8 @@ class ActiveRunState:
     status: str = "running"
     result: PipelineResult | None = None
     error: str | None = None
+    finished_at: float | None = None
+    completion_notice_shown: bool = False
 
 
 def render() -> None:
@@ -59,8 +62,8 @@ def render() -> None:
     st.title("HackIndia Lead Finder")
     st.caption(
         (
-            "Sponsor-lead scraper focused on recently funded Tech/AI/Web3 "
-            "companies, with global coverage and a US/India priority."
+            "Sponsor-lead scraper focused on Tech/AI/Web3 companies, using "
+            "optional Claude-backed review with a US/India priority."
         )
     )
 
@@ -81,12 +84,22 @@ def render() -> None:
         keywords_raw = st.text_input(
             "Themes", value=",".join(settings.default_keywords)
         )
-        settings.qualification_enabled = st.checkbox(
-            "Use Fit Qualification",
-            value=settings.qualification_enabled,
+        custom_urls_raw = st.text_area(
+            "Custom event URLs",
+            value="",
             help=(
-                "Turn this off for bulk test runs when you want to skip "
-                "search-based company qualification."
+                "Paste one or more hackathon or event page URLs. Each URL will be "
+                "scraped like an additional source."
+            ),
+            height=110,
+        )
+        settings.use_claude_qualification = st.checkbox(
+            "Use Claude Qualification",
+            value=settings.use_claude_qualification,
+            help=(
+                "Turn this off to force the deterministic non-LLM review flow "
+                "for this run. If Claude is unavailable, the app falls back "
+                "automatically."
             ),
         )
         limit_per_source = st.number_input(
@@ -119,21 +132,37 @@ def render() -> None:
         _render_env_status(settings)
 
     if start_clicked:
-        if not selected_sources:
-            st.error("Select at least one source.")
+        custom_urls = _parse_custom_urls(custom_urls_raw)
+        effective_sources = list(selected_sources)
+        if custom_urls:
+            effective_sources.append("custom")
+        if not effective_sources:
+            st.error("Select at least one source or enter at least one custom URL.")
             return
         if not settings.smtp_from_email:
             st.error(
                 "Set SMTP_FROM_EMAIL in your .env file before running the scraper."
             )
             return
+        if (
+            settings.qualification_enabled
+            and settings.use_claude_qualification
+            and not settings.anthropic_api_key
+        ):
+            st.warning(
+                (
+                    "ANTHROPIC_API_KEY is not set. Using the non-LLM "
+                    "fallback flow for sponsor and contact review in this run."
+                )
+            )
         keywords = [item.strip() for item in keywords_raw.split(",") if item.strip()]
         st.session_state[ACTIVE_RUN_KEY] = None
         active_run = _start_background_run(
             settings,
-            selected_sources,
+            effective_sources,
             keywords,
             int(limit_per_source),
+            custom_urls,
         )
 
     if pause_clicked and active_run is not None:
@@ -153,6 +182,7 @@ def render() -> None:
         return
 
     _sync_active_run(active_run)
+    _show_completion_notice(active_run)
     _render_run_outcome(active_run)
     source_panels = _create_source_panels(active_run.source_order)
     for source_name in active_run.source_order:
@@ -180,6 +210,7 @@ def _start_background_run(
     selected_sources: list[str],
     keywords: list[str],
     limit_per_source: int,
+    custom_urls: list[str] | None = None,
 ) -> ActiveRunState:
     controller = PipelineControl()
     progress_queue: Queue[tuple[str, object]] = Queue()
@@ -194,6 +225,7 @@ def _start_background_run(
             selected_sources,
             keywords,
             limit_per_source,
+            custom_urls,
             controller,
             progress_queue,
         ),
@@ -207,6 +239,7 @@ def _start_background_run(
         worker=worker,
         started_at=time.time(),
         estimated_total_seconds=_estimate_total_seconds(
+            settings,
             len(selected_sources),
             limit_per_source,
         ),
@@ -221,6 +254,7 @@ def _run_pipeline_worker(
     selected_sources: list[str],
     keywords: list[str],
     limit_per_source: int,
+    custom_urls: list[str] | None,
     controller: PipelineControl,
     progress_queue: Queue[tuple[str, object]],
 ) -> None:
@@ -230,6 +264,7 @@ def _run_pipeline_worker(
             selected_sources,
             keywords,
             limit_per_source,
+            custom_urls=custom_urls,
             progress_callback=lambda message: progress_queue.put(("progress", message)),
             control=controller,
         )
@@ -246,12 +281,30 @@ def _sync_active_run(active_run: ActiveRunState) -> None:
     if active_run.worker.is_alive():
         return
     if active_run.result is not None:
+        if active_run.finished_at is None:
+            active_run.finished_at = time.time()
         active_run.status = (
             "stopped" if active_run.controller.should_stop() else "completed"
         )
         return
     if active_run.status == "stopping":
         active_run.status = "stopped"
+
+
+def _show_completion_notice(active_run: ActiveRunState) -> None:
+    if active_run.completion_notice_shown:
+        return
+    if active_run.result is None or active_run.finished_at is None:
+        return
+    if active_run.status not in {"completed", "stopped"}:
+        return
+
+    elapsed_seconds = max(0, int(active_run.finished_at - active_run.started_at))
+    prefix = "Run stopped" if active_run.status == "stopped" else "Run finished"
+    st.info(
+        (f"{prefix} in {_format_duration(elapsed_seconds)}. " "Output table is ready.")
+    )
+    active_run.completion_notice_shown = True
 
 
 def _drain_progress_queue(active_run: ActiveRunState) -> None:
@@ -412,15 +465,34 @@ def _describe_run_state(active_run: ActiveRunState | None) -> str:
     return active_run.status.replace("_", " ").title()
 
 
-def _estimate_total_seconds(source_count: int, limit_per_source: int) -> int:
-    base_seconds = 20
-    per_source_seconds = 25
-    per_page_seconds = 8
+def _estimate_total_seconds(
+    settings: Settings,
+    source_count: int,
+    limit_per_source: int,
+) -> int:
+    base_seconds = 35
+    per_source_seconds = 45
+    per_page_seconds = 10
+    qualification_seconds = 6 if settings.qualification_enabled else 0
+    claude_seconds = (
+        4 if settings.qualification_enabled and settings.use_claude_qualification else 0
+    )
+    smtp_seconds = 6 if settings.smtp_precheck_required else 2
+    website_precheck_seconds = 3 if settings.website_precheck_required else 1
+    browser_fallback_seconds = 3 if settings.use_browser_fallback else 0
+    per_page_total = (
+        per_page_seconds
+        + qualification_seconds
+        + claude_seconds
+        + smtp_seconds
+        + website_precheck_seconds
+        + browser_fallback_seconds
+    )
     return max(
-        30,
+        60,
         base_seconds
         + (source_count * per_source_seconds)
-        + (source_count * limit_per_source * per_page_seconds),
+        + (source_count * limit_per_source * per_page_total),
     )
 
 
@@ -445,6 +517,10 @@ def _format_duration(total_seconds: int) -> str:
 
 def _format_source_label(source_name: str) -> str:
     return source_name.replace("_", " ").upper()
+
+
+def _parse_custom_urls(raw_value: str) -> list[str]:
+    return normalize_custom_urls(raw_value.replace(",", "\n").splitlines())
 
 
 def _create_source_panels(
@@ -581,7 +657,7 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
 
 
 def _render_env_status(settings: Settings) -> None:
-    col1, col2, col3, col4, col5 = st.columns(5)
+    col1, col2, col3, col4, col5, col6 = st.columns(6)
     col1.metric("SMTP sender", "set" if settings.smtp_from_email else "missing")
     col2.metric(
         "Website precheck", "on" if settings.website_precheck_required else "off"
@@ -592,6 +668,7 @@ def _render_env_status(settings: Settings) -> None:
         "Fit filter",
         "on" if settings.qualification_enabled else "off",
     )
+    col6.metric("Claude key", "set" if settings.anthropic_api_key else "missing")
 
 
 def _inject_styles() -> None:

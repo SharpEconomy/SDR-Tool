@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 from hackindia_leads.services import search as search_module
@@ -89,3 +90,60 @@ def test_search_client_uses_google_custom_search_when_configured(settings) -> No
     assert captured["params"]["key"] == "google-key"
     assert captured["params"]["cx"] == "engine-id"
     assert captured["params"]["num"] == 3
+
+
+def test_search_client_falls_back_to_ddgs_when_google_errors(
+    settings, monkeypatch
+) -> None:
+    settings.google_search_api_key = "google-key"
+    settings.google_search_engine_id = "engine-id"
+    recent_date = (date.today() - timedelta(days=15)).strftime("%b %d, %Y")
+    monkeypatch.setattr(
+        search_module,
+        "DDGS",
+        lambda: FakeDDGS(
+            [
+                {
+                    "title": f"Fallback result {recent_date}",
+                    "href": "https://example.com/fallback",
+                    "body": "Body text",
+                }
+            ]
+        ),
+    )
+
+    def fake_get(url, params, timeout):
+        raise RuntimeError("google failed")
+
+    client = SearchClient(settings, session=SimpleNamespace(get=fake_get))
+
+    results = client.search("example funding", max_results=3, recent_months=6)
+
+    assert [item.url for item in results] == ["https://example.com/fallback"]
+
+
+def test_search_client_filters_to_recent_dated_results(monkeypatch) -> None:
+    recent_date = (date.today() - timedelta(days=20)).strftime("%b %d, %Y")
+    stale_date = (date.today() - timedelta(days=260)).strftime("%b %d, %Y")
+    monkeypatch.setattr(
+        search_module,
+        "DDGS",
+        lambda: FakeDDGS(
+            [
+                {
+                    "title": f"Recent funding {recent_date}",
+                    "href": "https://example.com/recent",
+                    "body": "Raised a round recently.",
+                },
+                {
+                    "title": f"Old funding {stale_date}",
+                    "href": "https://example.com/old",
+                    "body": "Raised a round last year.",
+                },
+            ]
+        ),
+    )
+
+    results = SearchClient().search("query", recent_months=6)
+
+    assert [item.url for item in results] == ["https://example.com/recent"]

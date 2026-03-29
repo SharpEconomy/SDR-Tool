@@ -32,6 +32,9 @@ def _build_lead(**overrides: object) -> Lead:
         "qualification_notes": "Developer ecosystem push after recent funding.",
         "qualification_score": 91,
         "qualification_accepted": True,
+        "contact_review_notes": "Strong partnerships owner.",
+        "contact_review_score": 88,
+        "contact_review_accepted": True,
     }
     lead_kwargs.update(overrides)
     return Lead(**lead_kwargs)
@@ -70,6 +73,7 @@ def test_lead_as_row_contains_expected_keys() -> None:
     assert row["company_segment"] == "Web3"
     assert row["decision_maker_email"] == "jane@ens.domains"
     assert row["email_accepted"] is True
+    assert row["contact_review_accepted"] is True
 
 
 def test_lead_as_export_row_excludes_internal_validation_fields() -> None:

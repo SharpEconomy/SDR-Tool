@@ -13,7 +13,13 @@ class EmailValidatorService:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
-    def validate(self, email: str) -> EmailValidation:
+    def validate(
+        self,
+        email: str,
+        *,
+        include_mx_lookup: bool = True,
+        include_smtp_probe: bool = True,
+    ) -> EmailValidation:
         syntax_valid = False
         mx_valid = False
         smtp_code: int | None = None
@@ -26,10 +32,12 @@ class EmailValidatorService:
         except EmailNotValidError:
             return EmailValidation(False, False, None, None)
 
-        mx_hosts = self._resolve_mx(domain)
-        mx_valid = bool(mx_hosts)
+        mx_hosts: list[str] = []
+        if include_mx_lookup:
+            mx_hosts = self._resolve_mx(domain)
+            mx_valid = bool(mx_hosts)
 
-        if mx_hosts and self.settings.smtp_from_email:
+        if include_smtp_probe and mx_hosts and self.settings.smtp_from_email:
             smtp_code, smtp_message = self._smtp_probe(email, mx_hosts[0])
 
         return EmailValidation(
