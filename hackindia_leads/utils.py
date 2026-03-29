@@ -8,6 +8,15 @@ def normalize_whitespace(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
+def clean_company_name(value: str) -> str:
+    cleaned = normalize_whitespace(value)
+    if not cleaned:
+        return ""
+    cleaned = re.sub(r"\b(?:logo|page)\b$", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^go to\s+", "", cleaned, flags=re.IGNORECASE)
+    return normalize_whitespace(cleaned)
+
+
 def dedupe_keep_order(items: list[str]) -> list[str]:
     seen: set[str] = set()
     output: list[str] = []
@@ -60,7 +69,7 @@ def is_likely_prize_label(value: str) -> bool:
 
 
 def looks_like_company_name(value: str) -> bool:
-    cleaned = normalize_whitespace(value)
+    cleaned = clean_company_name(value)
     if len(cleaned) < 2 or len(cleaned) > 80:
         return False
     if is_likely_prize_label(cleaned):
@@ -84,7 +93,21 @@ def looks_like_company_name(value: str) -> bool:
         "tracks",
         "prize",
         "prizes",
+        "documentation",
+        "developer documentation",
+        "register today",
+        "reach out to us",
+        "telegram chat",
+        "here",
     }
     if cleaned.lower() in blocked_tokens:
+        return False
+    blocked_fragments = (
+        "interested in partnering",
+        "reach out to us",
+        "project submission dates",
+        "some important reminders",
+    )
+    if any(fragment in cleaned.lower() for fragment in blocked_fragments):
         return False
     return any(char.isalpha() for char in cleaned)

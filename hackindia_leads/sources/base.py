@@ -9,8 +9,10 @@ from bs4 import BeautifulSoup
 
 from hackindia_leads.models import Event, Sponsor
 from hackindia_leads.services.fetcher import PageFetcher
+from hackindia_leads.services.openai_client import OpenAIQualificationClient
 from hackindia_leads.services.search import SearchClient
 from hackindia_leads.utils import (
+    clean_company_name,
     dedupe_keep_order,
     extract_domain,
     is_likely_prize_label,
@@ -27,12 +29,52 @@ PLATFORM_DOMAINS = {
     "events.mlh.io",
     "organize.mlh.io",
 }
+NOISE_PATH_HINTS = (
+    "/about",
+    "/contact",
+    "/privacy",
+    "/terms",
+    "/career",
+    "/internships",
+    "/forum",
+    "/ambassadors",
+    "/ecosystem",
+    "/partners",
+    "/companies",
+    "/colleges",
+    "/faq",
+    "/news",
+    "/register",
+    "/login",
+    "/sitemap",
+)
+SPONSOR_CTA_HINTS = (
+    "partner with",
+    "host a hackathon",
+    "join thousands",
+    "ready to partner",
+    "contact",
+    "register",
+)
+SPONSOR_NOISE_NAME_HINTS = (
+    "find more",
+    "view ",
+    "managed by",
+    "go to ",
+    "privacy policy",
+    "terms of service",
+    "schedule",
+    "rules",
+    "beginner friendly",
+    "low/no code",
+)
 
 
 class SourceAdapter(ABC):
     def __init__(self, fetcher: PageFetcher, search_client: SearchClient) -> None:
         self.fetcher = fetcher
         self.search_client = search_client
+        self.openai_client = self._build_openai_client(fetcher)
 
     @property
     @abstractmethod
@@ -89,6 +131,7 @@ class SourceAdapter(ABC):
         )
         summary = self._summary(soup)
         sponsors = self.extract_sponsors(url, soup, html)
+        sponsors = self._adapt_sponsors_if_needed(url, soup, title, sponsors)
         return Event(
             source=self.name, url=url, title=title, summary=summary, sponsors=sponsors
         )
@@ -111,38 +154,53 @@ class SourceAdapter(ABC):
             ).lower()
             if not any(token in heading_text for token in SPONSOR_HEADINGS):
                 continue
-            parent = heading.parent
-            if parent is None:
+            section_nodes = self._section_nodes_for_heading(heading)
+            if not section_nodes:
                 continue
             is_prize_section = any(
                 token in heading_text for token in ("prize", "bounty")
             )
 
-            for anchor in parent.find_all("a", href=True):
-                anchor_text = self._anchor_company_name(anchor)
-                href = urljoin(url, anchor["href"])
-                domain = extract_domain(href)
-                if looks_like_company_name(anchor_text):
-                    sponsors.append(
-                        Sponsor(name=anchor_text, website=href, evidence=heading_text)
-                    )
-                elif domain and domain not in PLATFORM_DOMAINS:
-                    company = self._domain_to_company(domain)
-                    sponsors.append(
-                        Sponsor(name=company, website=href, evidence=heading_text)
-                    )
+            for node in section_nodes:
+                for anchor in node.find_all("a", href=True):
+                    anchor_text = self._anchor_company_name(anchor)
+                    href = urljoin(url, anchor["href"])
+                    domain = extract_domain(href)
+                    if looks_like_company_name(anchor_text):
+                        sponsors.append(
+                            Sponsor(
+                                name=clean_company_name(anchor_text),
+                                website=href,
+                                evidence=heading_text,
+                            )
+                        )
+                    elif domain and domain not in PLATFORM_DOMAINS:
+                        company = self._domain_to_company(domain)
+                        sponsors.append(
+                            Sponsor(
+                                name=clean_company_name(company),
+                                website=href,
+                                evidence=heading_text,
+                            )
+                        )
 
             if is_prize_section:
                 continue
             nearby_text = dedupe_keep_order(
                 [
                     normalize_whitespace(item.get_text(" ", strip=True))
-                    for item in parent.find_all(["li", "p", "span", "div"])
+                    for node in section_nodes
+                    for item in node.find_all(["li", "p", "span", "div"])
                 ]
             )
             for item in nearby_text[:25]:
                 if looks_like_company_name(item) and not is_likely_prize_label(item):
-                    sponsors.append(Sponsor(name=item, evidence=heading_text))
+                    sponsors.append(
+                        Sponsor(
+                            name=clean_company_name(item),
+                            evidence=heading_text,
+                        )
+                    )
         return self._dedupe_sponsors(sponsors)
 
     def extract_sponsors_from_jsonish(self, html: str) -> list[Sponsor]:
@@ -162,7 +220,16 @@ class SourceAdapter(ABC):
                     evidence="embedded-json",
                 )
             )
-        return self._dedupe_sponsors(sponsors)
+        cleaned_sponsors = [
+            Sponsor(
+                name=clean_company_name(sponsor.name),
+                website=sponsor.website,
+                evidence=sponsor.evidence,
+            )
+            for sponsor in sponsors
+            if clean_company_name(sponsor.name)
+        ]
+        return self._dedupe_sponsors(cleaned_sponsors)
 
     def _summary(self, soup: BeautifulSoup) -> str:
         meta = soup.find("meta", attrs={"name": "description"})
@@ -199,6 +266,112 @@ class SourceAdapter(ABC):
             if looks_like_company_name(candidate):
                 return candidate
         return ""
+
+    def _section_nodes_for_heading(self, heading) -> list:
+        start = heading.parent or heading
+        nodes = [start]
+        sibling_count = 0
+        for sibling in start.next_siblings:
+            if sibling_count >= 3:
+                break
+            if getattr(sibling, "name", None) is None:
+                continue
+            if sibling.find(re.compile("^h[1-6]$")) is not None:
+                break
+            nodes.append(sibling)
+            sibling_count += 1
+        return nodes
+
+    def _build_openai_client(
+        self, fetcher: PageFetcher
+    ) -> OpenAIQualificationClient | None:
+        if hasattr(fetcher, "settings"):
+            return OpenAIQualificationClient(fetcher.settings)
+        return None
+
+    def _adapt_sponsors_if_needed(
+        self,
+        url: str,
+        soup: BeautifulSoup,
+        title: str,
+        sponsors: list[Sponsor],
+    ) -> list[Sponsor]:
+        if self.openai_client is None:
+            return sponsors
+        if not self.openai_client.is_configured():
+            return sponsors
+        if not self._needs_adaptive_sponsor_fallback(sponsors):
+            return sponsors
+
+        try:
+            adapted = self._extract_sponsors_with_openai(url, soup, title)
+        except Exception:
+            return sponsors
+        return adapted or sponsors
+
+    def _needs_adaptive_sponsor_fallback(self, sponsors: list[Sponsor]) -> bool:
+        if not sponsors:
+            return True
+        suspicious = sum(
+            1 for sponsor in sponsors if self._looks_like_noise_sponsor(sponsor)
+        )
+        return suspicious >= max(1, (len(sponsors) + 1) // 2)
+
+    def _looks_like_noise_sponsor(self, sponsor: Sponsor) -> bool:
+        lowered_name = sponsor.name.lower()
+        if any(token in lowered_name for token in SPONSOR_CTA_HINTS):
+            return True
+        if any(token in lowered_name for token in SPONSOR_NOISE_NAME_HINTS):
+            return True
+        website = sponsor.website or ""
+        lowered_website = website.lower()
+        domain = extract_domain(website)
+        if domain in PLATFORM_DOMAINS:
+            return True
+        if any(token in lowered_website for token in NOISE_PATH_HINTS):
+            return True
+        return False
+
+    def _extract_sponsors_with_openai(
+        self,
+        url: str,
+        soup: BeautifulSoup,
+        title: str,
+    ) -> list[Sponsor]:
+        headings = [
+            normalize_whitespace(heading.get_text(" ", strip=True))
+            for heading in soup.find_all(["h1", "h2", "h3", "h4"])
+        ]
+        headings = [heading for heading in headings if heading][:25]
+        links = []
+        for anchor in soup.find_all("a", href=True):
+            text = normalize_whitespace(anchor.get_text(" ", strip=True))
+            href = urljoin(url, anchor["href"])
+            if not text and not href:
+                continue
+            links.append({"text": text, "href": href})
+            if len(links) >= 60:
+                break
+
+        body_text = normalize_whitespace(soup.get_text(" ", strip=True))
+        extracted = self.openai_client.extract_sponsors(
+            {
+                "event_url": url,
+                "page_title": title,
+                "headings": headings,
+                "links": links,
+                "body_excerpt": body_text[:6000],
+            }
+        )
+        sponsors = [
+            Sponsor(
+                name=item["name"],
+                website=item.get("website"),
+                evidence=item.get("evidence"),
+            )
+            for item in extracted
+        ]
+        return self._dedupe_sponsors(sponsors)
 
     def _domain_to_company(self, domain: str) -> str:
         parts = [part for part in domain.split(".") if part]

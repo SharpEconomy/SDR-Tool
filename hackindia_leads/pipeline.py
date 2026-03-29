@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 from collections.abc import Callable
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from io import BytesIO
 
@@ -11,6 +11,7 @@ import pandas as pd
 
 from hackindia_leads.config import Settings
 from hackindia_leads.models import (
+    FILTERED_SPONSOR_COLUMNS,
     PUBLIC_LEAD_COLUMNS,
     CompanyQualification,
     ContactCandidate,
@@ -34,10 +35,19 @@ class PipelineResult:
     rows: list[Lead]
     export_name: str
     export_bytes: bytes
+    filtered_sponsors: list[dict[str, str | None]] = field(default_factory=list)
+    filtered_export_name: str | None = None
+    filtered_export_bytes: bytes = b""
 
     def dataframe(self) -> pd.DataFrame:
         return pd.DataFrame(
             [row.as_export_row() for row in self.rows], columns=PUBLIC_LEAD_COLUMNS
+        )
+
+    def filtered_sponsors_dataframe(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            self.filtered_sponsors,
+            columns=FILTERED_SPONSOR_COLUMNS,
         )
 
 
@@ -81,6 +91,8 @@ class LeadPipeline:
         self.qualifier = CompanyQualifier(settings, self.search_client)
         self.validator = EmailValidatorService(settings)
         self._progress_lock = threading.Lock()
+        self._filtered_sponsors: list[dict[str, str | None]] = []
+        self._filtered_sponsors_lock = threading.Lock()
 
     def run(
         self,
@@ -91,6 +103,7 @@ class LeadPipeline:
         progress_callback: Callable[[str], None] | None = None,
         control: PipelineControl | None = None,
     ) -> PipelineResult:
+        self._filtered_sponsors = []
         sources = self._build_sources(custom_urls)
         self._emit(progress_callback, "Starting scrape run")
         if not self._checkpoint(control):
@@ -104,7 +117,6 @@ class LeadPipeline:
             progress_callback,
             control,
         )
-
         sponsor_jobs: list[tuple[str, Event, Sponsor]] = []
         for source_name, events in source_results:
             if not self._checkpoint(control):
@@ -268,6 +280,14 @@ class LeadPipeline:
             domain = self.enricher.resolve_domain(sponsor, website)
             website_is_valid = self.enricher.validate_website(website)
             if self.settings.website_precheck_required and not website_is_valid:
+                self._record_filtered_sponsor(
+                    source_name,
+                    event,
+                    sponsor,
+                    website,
+                    outcome="skipped",
+                    reason="invalid website",
+                )
                 self._emit(
                     progress_callback,
                     (
@@ -277,6 +297,14 @@ class LeadPipeline:
                 )
                 return []
         except Exception as exc:
+            self._record_filtered_sponsor(
+                source_name,
+                event,
+                sponsor,
+                None,
+                outcome="skipped",
+                reason=f"processing error: {exc}",
+            )
             self._emit(
                 progress_callback,
                 f"{source_name}: skipped sponsor '{sponsor.name}' ({exc})",
@@ -292,6 +320,14 @@ class LeadPipeline:
             progress_callback,
         )
         if qualification is not None and not qualification.accepted:
+            self._record_filtered_sponsor(
+                source_name,
+                event,
+                sponsor,
+                website,
+                outcome="filtered",
+                reason="fit filter",
+            )
             self._emit(
                 progress_callback,
                 f"{source_name}: filtered sponsor '{sponsor.name}' by fit filter",
@@ -301,6 +337,14 @@ class LeadPipeline:
         try:
             contacts = self.enricher.find_contact_candidates(sponsor, website, domain)
         except Exception as exc:
+            self._record_filtered_sponsor(
+                source_name,
+                event,
+                sponsor,
+                website,
+                outcome="skipped",
+                reason=f"contact lookup error: {exc}",
+            )
             self._emit(
                 progress_callback,
                 f"{source_name}: skipped sponsor '{sponsor.name}' ({exc})",
@@ -331,6 +375,21 @@ class LeadPipeline:
         progress_callback: Callable[[str], None] | None,
         control: PipelineControl | None,
     ) -> list[Lead]:
+        if not contacts:
+            self._record_filtered_sponsor(
+                source_name,
+                event,
+                sponsor,
+                website,
+                outcome="filtered",
+                reason="no contact candidates found",
+            )
+            self._emit(
+                progress_callback,
+                f"{source_name}: filtered out '{sponsor.name}' during precheck",
+            )
+            return []
+
         validations_by_email = self._validate_contacts(
             source_name,
             sponsor,
@@ -346,6 +405,14 @@ class LeadPipeline:
             validations_by_email,
         )
         if not candidate_contacts:
+            self._record_filtered_sponsor(
+                source_name,
+                event,
+                sponsor,
+                website,
+                outcome="filtered",
+                reason="no contacts passed email precheck",
+            )
             self._emit(
                 progress_callback,
                 f"{source_name}: filtered out '{sponsor.name}' during precheck",
@@ -404,6 +471,14 @@ class LeadPipeline:
         if selected_leads:
             return selected_leads
 
+        self._record_filtered_sponsor(
+            source_name,
+            event,
+            sponsor,
+            website,
+            outcome="filtered",
+            reason="no accepted contacts after final review",
+        )
         self._emit(
             progress_callback,
             (
@@ -661,6 +736,47 @@ class LeadPipeline:
             ).to_excel(writer, index=False, sheet_name="Leads")
         return export_name, buffer.getvalue()
 
+    def _build_filtered_sponsors_excel(
+        self,
+        filtered_sponsors: list[dict[str, str | None]],
+    ) -> tuple[str | None, bytes]:
+        if not filtered_sponsors:
+            return None, b""
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        export_name = f"hackindia_filtered_sponsors_{timestamp}.xlsx"
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            pd.DataFrame(
+                filtered_sponsors,
+                columns=FILTERED_SPONSOR_COLUMNS,
+            ).to_excel(writer, index=False, sheet_name="Filtered Sponsors")
+        return export_name, buffer.getvalue()
+
+    def _record_filtered_sponsor(
+        self,
+        source_name: str,
+        event: Event,
+        sponsor: Sponsor,
+        website: str | None,
+        *,
+        outcome: str,
+        reason: str,
+    ) -> None:
+        with self._filtered_sponsors_lock:
+            self._filtered_sponsors.append(
+                {
+                    "source": source_name,
+                    "event_name": event.title,
+                    "event_url": event.url,
+                    "sponsor_company": sponsor.name,
+                    "sponsor_website": website or sponsor.website,
+                    "evidence": sponsor.evidence,
+                    "outcome": outcome,
+                    "reason": reason,
+                }
+            )
+
     def _finish_run(
         self,
         leads: list[Lead],
@@ -671,6 +787,10 @@ class LeadPipeline:
         ordered_leads = sorted(leads, key=self._lead_sort_key, reverse=True)
         unique_leads = self._dedupe_leads(ordered_leads)
         export_name, export_bytes = self._build_excel(unique_leads)
+        filtered_sponsors = list(self._filtered_sponsors)
+        filtered_export_name, filtered_export_bytes = (
+            self._build_filtered_sponsors_excel(filtered_sponsors)
+        )
         if stopped:
             self._emit(
                 progress_callback,
@@ -691,6 +811,9 @@ class LeadPipeline:
             rows=unique_leads,
             export_name=export_name,
             export_bytes=export_bytes,
+            filtered_sponsors=filtered_sponsors,
+            filtered_export_name=filtered_export_name,
+            filtered_export_bytes=filtered_export_bytes,
         )
 
     def _checkpoint(self, control: PipelineControl | None) -> bool:

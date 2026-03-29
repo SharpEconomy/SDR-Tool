@@ -88,10 +88,19 @@ class FakeWorker:
 
 
 class FakeResult:
-    def __init__(self, export_name: str, export_bytes: bytes, rows=None) -> None:
+    def __init__(
+        self,
+        export_name: str,
+        export_bytes: bytes,
+        rows=None,
+        filtered_export_name=None,
+        filtered_export_bytes=b"",
+    ) -> None:
         self.rows = [] if rows is None else rows
         self.export_name = export_name
         self.export_bytes = export_bytes
+        self.filtered_export_name = filtered_export_name
+        self.filtered_export_bytes = filtered_export_bytes
 
     def dataframe(self):
         return "FRAME"
@@ -119,6 +128,7 @@ class FakeStreamlit:
         self.warnings = []
         self.infos = []
         self.downloads = []
+        self.dataframes = []
         self.columns_created = []
         self.containers = []
         self.markdowns = []
@@ -181,8 +191,10 @@ class FakeStreamlit:
         self.successes.append(text)
 
     def dataframe(self, frame, use_container_width, height) -> None:
-        self.dataframe_frame = frame
-        self.dataframe_height = height
+        self.dataframes.append((frame, height))
+        if not hasattr(self, "dataframe_frame"):
+            self.dataframe_frame = frame
+            self.dataframe_height = height
         self.events.append("dataframe")
 
     def download_button(
@@ -207,6 +219,8 @@ def _build_active_run(
     status="completed",
     alive=False,
     rows=None,
+    filtered_export_name=None,
+    filtered_export_bytes=b"",
     started_at=0.0,
     estimated_total_seconds=120,
     finished_at=None,
@@ -225,7 +239,13 @@ def _build_active_run(
         started_at=started_at,
         estimated_total_seconds=estimated_total_seconds,
         status=status,
-        result=FakeResult(export_name, b"excel-bytes", rows=rows),
+        result=FakeResult(
+            export_name,
+            b"excel-bytes",
+            rows=rows,
+            filtered_export_name=filtered_export_name,
+            filtered_export_bytes=filtered_export_bytes,
+        ),
         finished_at=finished_at,
         completion_notice_shown=completion_notice_shown,
     )
@@ -515,6 +535,22 @@ def test_render_shows_non_empty_loading_table_while_running(
         for text, _ in fake_st.markdowns
         for column in ui.PUBLIC_LEAD_COLUMNS
     )
+
+
+def test_render_shows_filtered_sponsors_download(settings, monkeypatch) -> None:
+    fake_st = FakeStreamlit()
+    monkeypatch.setattr(ui, "st", fake_st)
+    monkeypatch.setattr(ui.Settings, "load", lambda: settings)
+    fake_st.session_state[ui.ACTIVE_RUN_KEY] = _build_active_run(
+        "result.xlsx",
+        rows=[],
+        filtered_export_name="filtered.xlsx",
+        filtered_export_bytes=b"filtered-bytes",
+    )
+
+    ui.render()
+
+    assert fake_st.downloads == ["result.xlsx", "filtered.xlsx"]
 
 
 def test_render_stop_button_requests_stop(

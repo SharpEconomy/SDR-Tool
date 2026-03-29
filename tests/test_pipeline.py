@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pandas as pd
 
 from hackindia_leads.models import (
+    FILTERED_SPONSOR_COLUMNS,
     PUBLIC_LEAD_COLUMNS,
     CompanyQualification,
     ContactCandidate,
@@ -171,6 +172,31 @@ def test_pipeline_result_dataframe() -> None:
     assert frame.columns.tolist() == PUBLIC_LEAD_COLUMNS
 
 
+def test_pipeline_result_filtered_sponsors_dataframe() -> None:
+    result = PipelineResult(
+        rows=[],
+        export_name="empty.xlsx",
+        export_bytes=b"",
+        filtered_sponsors=[
+            {
+                "source": "ethglobal",
+                "event_name": "ETHGlobal Mumbai",
+                "event_url": "https://ethglobal.com/events/mumbai",
+                "sponsor_company": "ENS",
+                "sponsor_website": "https://ens.domains",
+                "evidence": "embedded-json",
+                "outcome": "filtered",
+                "reason": "fit filter",
+            }
+        ],
+    )
+
+    frame = result.filtered_sponsors_dataframe()
+
+    assert frame.columns.tolist() == FILTERED_SPONSOR_COLUMNS
+    assert frame.loc[0, "sponsor_company"] == "ENS"
+
+
 def test_pipeline_run_writes_only_accepted_leads(settings, monkeypatch) -> None:
     settings.qualification_enabled = False
     pipeline = LeadPipeline(settings)
@@ -199,11 +225,69 @@ def test_pipeline_run_writes_only_accepted_leads(settings, monkeypatch) -> None:
 
     assert len(result.rows) == 1
     assert result.rows[0].decision_maker_email == "jane@ens.domains"
+    assert result.filtered_sponsors == []
+    assert result.filtered_export_bytes == b""
     assert result.export_name.startswith("hackindia_leads_")
     assert result.export_name.endswith(".xlsx")
     exported_frame = pd.read_excel(BytesIO(result.export_bytes))
     assert exported_frame.columns.tolist() == PUBLIC_LEAD_COLUMNS
     assert exported_frame.loc[0, "decision_maker_email"] == "jane@ens.domains"
+
+
+def test_pipeline_run_exports_filtered_sponsors(settings, monkeypatch) -> None:
+    pipeline = LeadPipeline(settings)
+    _stub_source_events(
+        pipeline,
+        [
+            _build_event(
+                sponsors=[Sponsor(name="Example", website="https://example.com")]
+            )
+        ],
+    )
+    _stub_enrichment(
+        pipeline,
+        monkeypatch,
+        website="https://example.com",
+        domain="example.com",
+        website_is_valid=True,
+    )
+    monkeypatch.setattr(
+        pipeline.qualifier,
+        "qualify",
+        lambda sponsor, event, website, domain: CompanyQualification(
+            company_segment="Other",
+            recently_funded=False,
+            recent_funding_signal="No funding found",
+            company_location="Unknown",
+            location_priority="Unknown",
+            developer_adoption_need=False,
+            market_visibility_need=False,
+            qualification_notes="Not a fit.",
+            score=12,
+            accepted=False,
+        ),
+    )
+
+    result = pipeline.run(["ethglobal"], ["web3"], 1)
+
+    assert result.rows == []
+    assert result.filtered_sponsors == [
+        {
+            "source": "ethglobal",
+            "event_name": "ETHGlobal Mumbai",
+            "event_url": "https://ethglobal.com/events/mumbai",
+            "sponsor_company": "Example",
+            "sponsor_website": "https://example.com",
+            "evidence": None,
+            "outcome": "filtered",
+            "reason": "fit filter",
+        }
+    ]
+    assert result.filtered_export_name is not None
+    assert result.filtered_export_name.endswith(".xlsx")
+    filtered_frame = pd.read_excel(BytesIO(result.filtered_export_bytes))
+    assert filtered_frame.columns.tolist() == FILTERED_SPONSOR_COLUMNS
+    assert filtered_frame.loc[0, "reason"] == "fit filter"
 
 
 def test_pipeline_run_dedupes_duplicate_sponsors(settings, monkeypatch) -> None:

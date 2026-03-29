@@ -13,6 +13,29 @@ class DevpostSource(SearchBackedSource):
     def name(self) -> str:
         return "devpost"
 
+    def discover_event_urls(self, keywords: list[str], limit: int) -> list[str]:
+        urls: list[str] = []
+        per_keyword = max(3, limit)
+        ranked_urls: list[tuple[int, str]] = []
+        seen: set[str] = set()
+        for keyword in keywords:
+            query = self.query_format.format(keyword=keyword)
+            for result in self.search_client.search(query, max_results=per_keyword):
+                normalized = self._normalize_event_url(result.url)
+                if not self.accepts_event_url(normalized):
+                    continue
+                if normalized in seen:
+                    continue
+                seen.add(normalized)
+                ranked_urls.append((self.url_priority(normalized), normalized))
+
+        ranked_urls.sort(key=lambda item: (item[0], item[1]))
+        for _, url in ranked_urls:
+            urls.append(url)
+            if len(urls) >= limit:
+                break
+        return urls
+
     def accepts_event_url(self, url: str) -> bool:
         parsed = urlparse(url)
         host = parsed.netloc.lower()
@@ -28,3 +51,8 @@ class DevpostSource(SearchBackedSource):
 
     def should_use_browser(self, url: str) -> bool:
         return True
+
+    def _normalize_event_url(self, url: str) -> str:
+        parsed = urlparse(url)
+        scheme = parsed.scheme or "https"
+        return f"{scheme}://{parsed.netloc}/"

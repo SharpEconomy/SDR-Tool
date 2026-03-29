@@ -94,12 +94,16 @@ Expected columns:
 - `evidence`
 - `qualification_notes`
 
-## Extending to more websites later
+## Adaptive source handling
 
-Add a new source adapter inside `hackindia_leads/sources/` and register it in `hackindia_leads/sources/registry.py`.
+The scraper now uses a shared adaptive sponsor extractor for every source:
 
-The simplest path is:
+- It first tries the deterministic HTML parser.
+- If the page has no sponsors or mostly noisy/non-company matches, it falls back
+  to the OpenAI sponsor extractor automatically.
+- Custom URLs can therefore be used for unfamiliar event websites without
+  adding source-specific parsing code.
 
-1. Subclass `SearchBackedSource` for search-driven discovery.
-2. Override `discover_event_urls()` if the site has a stable listing page.
-3. Override `extract_sponsors()` if the site uses a source-specific JSON blob or special markup.
+You still may want a dedicated source adapter only when you need automatic event
+discovery for a brand-new platform at scale. Sponsor extraction itself is no
+longer tied to per-site code.

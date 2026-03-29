@@ -5,10 +5,7 @@ from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
 
-from hackindia_leads.models import Event, Sponsor
-from hackindia_leads.services.openai_client import OpenAIQualificationClient
-from hackindia_leads.sources.base import SourceAdapter
-from hackindia_leads.utils import normalize_whitespace
+from hackindia_leads.sources.base import NOISE_PATH_HINTS, SourceAdapter
 
 COMMON_EVENT_INDEX_PATHS = (
     "/hackathons",
@@ -26,33 +23,6 @@ EVENT_URL_HINTS = (
     "summit",
     "sprint",
     "cup",
-)
-NOISE_PATH_HINTS = (
-    "/about",
-    "/contact",
-    "/privacy",
-    "/terms",
-    "/career",
-    "/internships",
-    "/forum",
-    "/ambassadors",
-    "/ecosystem",
-    "/partners",
-    "/companies",
-    "/colleges",
-    "/faq",
-    "/news",
-    "/register",
-    "/login",
-    "/sitemap",
-)
-SPONSOR_CTA_HINTS = (
-    "partner with",
-    "host a hackathon",
-    "join thousands",
-    "ready to partner",
-    "contact",
-    "register",
 )
 
 
@@ -86,10 +56,6 @@ class CustomWebsiteSource(SourceAdapter):
         self._urls = normalize_custom_urls(urls)
         if openai_client is not None:
             self.openai_client = openai_client
-        elif hasattr(fetcher, "settings"):
-            self.openai_client = OpenAIQualificationClient(fetcher.settings)
-        else:
-            self.openai_client = None
 
     @property
     def name(self) -> str:
@@ -109,24 +75,6 @@ class CustomWebsiteSource(SourceAdapter):
                     return discovered
 
         return discovered[:limit]
-
-    def parse_event(self, url: str, html: str) -> Event | None:
-        event = super().parse_event(url, html)
-        if event is None or self.openai_client is None:
-            return event
-        if not self.openai_client.is_configured():
-            return event
-        if event.sponsors and not self._needs_openai_sponsor_fallback(event.sponsors):
-            return event
-
-        try:
-            sponsors = self._extract_sponsors_with_openai(url, html, event.title)
-        except Exception:
-            return event
-        if not sponsors:
-            return event
-        event.sponsors = sponsors
-        return event
 
     def _candidate_urls_for_seed(self, seed_url: str) -> list[str]:
         pages_to_scan = [seed_url]
@@ -181,56 +129,3 @@ class CustomWebsiteSource(SourceAdapter):
         hackathon_bonus = 0 if "hackathon" in lowered else 1
         depth = -len([part for part in urlparse(url).path.split("/") if part])
         return (year_bonus, hackathon_bonus, depth, lowered)
-
-    def _needs_openai_sponsor_fallback(self, sponsors: list[Sponsor]) -> bool:
-        if not sponsors:
-            return True
-        return all(
-            any(token in sponsor.name.lower() for token in SPONSOR_CTA_HINTS)
-            or (
-                sponsor.website is not None
-                and any(token in sponsor.website.lower() for token in NOISE_PATH_HINTS)
-            )
-            for sponsor in sponsors
-        )
-
-    def _extract_sponsors_with_openai(
-        self,
-        url: str,
-        html: str,
-        title: str,
-    ) -> list[Sponsor]:
-        soup = BeautifulSoup(html, "html.parser")
-        headings = [
-            normalize_whitespace(heading.get_text(" ", strip=True))
-            for heading in soup.find_all(["h1", "h2", "h3", "h4"])
-        ]
-        headings = [heading for heading in headings if heading][:25]
-        links = []
-        for anchor in soup.find_all("a", href=True):
-            text = normalize_whitespace(anchor.get_text(" ", strip=True))
-            href = urljoin(url, anchor["href"])
-            if not text and not href:
-                continue
-            links.append({"text": text, "href": href})
-            if len(links) >= 60:
-                break
-
-        body_text = normalize_whitespace(soup.get_text(" ", strip=True))
-        payload = {
-            "event_url": url,
-            "page_title": title,
-            "headings": headings,
-            "links": links,
-            "body_excerpt": body_text[:6000],
-        }
-        extracted = self.openai_client.extract_sponsors(payload)
-        sponsors = [
-            Sponsor(
-                name=item["name"],
-                website=item.get("website"),
-                evidence=item.get("evidence"),
-            )
-            for item in extracted
-        ]
-        return self._dedupe_sponsors(sponsors)

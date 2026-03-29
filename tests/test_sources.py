@@ -86,6 +86,101 @@ def test_parse_event_ignores_prize_labels_and_uses_logo_alt_text() -> None:
     assert [s.name for s in event.sponsors] == ["Impetus", "Amazon Web Services"]
 
 
+def test_parse_event_strips_logo_suffix_from_sponsor_names() -> None:
+    html = """
+    <html>
+      <head><title>Logo Event</title></head>
+      <body>
+        <section>
+          <h2>Partners</h2>
+          <a href="https://ens.domains">ENS logo</a>
+          <a href="https://world.org">World logo</a>
+        </section>
+      </body>
+    </html>
+    """
+    source = DummySource(SimpleNamespace(), SimpleNamespace())
+
+    event = source.parse_event("https://events.example/1", html)
+
+    assert event is not None
+    assert [s.name for s in event.sponsors] == ["ENS", "World"]
+
+
+def test_parse_event_extracts_sponsors_from_sibling_section() -> None:
+    html = """
+    <html>
+      <head><title>Sibling Sponsors</title></head>
+      <body>
+        <div class="section-title">
+          <h3>Hackathon Sponsors</h3>
+        </div>
+        <div class="sponsor-tiles">
+          <a href="https://openai.com">OpenAI</a>
+          <a href="https://stripe.com">Stripe</a>
+        </div>
+      </body>
+    </html>
+    """
+    source = DummySource(SimpleNamespace(), SimpleNamespace())
+
+    event = source.parse_event("https://events.example/1", html)
+
+    assert event is not None
+    assert [s.name for s in event.sponsors] == ["OpenAI", "Stripe"]
+
+
+def test_parse_event_uses_adaptive_fallback_for_noisy_sponsor_sections(
+    settings,
+) -> None:
+    class FakeOpenAIClient:
+        def is_configured(self) -> bool:
+            return True
+
+        def extract_sponsors(self, payload):
+            return [
+                {
+                    "name": "Salesforce",
+                    "website": "https://salesforce.com",
+                    "evidence": "hackathon sponsors",
+                },
+                {
+                    "name": "AWS",
+                    "website": "https://aws.amazon.com",
+                    "evidence": "hackathon sponsors",
+                },
+            ]
+
+    fetcher = SimpleNamespace(settings=settings)
+    source = DummySource(fetcher, SimpleNamespace())
+    source.openai_client = FakeOpenAIClient()
+    html = """
+    <html>
+      <head><title>Noisy Sponsors</title></head>
+      <body>
+        <section>
+          <h2>Hackathon Sponsors</h2>
+          <a href="https://agentforcehackathon.devpost.com/hackathons">
+            Find more hackathons
+          </a>
+          <a href="https://agentforcehackathon.devpost.com/rules">
+            View full rules
+          </a>
+          <a href="https://agentforcehackathon.devpost.com/schedule">
+            View schedule
+          </a>
+          <a href="https://salesforce.com">Go to Salesforce page</a>
+        </section>
+      </body>
+    </html>
+    """
+
+    event = source.parse_event("https://events.example/1", html)
+
+    assert event is not None
+    assert [s.name for s in event.sponsors] == ["Salesforce", "AWS"]
+
+
 def test_extract_sponsors_from_jsonish() -> None:
     source = DummySource(SimpleNamespace(), SimpleNamespace())
     html = (
@@ -244,6 +339,21 @@ def test_devpost_accepts_only_event_subdomains() -> None:
     assert source.accepts_event_url("https://hack4ai.devpost.com/") is True
     assert source.accepts_event_url("https://devpost.com/hackathons") is False
     assert source.accepts_event_url("https://info.devpost.com/blog/x") is False
+
+
+def test_devpost_discover_event_urls_normalizes_subpages() -> None:
+    search_client = SimpleNamespace(
+        search=lambda query, max_results: [
+            SearchResult("Rules", "https://agenthacker.devpost.com/rules", ""),
+            SearchResult("Home", "https://agenthacker.devpost.com/", ""),
+            SearchResult("Updates", "https://agenthacker.devpost.com/updates", ""),
+        ]
+    )
+    source = DevpostSource(SimpleNamespace(), search_client)
+
+    urls = source.discover_event_urls(["ai"], 5)
+
+    assert urls == ["https://agenthacker.devpost.com/"]
 
 
 def test_dorahacks_accepts_event_detail_pages_only() -> None:

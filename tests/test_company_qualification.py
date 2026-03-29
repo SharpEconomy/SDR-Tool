@@ -293,7 +293,7 @@ def test_company_qualifier_falls_back_when_openai_errors(settings) -> None:
     )
 
 
-def test_company_qualifier_rejects_when_recent_evidence_is_missing(
+def test_company_qualifier_accepts_clear_company_when_recent_evidence_is_missing(
     settings,
 ) -> None:
     search_client = SimpleNamespace(
@@ -314,9 +314,12 @@ def test_company_qualifier_rejects_when_recent_evidence_is_missing(
     )
 
     assert result is not None
-    assert result.accepted is False
-    assert result.score == 12
+    assert result.accepted is True
+    assert result.score == 60
     assert "No sufficiently recent dated evidence." in (
+        result.qualification_notes or ""
+    )
+    assert "accepted by sponsor-domain fit override" in (
         result.qualification_notes or ""
     )
     assert len(openai_client.calls) == 1

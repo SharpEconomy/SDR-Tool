@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import threading
 from dataclasses import dataclass
 from typing import Any
@@ -15,6 +16,7 @@ from hackindia_leads.models import (
 )
 from hackindia_leads.services.openai_client import OpenAIQualificationClient
 from hackindia_leads.services.search import SearchClient, SearchResult
+from hackindia_leads.utils import extract_domain
 
 AI_KEYWORDS = {
     "ai",
@@ -115,6 +117,14 @@ INDIA_HINTS = {
     "pune",
     "chennai",
     "noida",
+}
+PLATFORM_DOMAINS = {
+    "devpost.com",
+    "ethglobal.com",
+    "dorahacks.io",
+    "mlh.io",
+    "events.mlh.io",
+    "organize.mlh.io",
 }
 
 
@@ -299,22 +309,33 @@ class CompanyQualifier:
         hints = self._build_rule_hints(context)
         if self._should_use_openai():
             try:
-                return self._openai_qualification(context, hints)
+                qualification = self._openai_qualification(context, hints)
+                return self._apply_sponsor_fit_override(
+                    context,
+                    hints,
+                    qualification,
+                )
             except Exception:
-                return self._fallback_qualification(
+                qualification = self._fallback_qualification(
                     context,
                     hints,
                     "rule-based fallback used after OpenAI error",
+                )
+                return self._apply_sponsor_fit_override(
+                    context,
+                    hints,
+                    qualification,
                 )
         if self.settings.use_openai_qualification:
             fallback_note = "rule-based fallback used because OpenAI is unavailable"
         else:
             fallback_note = "rule-based fallback used because OpenAI is disabled"
-        return self._fallback_qualification(
+        qualification = self._fallback_qualification(
             context,
             hints,
             fallback_note,
         )
+        return self._apply_sponsor_fit_override(context, hints, qualification)
 
     def _build_rule_hints(self, context: _QualificationContext) -> _RuleHints:
         text = context.combined_text
@@ -628,6 +649,54 @@ class CompanyQualifier:
 
     def _best_signal_text(self, result: SearchResult) -> str:
         return (result.title or result.snippet or result.url).strip() or result.url
+
+    def _apply_sponsor_fit_override(
+        self,
+        context: _QualificationContext,
+        hints: _RuleHints,
+        qualification: CompanyQualification,
+    ) -> CompanyQualification:
+        if qualification.accepted:
+            return qualification
+        domain = extract_domain(context.website) or context.domain
+        if not domain or domain in PLATFORM_DOMAINS:
+            return qualification
+        if hints.company_segment == "Other":
+            return qualification
+        if not self._sponsor_matches_domain(context.sponsor.name, domain):
+            return qualification
+
+        notes = qualification.qualification_notes or ""
+        override_note = "accepted by sponsor-domain fit override"
+        merged_notes = f"{notes}; {override_note}" if notes else override_note
+        return CompanyQualification(
+            company_segment=qualification.company_segment,
+            recently_funded=qualification.recently_funded,
+            recent_funding_signal=qualification.recent_funding_signal,
+            company_location=qualification.company_location,
+            location_priority=qualification.location_priority,
+            developer_adoption_need=qualification.developer_adoption_need,
+            market_visibility_need=qualification.market_visibility_need,
+            qualification_notes=merged_notes,
+            score=max(qualification.score, 60),
+            accepted=True,
+        )
+
+    def _sponsor_matches_domain(self, sponsor_name: str, domain: str) -> bool:
+        sponsor_tokens = {
+            token
+            for token in re.findall(r"[a-z0-9]+", sponsor_name.lower())
+            if len(token) > 1
+            and token not in {"labs", "foundation", "network", "protocol", "logo"}
+        }
+        if not sponsor_tokens:
+            return False
+        domain_tokens = {
+            token
+            for token in re.findall(r"[a-z0-9]+", domain.lower())
+            if len(token) > 1
+        }
+        return any(token in domain_tokens for token in sponsor_tokens)
 
     def _should_use_openai(self) -> bool:
         return (

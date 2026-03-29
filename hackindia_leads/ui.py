@@ -385,10 +385,10 @@ def _render_run_outcome(active_run: ActiveRunState) -> None:
         use_container_width=True,
         height=_dataframe_height_for_rows(len(rows)),
     )
+    _render_filtered_sponsors_download(active_run.result)
 
 
 def _render_loading_table() -> None:
-    st.caption("Output preview while leads are loading.")
     header_cells = "".join(
         f"<div class='loading-table__header-cell'>{column}</div>"
         for column in PUBLIC_LEAD_COLUMNS
@@ -414,6 +414,19 @@ def _render_loading_table() -> None:
             "</div>"
         ),
         unsafe_allow_html=True,
+    )
+
+
+def _render_filtered_sponsors_download(result: PipelineResult) -> None:
+    if not result.filtered_export_bytes or not result.filtered_export_name:
+        return
+
+    st.download_button(
+        "Download Filtered Sponsors",
+        data=result.filtered_export_bytes,
+        file_name=result.filtered_export_name,
+        mime=("application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"),
+        use_container_width=True,
     )
 
 
@@ -470,29 +483,47 @@ def _estimate_total_seconds(
     source_count: int,
     limit_per_source: int,
 ) -> int:
-    base_seconds = 35
-    per_source_seconds = 45
-    per_page_seconds = 10
-    qualification_seconds = 6 if settings.qualification_enabled else 0
-    openai_seconds = (
-        4 if settings.qualification_enabled and settings.use_openai_qualification else 0
-    )
-    smtp_seconds = 6 if settings.smtp_precheck_required else 2
-    website_precheck_seconds = 3 if settings.website_precheck_required else 1
-    browser_fallback_seconds = 3 if settings.use_browser_fallback else 0
-    per_page_total = (
-        per_page_seconds
-        + qualification_seconds
-        + openai_seconds
-        + smtp_seconds
-        + website_precheck_seconds
-        + browser_fallback_seconds
-    )
+    source_workers = max(1, min(source_count, settings.max_source_workers))
+    event_count = max(1, source_count * limit_per_source)
+    enrichment_workers = max(1, settings.max_enrichment_workers)
+    estimated_sponsors_per_event = 8
+
+    base_seconds = 20
+    per_source_discovery_seconds = 18
+    per_event_fetch_seconds = 8
+    if settings.use_browser_fallback:
+        per_source_discovery_seconds += 4
+        per_event_fetch_seconds += 4
+
+    per_sponsor_seconds = 4
+    if settings.website_precheck_required:
+        per_sponsor_seconds += 2
+    if settings.qualification_enabled:
+        per_sponsor_seconds += 4
+        if settings.use_openai_qualification:
+            per_sponsor_seconds += 3
+    if settings.smtp_precheck_required:
+        per_sponsor_seconds += 4
+    else:
+        per_sponsor_seconds += 1
+
+    discovery_seconds = (
+        (source_count * per_source_discovery_seconds) + source_workers - 1
+    ) // source_workers
+    event_fetch_seconds = (
+        (event_count * per_event_fetch_seconds) + source_workers - 1
+    ) // source_workers
+    sponsor_jobs = event_count * estimated_sponsors_per_event
+    enrichment_seconds = (
+        (sponsor_jobs * per_sponsor_seconds) + enrichment_workers - 1
+    ) // enrichment_workers
+
     return max(
-        60,
+        75,
         base_seconds
-        + (source_count * per_source_seconds)
-        + (source_count * limit_per_source * per_page_total),
+        + discovery_seconds
+        + event_fetch_seconds
+        + enrichment_seconds,
     )
 
 

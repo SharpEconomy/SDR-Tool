@@ -19,6 +19,16 @@ PUBLIC_LEAD_COLUMNS = [
     "decision_maker_email",
     "linkedin_url",
 ]
+FILTERED_SPONSOR_COLUMNS = [
+    "source",
+    "event_name",
+    "event_url",
+    "sponsor_company",
+    "sponsor_website",
+    "evidence",
+    "outcome",
+    "reason",
+]
 
 
 @dataclass(slots=True)
