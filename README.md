@@ -11,7 +11,7 @@ websites, and prepare the final output as a downloadable Excel file.
 - Resolves and validates the sponsor's primary website and domain.
 - Uses public search results and sponsor websites to infer likely
   decision-makers.
-- Uses a Claude-backed qualification pass for the final fit decision.
+- Uses an OpenAI-backed qualification pass for the final fit decision.
 - Keeps Tech/AI/Web3 fit, US/India priority, and part of the developer
   adoption signal as deterministic rule-based hints.
 - Restricts final qualification evidence to recent public data, with a 6-month
@@ -41,8 +41,8 @@ SMTP_FROM_EMAIL=hello@yourdomain.com
 WEBSITE_PRECHECK_REQUIRED=true
 SMTP_PRECHECK_REQUIRED=true
 QUALIFICATION_ENABLED=true
-ANTHROPIC_API_KEY=your_anthropic_api_key
-ANTHROPIC_MODEL=claude-sonnet-4-20250514
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-5.4-mini
 QUALIFICATION_RECENT_MONTHS=6
 QUALIFICATION_PREFERRED_RECENT_MONTHS=3
 GOOGLE_SEARCH_API_KEY=your_google_search_api_key
@@ -51,7 +51,7 @@ GOOGLE_SEARCH_ENGINE_ID=your_programmable_search_engine_id
 
 Set `QUALIFICATION_ENABLED=false` for bulk test runs when you want to skip
 company-fit qualification entirely. When qualification is enabled, the app
-expects an Anthropic API key in `.env`. If Google Custom Search credentials are
+expects an OpenAI API key in `.env`. If Google Custom Search credentials are
 not set, the app falls back to DuckDuckGo Search and still applies the same
 freshness filter to dated results.
 

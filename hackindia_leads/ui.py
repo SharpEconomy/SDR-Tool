@@ -63,7 +63,7 @@ def render() -> None:
     st.caption(
         (
             "Sponsor-lead scraper focused on Tech/AI/Web3 companies, using "
-            "optional Claude-backed review with a US/India priority."
+            "optional OpenAI-backed review with a US/India priority."
         )
     )
 
@@ -93,12 +93,12 @@ def render() -> None:
             ),
             height=110,
         )
-        settings.use_claude_qualification = st.checkbox(
-            "Use Claude Qualification",
-            value=settings.use_claude_qualification,
+        settings.use_openai_qualification = st.checkbox(
+            "Use OpenAI Qualification",
+            value=settings.use_openai_qualification,
             help=(
                 "Turn this off to force the deterministic non-LLM review flow "
-                "for this run. If Claude is unavailable, the app falls back "
+                "for this run. If OpenAI is unavailable, the app falls back "
                 "automatically."
             ),
         )
@@ -144,12 +144,12 @@ def render() -> None:
             return
         if (
             settings.qualification_enabled
-            and settings.use_claude_qualification
-            and not settings.anthropic_api_key
+            and settings.use_openai_qualification
+            and not settings.openai_api_key
         ):
             st.warning(
                 (
-                    "ANTHROPIC_API_KEY is not set. Using the non-LLM "
+                    "OPENAI_API_KEY is not set. Using the non-LLM "
                     "fallback flow for sponsor and contact review in this run."
                 )
             )
@@ -474,8 +474,8 @@ def _estimate_total_seconds(
     per_source_seconds = 45
     per_page_seconds = 10
     qualification_seconds = 6 if settings.qualification_enabled else 0
-    claude_seconds = (
-        4 if settings.qualification_enabled and settings.use_claude_qualification else 0
+    openai_seconds = (
+        4 if settings.qualification_enabled and settings.use_openai_qualification else 0
     )
     smtp_seconds = 6 if settings.smtp_precheck_required else 2
     website_precheck_seconds = 3 if settings.website_precheck_required else 1
@@ -483,7 +483,7 @@ def _estimate_total_seconds(
     per_page_total = (
         per_page_seconds
         + qualification_seconds
-        + claude_seconds
+        + openai_seconds
         + smtp_seconds
         + website_precheck_seconds
         + browser_fallback_seconds
@@ -594,10 +594,9 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
 
     if "discovered " in cleaned and "event page(s)" in cleaned:
         state.status = "Discovering events"
-        try:
-            state.event_pages = int(cleaned.split("discovered ", 1)[1].split(" ", 1)[0])
-        except ValueError:
-            pass
+        parsed_count = _extract_progress_count(cleaned, "discovered ")
+        if parsed_count is not None:
+            state.event_pages = parsed_count
         return
 
     if "fetching event " in cleaned:
@@ -606,10 +605,9 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
 
     if "event(s) ready for enrichment" in cleaned:
         state.status = "Enriching sponsors"
-        try:
-            state.events_ready = int(cleaned.split(": ", 1)[1].split(" ", 1)[0])
-        except (IndexError, ValueError):
-            pass
+        parsed_count = _extract_progress_count(cleaned, ": ")
+        if parsed_count is not None:
+            state.events_ready = parsed_count
         return
 
     if "enriching sponsor" in cleaned:
@@ -654,6 +652,15 @@ def _apply_progress_message(state: SourceProgressState, message: str) -> None:
 
     if "validating '" in cleaned:
         state.status = "Validating email"
+
+
+def _extract_progress_count(message: str, marker: str) -> int | None:
+    if marker not in message:
+        return None
+    try:
+        return int(message.split(marker, 1)[1].split(" ", 1)[0])
+    except (IndexError, ValueError):
+        return None
 
 
 def _inject_styles() -> None:

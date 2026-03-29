@@ -115,8 +115,16 @@ def test_search_backed_source_filters_and_dedupes_urls() -> None:
 
 
 def test_custom_source_normalizes_and_dedupes_urls() -> None:
+    fetcher = SimpleNamespace(
+        fetch=lambda url, prefer_browser=False: FetchResult(
+            url=url,
+            status_code=200,
+            text="",
+            used_browser=prefer_browser,
+        )
+    )
     source = CustomWebsiteSource(
-        SimpleNamespace(),
+        fetcher,
         SimpleNamespace(),
         [
             "demo.example/event",
@@ -131,6 +139,74 @@ def test_custom_source_normalizes_and_dedupes_urls() -> None:
         "https://demo.example/event",
         "https://two.example/hackathon?x=1",
     ]
+
+
+def test_custom_source_discovers_event_pages_from_homepage() -> None:
+    html_by_url = {
+        "https://demo.example": '<a href="/hackathons">Hackathons</a>',
+        "https://demo.example/hackathons": (
+            '<a href="/2026/ai-hackathon">AI Hackathon</a>'
+            '<a href="/contact">Contact</a>'
+        ),
+        "https://demo.example/events": "",
+        "https://demo.example/challenges": "",
+        "https://demo.example/buildathons": "",
+        "https://demo.example/schedule": "",
+    }
+    fetcher = SimpleNamespace(
+        fetch=lambda url, prefer_browser=False: FetchResult(
+            url=url,
+            status_code=200,
+            text=html_by_url.get(url, ""),
+            used_browser=prefer_browser,
+        )
+    )
+    source = CustomWebsiteSource(fetcher, SimpleNamespace(), ["https://demo.example"])
+
+    urls = source.discover_event_urls([], 5)
+
+    assert urls == ["https://demo.example/2026/ai-hackathon"]
+
+
+def test_custom_source_uses_openai_fallback_when_generic_parsing_finds_no_sponsors(
+    settings,
+) -> None:
+    class FakeOpenAIClient:
+        def is_configured(self) -> bool:
+            return True
+
+        def extract_sponsors(self, payload):
+            return [
+                {
+                    "name": "OpenAI",
+                    "website": "https://openai.com",
+                    "evidence": "hackathon sponsors",
+                },
+                {
+                    "name": "Stripe",
+                    "website": "https://stripe.com",
+                    "evidence": "partners",
+                },
+            ]
+
+    fetcher = SimpleNamespace(settings=settings)
+    source = CustomWebsiteSource(fetcher, SimpleNamespace(), [], FakeOpenAIClient())
+    html = """
+    <html>
+      <head><title>Demo Hackathon</title></head>
+      <body>
+        <section>
+          <h2>Ready to Partner with Us</h2>
+          <a href="/contact">Partner with Demo</a>
+        </section>
+      </body>
+    </html>
+    """
+
+    event = source.parse_event("https://demo.example/2026/demo-hackathon", html)
+
+    assert event is not None
+    assert [s.name for s in event.sponsors] == ["OpenAI", "Stripe"]
 
 
 def test_ethglobal_discover_event_urls_filters_blocked_tokens(settings) -> None:

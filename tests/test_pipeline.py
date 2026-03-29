@@ -22,15 +22,15 @@ from hackindia_leads.services.company_qualification import CompanyQualifier
 from hackindia_leads.services.search import SearchResult
 
 
-class _BrokenClaudeClient:
+class _BrokenOpenAIClient:
     def is_configured(self) -> bool:
         return True
 
     def qualify(self, payload: dict[str, object]) -> dict[str, object]:
-        raise RuntimeError("claude unavailable")
+        raise RuntimeError("openai unavailable")
 
     def review_contacts(self, payload: dict[str, object]) -> dict[str, object]:
-        raise RuntimeError("claude unavailable")
+        raise RuntimeError("openai unavailable")
 
 
 def _fallback_search_results(
@@ -338,10 +338,10 @@ def test_pipeline_run_filters_sponsor_with_failed_fit_check(
     assert result.rows == []
 
 
-def test_pipeline_run_falls_back_when_claude_is_not_configured(
+def test_pipeline_run_falls_back_when_openai_is_not_configured(
     settings, monkeypatch
 ) -> None:
-    settings.anthropic_api_key = ""
+    settings.openai_api_key = ""
     pipeline = LeadPipeline(settings)
     monkeypatch.setattr(
         pipeline.qualifier.search_client,
@@ -362,15 +362,15 @@ def test_pipeline_run_falls_back_when_claude_is_not_configured(
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
     assert len(result.rows) == 1
-    assert "rule-based fallback used because Claude is unavailable" in (
+    assert "rule-based fallback used because OpenAI is unavailable" in (
         result.rows[0].qualification_notes or ""
     )
-    assert "rule-based contact fallback used because Claude is unavailable" in (
+    assert "rule-based contact fallback used because OpenAI is unavailable" in (
         result.rows[0].contact_review_notes or ""
     )
 
 
-def test_pipeline_run_falls_back_when_claude_errors(settings, monkeypatch) -> None:
+def test_pipeline_run_falls_back_when_openai_errors(settings, monkeypatch) -> None:
     pipeline = LeadPipeline(settings)
     pipeline.qualifier = CompanyQualifier(
         settings,
@@ -379,7 +379,7 @@ def test_pipeline_run_falls_back_when_claude_errors(settings, monkeypatch) -> No
                 _fallback_search_results(query, recent_months)
             )
         ),
-        _BrokenClaudeClient(),
+        _BrokenOpenAIClient(),
     )
     _stub_source_events(pipeline, [_build_event()])
     _stub_enrichment(
@@ -392,10 +392,10 @@ def test_pipeline_run_falls_back_when_claude_errors(settings, monkeypatch) -> No
     result = pipeline.run(["ethglobal"], ["web3"], 1)
 
     assert len(result.rows) == 1
-    assert "rule-based fallback used after Claude error" in (
+    assert "rule-based fallback used after OpenAI error" in (
         result.rows[0].qualification_notes or ""
     )
-    assert "rule-based contact fallback used after Claude error" in (
+    assert "rule-based contact fallback used after OpenAI error" in (
         result.rows[0].contact_review_notes or ""
     )
 
@@ -592,7 +592,7 @@ def test_pipeline_run_skips_invalid_website(settings, monkeypatch) -> None:
     assert result.rows == []
 
 
-def test_pipeline_run_keeps_only_claude_accepted_contacts(
+def test_pipeline_run_keeps_only_openai_accepted_contacts(
     settings, monkeypatch
 ) -> None:
     pipeline = LeadPipeline(settings)
@@ -716,6 +716,31 @@ def test_pipeline_run_ignores_source_and_contact_errors(settings) -> None:
     assert result.rows == []
     assert result.export_name.endswith(".xlsx")
     assert pd.read_excel(BytesIO(result.export_bytes)).empty
+
+
+def test_pipeline_run_with_custom_urls_does_not_mutate_default_sources(
+    settings, monkeypatch
+) -> None:
+    settings.qualification_enabled = False
+    pipeline = LeadPipeline(settings)
+    builtin_source = SimpleNamespace(
+        fetch_events=lambda keywords, limit, progress_callback=None: []
+    )
+    custom_source = SimpleNamespace(
+        fetch_events=lambda keywords, limit, progress_callback=None: []
+    )
+    pipeline.sources = {"ethglobal": builtin_source}
+    monkeypatch.setattr(
+        "hackindia_leads.pipeline.build_sources",
+        lambda fetcher, search_client, custom_urls=None: {
+            "ethglobal": builtin_source,
+            "custom": custom_source,
+        },
+    )
+
+    pipeline.run(["custom"], ["web3"], 1, custom_urls=["https://demo.example"])
+
+    assert pipeline.sources == {"ethglobal": builtin_source}
 
 
 def test_pipeline_run_stops_before_processing_sources(settings, monkeypatch) -> None:

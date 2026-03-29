@@ -53,9 +53,9 @@ def test_settings_load_reads_env(monkeypatch) -> None:
         "SMTP_PRECHECK_REQUIRED": "true",
         "MIN_VALIDATION_SCORE": "3",
         "QUALIFICATION_ENABLED": "false",
-        "USE_CLAUDE_QUALIFICATION": "false",
-        "ANTHROPIC_API_KEY": "anthropic-key",
-        "ANTHROPIC_MODEL": "claude-test-model",
+        "USE_OPENAI_QUALIFICATION": "false",
+        "OPENAI_API_KEY": "openai-key",
+        "OPENAI_MODEL": "gpt-5.4-mini",
         "QUALIFICATION_RECENT_MONTHS": "5",
         "QUALIFICATION_PREFERRED_RECENT_MONTHS": "2",
         "GOOGLE_SEARCH_API_KEY": "google-key",
@@ -80,9 +80,9 @@ def test_settings_load_reads_env(monkeypatch) -> None:
     assert loaded.smtp_precheck_required is True
     assert loaded.min_validation_score == 3
     assert loaded.qualification_enabled is False
-    assert loaded.use_claude_qualification is False
-    assert loaded.anthropic_api_key == "anthropic-key"
-    assert loaded.anthropic_model == "claude-test-model"
+    assert loaded.use_openai_qualification is False
+    assert loaded.openai_api_key == "openai-key"
+    assert loaded.openai_model == "gpt-5.4-mini"
     assert loaded.qualification_recent_months == 5
     assert loaded.qualification_preferred_recent_months == 2
     assert loaded.google_search_api_key == "google-key"

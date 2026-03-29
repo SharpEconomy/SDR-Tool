@@ -57,10 +57,11 @@ def _search_results_for_query(
     ]
 
 
-class FakeClaudeClient:
+class FakeOpenAIClient:
     def __init__(self) -> None:
         self.calls: list[dict[str, object]] = []
         self.contact_calls: list[dict[str, object]] = []
+        self.sponsor_calls: list[dict[str, object]] = []
 
     def is_configured(self) -> bool:
         return True
@@ -108,15 +109,25 @@ class FakeClaudeClient:
             "selection_notes": "Prioritize direct sponsorship owners.",
         }
 
+    def extract_sponsors(self, payload: dict[str, object]) -> list[dict[str, object]]:
+        self.sponsor_calls.append(payload)
+        return [
+            {
+                "name": "OpenAI",
+                "website": "https://openai.com",
+                "evidence": "hackathon sponsors",
+            }
+        ]
 
-class BrokenClaudeClient(FakeClaudeClient):
+
+class BrokenOpenAIClient(FakeOpenAIClient):
     def qualify(self, payload: dict[str, object]) -> dict[str, object]:
         self.calls.append(payload)
-        raise RuntimeError("claude unavailable")
+        raise RuntimeError("openai unavailable")
 
     def review_contacts(self, payload: dict[str, object]) -> dict[str, object]:
         self.contact_calls.append(payload)
-        raise RuntimeError("claude unavailable")
+        raise RuntimeError("openai unavailable")
 
 
 def _build_qualification() -> CompanyQualification:
@@ -178,15 +189,15 @@ def test_company_qualifier_returns_none_when_disabled(settings) -> None:
     assert result is None
 
 
-def test_company_qualifier_uses_claude_with_recent_evidence(settings) -> None:
+def test_company_qualifier_uses_openai_with_recent_evidence(settings) -> None:
     search_client = SimpleNamespace(
         search=lambda query, max_results, recent_months=None: _search_results_for_query(
             query,
             recent_months,
         )
     )
-    claude_client = FakeClaudeClient()
-    qualifier = CompanyQualifier(settings, search_client, claude_client)
+    openai_client = FakeOpenAIClient()
+    qualifier = CompanyQualifier(settings, search_client, openai_client)
 
     result = qualifier.qualify(
         Sponsor(name="Example AI", website="https://example.ai"),
@@ -203,12 +214,12 @@ def test_company_qualifier_uses_claude_with_recent_evidence(settings) -> None:
     assert result.developer_adoption_need is True
     assert result.market_visibility_need is True
     assert "Series A" in (result.recent_funding_signal or "")
-    assert claude_client.calls
-    assert claude_client.calls[0]["rule_hints"]["company_segment"] == "AI"
+    assert openai_client.calls
+    assert openai_client.calls[0]["rule_hints"]["company_segment"] == "AI"
 
 
-def test_company_qualifier_falls_back_when_claude_is_not_configured(settings) -> None:
-    settings.anthropic_api_key = ""
+def test_company_qualifier_falls_back_when_openai_is_not_configured(settings) -> None:
+    settings.openai_api_key = ""
     search_client = SimpleNamespace(
         search=lambda query, max_results, recent_months=None: _search_results_for_query(
             query,
@@ -226,21 +237,21 @@ def test_company_qualifier_falls_back_when_claude_is_not_configured(settings) ->
 
     assert result is not None
     assert result.accepted is True
-    assert "rule-based fallback used because Claude is unavailable" in (
+    assert "rule-based fallback used because OpenAI is unavailable" in (
         result.qualification_notes or ""
     )
 
 
-def test_company_qualifier_falls_back_when_claude_is_disabled(settings) -> None:
-    settings.use_claude_qualification = False
+def test_company_qualifier_falls_back_when_openai_is_disabled(settings) -> None:
+    settings.use_openai_qualification = False
     search_client = SimpleNamespace(
         search=lambda query, max_results, recent_months=None: _search_results_for_query(
             query,
             recent_months,
         )
     )
-    claude_client = FakeClaudeClient()
-    qualifier = CompanyQualifier(settings, search_client, claude_client)
+    openai_client = FakeOpenAIClient()
+    qualifier = CompanyQualifier(settings, search_client, openai_client)
 
     result = qualifier.qualify(
         Sponsor(name="Example AI", website="https://example.ai"),
@@ -251,21 +262,21 @@ def test_company_qualifier_falls_back_when_claude_is_disabled(settings) -> None:
 
     assert result is not None
     assert result.accepted is True
-    assert claude_client.calls == []
-    assert "rule-based fallback used because Claude is disabled" in (
+    assert openai_client.calls == []
+    assert "rule-based fallback used because OpenAI is disabled" in (
         result.qualification_notes or ""
     )
 
 
-def test_company_qualifier_falls_back_when_claude_errors(settings) -> None:
+def test_company_qualifier_falls_back_when_openai_errors(settings) -> None:
     search_client = SimpleNamespace(
         search=lambda query, max_results, recent_months=None: _search_results_for_query(
             query,
             recent_months,
         )
     )
-    claude_client = BrokenClaudeClient()
-    qualifier = CompanyQualifier(settings, search_client, claude_client)
+    openai_client = BrokenOpenAIClient()
+    qualifier = CompanyQualifier(settings, search_client, openai_client)
 
     result = qualifier.qualify(
         Sponsor(name="Example AI", website="https://example.ai"),
@@ -276,8 +287,8 @@ def test_company_qualifier_falls_back_when_claude_errors(settings) -> None:
 
     assert result is not None
     assert result.accepted is True
-    assert len(claude_client.calls) == 1
-    assert "rule-based fallback used after Claude error" in (
+    assert len(openai_client.calls) == 1
+    assert "rule-based fallback used after OpenAI error" in (
         result.qualification_notes or ""
     )
 
@@ -292,8 +303,8 @@ def test_company_qualifier_rejects_when_recent_evidence_is_missing(
             else _search_results_for_query(query, recent_months)
         )
     )
-    claude_client = FakeClaudeClient()
-    qualifier = CompanyQualifier(settings, search_client, claude_client)
+    openai_client = FakeOpenAIClient()
+    qualifier = CompanyQualifier(settings, search_client, openai_client)
 
     result = qualifier.qualify(
         Sponsor(name="Example AI", website="https://example.ai"),
@@ -308,8 +319,8 @@ def test_company_qualifier_rejects_when_recent_evidence_is_missing(
     assert "No sufficiently recent dated evidence." in (
         result.qualification_notes or ""
     )
-    assert len(claude_client.calls) == 1
-    assert claude_client.calls[0]["recent_evidence"] == []
+    assert len(openai_client.calls) == 1
+    assert openai_client.calls[0]["recent_evidence"] == []
 
 
 def test_company_qualifier_caches_by_company_and_domain(settings) -> None:
@@ -322,7 +333,7 @@ def test_company_qualifier_caches_by_company_and_domain(settings) -> None:
     qualifier = CompanyQualifier(
         settings,
         SimpleNamespace(search=fake_search),
-        FakeClaudeClient(),
+        FakeOpenAIClient(),
     )
 
     first = qualifier.qualify(
@@ -344,15 +355,15 @@ def test_company_qualifier_caches_by_company_and_domain(settings) -> None:
     assert search_calls["count"] == 3
 
 
-def test_company_qualifier_reviews_contacts_with_claude(settings) -> None:
+def test_company_qualifier_reviews_contacts_with_openai(settings) -> None:
     search_client = SimpleNamespace(
         search=lambda query, max_results, recent_months=None: _search_results_for_query(
             query,
             recent_months,
         )
     )
-    claude_client = FakeClaudeClient()
-    qualifier = CompanyQualifier(settings, search_client, claude_client)
+    openai_client = FakeOpenAIClient()
+    qualifier = CompanyQualifier(settings, search_client, openai_client)
     contacts, validations = _build_contacts()
 
     reviews = qualifier.review_contacts(
@@ -371,10 +382,10 @@ def test_company_qualifier_reviews_contacts_with_claude(settings) -> None:
         reviews["jane@example.ai"].notes or ""
     )
     assert reviews["hello@example.ai"].accepted is False
-    assert len(claude_client.contact_calls) == 1
+    assert len(openai_client.contact_calls) == 1
 
 
-def test_company_qualifier_reviews_contacts_with_fallback_when_claude_errors(
+def test_company_qualifier_reviews_contacts_with_fallback_when_openai_errors(
     settings,
 ) -> None:
     search_client = SimpleNamespace(
@@ -383,8 +394,8 @@ def test_company_qualifier_reviews_contacts_with_fallback_when_claude_errors(
             recent_months,
         )
     )
-    claude_client = BrokenClaudeClient()
-    qualifier = CompanyQualifier(settings, search_client, claude_client)
+    openai_client = BrokenOpenAIClient()
+    qualifier = CompanyQualifier(settings, search_client, openai_client)
     contacts, validations = _build_contacts()
 
     reviews = qualifier.review_contacts(
@@ -399,7 +410,29 @@ def test_company_qualifier_reviews_contacts_with_fallback_when_claude_errors(
 
     assert reviews["jane@example.ai"].accepted is True
     assert reviews["hello@example.ai"].accepted is True
-    assert "rule-based contact fallback used after Claude error" in (
+    assert "rule-based contact fallback used after OpenAI error" in (
         reviews["jane@example.ai"].notes or ""
     )
-    assert len(claude_client.contact_calls) == 1
+    assert len(openai_client.contact_calls) == 1
+
+
+def test_openai_client_extracts_sponsors_payload_shape(settings) -> None:
+    client = FakeOpenAIClient()
+
+    sponsors = client.extract_sponsors(
+        {
+            "event_url": "https://example.ai/hackathon",
+            "page_title": "Example Hackathon",
+            "headings": ["Hackathon Sponsors"],
+            "links": [{"text": "OpenAI", "href": "https://openai.com"}],
+            "body_excerpt": "OpenAI supports the event.",
+        }
+    )
+
+    assert sponsors == [
+        {
+            "name": "OpenAI",
+            "website": "https://openai.com",
+            "evidence": "hackathon sponsors",
+        }
+    ]

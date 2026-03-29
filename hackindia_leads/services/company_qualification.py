@@ -13,7 +13,7 @@ from hackindia_leads.models import (
     Event,
     Sponsor,
 )
-from hackindia_leads.services.claude import ClaudeQualificationClient
+from hackindia_leads.services.openai_client import OpenAIQualificationClient
 from hackindia_leads.services.search import SearchClient, SearchResult
 
 AI_KEYWORDS = {
@@ -169,11 +169,11 @@ class CompanyQualifier:
         self,
         settings: Settings,
         search_client: SearchClient | None = None,
-        claude_client: ClaudeQualificationClient | None = None,
+        openai_client: OpenAIQualificationClient | None = None,
     ) -> None:
         self.settings = settings
         self.search_client = search_client or SearchClient(settings)
-        self.claude_client = claude_client or ClaudeQualificationClient(settings)
+        self.openai_client = openai_client or OpenAIQualificationClient(settings)
         self._context_cache: dict[tuple[str, str], _QualificationContext] = {}
         self._cache: dict[tuple[str, str], CompanyQualification] = {}
         self._cache_lock = threading.Lock()
@@ -218,9 +218,9 @@ class CompanyQualifier:
 
         cache_key = self._cache_key(sponsor, domain)
         context = self._get_context(cache_key, sponsor, event, website, domain)
-        if self._should_use_claude():
+        if self._should_use_openai():
             try:
-                return self._claude_contact_review(
+                return self._openai_contact_review(
                     context,
                     qualification,
                     contacts,
@@ -230,16 +230,16 @@ class CompanyQualifier:
                 return self._fallback_contact_review(
                     contacts,
                     validations_by_email,
-                    "rule-based contact fallback used after Claude error",
+                    "rule-based contact fallback used after OpenAI error",
                 )
 
-        if self.settings.use_claude_qualification:
+        if self.settings.use_openai_qualification:
             fallback_note = (
-                "rule-based contact fallback used because Claude is unavailable"
+                "rule-based contact fallback used because OpenAI is unavailable"
             )
         else:
             fallback_note = (
-                "rule-based contact fallback used because Claude is disabled"
+                "rule-based contact fallback used because OpenAI is disabled"
             )
         return self._fallback_contact_review(
             contacts,
@@ -297,19 +297,19 @@ class CompanyQualifier:
 
     def _qualify_context(self, context: _QualificationContext) -> CompanyQualification:
         hints = self._build_rule_hints(context)
-        if self._should_use_claude():
+        if self._should_use_openai():
             try:
-                return self._claude_qualification(context, hints)
+                return self._openai_qualification(context, hints)
             except Exception:
                 return self._fallback_qualification(
                     context,
                     hints,
-                    "rule-based fallback used after Claude error",
+                    "rule-based fallback used after OpenAI error",
                 )
-        if self.settings.use_claude_qualification:
-            fallback_note = "rule-based fallback used because Claude is unavailable"
+        if self.settings.use_openai_qualification:
+            fallback_note = "rule-based fallback used because OpenAI is unavailable"
         else:
-            fallback_note = "rule-based fallback used because Claude is disabled"
+            fallback_note = "rule-based fallback used because OpenAI is disabled"
         return self._fallback_qualification(
             context,
             hints,
@@ -341,7 +341,7 @@ class CompanyQualifier:
             notes=notes,
         )
 
-    def _claude_qualification(
+    def _openai_qualification(
         self,
         context: _QualificationContext,
         hints: _RuleHints,
@@ -349,7 +349,7 @@ class CompanyQualifier:
         recent_evidence = [
             self._serialize_result(result) for result in context.recent_decision_results
         ]
-        decision = self.claude_client.qualify(
+        decision = self.openai_client.qualify(
             {
                 "sponsor_name": context.sponsor.name,
                 "sponsor_website": context.website,
@@ -446,14 +446,14 @@ class CompanyQualifier:
             accepted=accepted,
         )
 
-    def _claude_contact_review(
+    def _openai_contact_review(
         self,
         context: _QualificationContext,
         qualification: CompanyQualification,
         contacts: list[ContactCandidate],
         validations_by_email: dict[str, EmailValidation],
     ) -> dict[str, ContactReview]:
-        response = self.claude_client.review_contacts(
+        response = self.openai_client.review_contacts(
             {
                 "sponsor_name": context.sponsor.name,
                 "sponsor_website": context.website,
@@ -508,7 +508,7 @@ class CompanyQualifier:
             )
 
         default_note = (
-            selection_notes or "contact rejected because Claude returned no decision"
+            selection_notes or "contact rejected because OpenAI returned no decision"
         )
         for contact in contacts:
             reviews.setdefault(
@@ -629,10 +629,10 @@ class CompanyQualifier:
     def _best_signal_text(self, result: SearchResult) -> str:
         return (result.title or result.snippet or result.url).strip() or result.url
 
-    def _should_use_claude(self) -> bool:
+    def _should_use_openai(self) -> bool:
         return (
-            self.settings.use_claude_qualification
-            and self.claude_client.is_configured()
+            self.settings.use_openai_qualification
+            and self.openai_client.is_configured()
         )
 
     def _serialize_result(self, result: SearchResult) -> dict[str, Any]:

@@ -26,6 +26,7 @@ from hackindia_leads.services.enrichment import ContactEnricher
 from hackindia_leads.services.fetcher import PageFetcher
 from hackindia_leads.services.search import SearchClient
 from hackindia_leads.sources import build_sources
+from hackindia_leads.sources.base import SourceAdapter
 
 
 @dataclass(slots=True)
@@ -90,12 +91,13 @@ class LeadPipeline:
         progress_callback: Callable[[str], None] | None = None,
         control: PipelineControl | None = None,
     ) -> PipelineResult:
-        self._refresh_sources(custom_urls)
+        sources = self._build_sources(custom_urls)
         self._emit(progress_callback, "Starting scrape run")
         if not self._checkpoint(control):
             return self._finish_run([], progress_callback, stopped=True)
 
         source_results = self._fetch_sources(
+            sources,
             selected_sources,
             keywords,
             limit_per_source,
@@ -131,6 +133,7 @@ class LeadPipeline:
 
     def _fetch_sources(
         self,
+        sources: dict[str, SourceAdapter],
         selected_sources: list[str],
         keywords: list[str],
         limit_per_source: int,
@@ -149,7 +152,7 @@ class LeadPipeline:
                 if not self._checkpoint(control):
                     stopped_early = True
                     break
-                source = self.sources[source_name]
+                source = sources[source_name]
                 self._emit(progress_callback, f"Scanning source: {source_name}")
                 future = executor.submit(
                     source.fetch_events,
@@ -189,9 +192,10 @@ class LeadPipeline:
             executor.shutdown(wait=not stopped_early, cancel_futures=True)
         return results
 
-    def _refresh_sources(self, custom_urls: list[str] | None) -> None:
+    def _build_sources(self, custom_urls: list[str] | None) -> dict[str, SourceAdapter]:
         if custom_urls:
-            self.sources = build_sources(self.fetcher, self.search_client, custom_urls)
+            return build_sources(self.fetcher, self.search_client, custom_urls)
+        return self.sources
 
     def _enrich_sponsors(
         self,
@@ -371,7 +375,7 @@ class LeadPipeline:
                 ContactReview(
                     accepted=True,
                     score=contact.confidence or 0,
-                    notes="contact accepted without Claude review",
+                    notes="contact accepted without OpenAI review",
                 ),
             )
             if not review.accepted:

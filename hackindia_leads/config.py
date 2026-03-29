@@ -45,9 +45,9 @@ class Settings:
     smtp_precheck_required: bool
     min_validation_score: int
     qualification_enabled: bool
-    use_claude_qualification: bool
-    anthropic_api_key: str
-    anthropic_model: str
+    use_openai_qualification: bool
+    openai_api_key: str
+    openai_model: str
     qualification_recent_months: int
     qualification_preferred_recent_months: int
     google_search_api_key: str
@@ -95,14 +95,14 @@ class Settings:
                 os.getenv("QUALIFICATION_ENABLED"),
                 True,
             ),
-            use_claude_qualification=_as_bool(
-                os.getenv("USE_CLAUDE_QUALIFICATION"),
+            use_openai_qualification=_as_bool(
+                os.getenv("USE_OPENAI_QUALIFICATION"),
                 True,
             ),
-            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", "").strip(),
-            anthropic_model=os.getenv(
-                "ANTHROPIC_MODEL",
-                "claude-sonnet-4-20250514",
+            openai_api_key=os.getenv("OPENAI_API_KEY", "").strip(),
+            openai_model=os.getenv(
+                "OPENAI_MODEL",
+                "gpt-5.4-mini",
             ).strip(),
             qualification_recent_months=qualification_recent_months,
             qualification_preferred_recent_months=(

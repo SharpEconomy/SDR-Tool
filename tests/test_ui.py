@@ -105,7 +105,7 @@ class FakeStreamlit:
         sources=None,
         keywords="ai,web3",
         custom_urls="",
-        use_claude_qualification=None,
+        use_openai_qualification=None,
     ) -> None:
         self.sidebar = FakeSidebar()
         self.session_state = {}
@@ -113,7 +113,7 @@ class FakeStreamlit:
         self.sources = ["ethglobal"] if sources is None else sources
         self.keywords = keywords
         self.custom_urls = custom_urls
-        self.use_claude_qualification = use_claude_qualification
+        self.use_openai_qualification = use_openai_qualification
         self.errors = []
         self.successes = []
         self.warnings = []
@@ -151,9 +151,9 @@ class FakeStreamlit:
         return self.custom_urls
 
     def checkbox(self, label, value=False, help=None):
-        if self.use_claude_qualification is None:
+        if self.use_openai_qualification is None:
             return value
-        return self.use_claude_qualification
+        return self.use_openai_qualification
 
     def number_input(self, label, min_value, max_value, value, step):
         return value
@@ -245,10 +245,10 @@ def test_render_shows_error_when_smtp_sender_missing(settings, monkeypatch) -> N
     ]
 
 
-def test_render_warns_and_starts_when_claude_key_missing(settings, monkeypatch) -> None:
+def test_render_warns_and_starts_when_openai_key_missing(settings, monkeypatch) -> None:
     fake_st = FakeStreamlit(buttons={"Start": True})
     monkeypatch.setattr(ui, "st", fake_st)
-    settings.anthropic_api_key = ""
+    settings.openai_api_key = ""
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
     captured = {"started": False}
@@ -272,7 +272,7 @@ def test_render_warns_and_starts_when_claude_key_missing(settings, monkeypatch) 
     assert captured["started"] is True
     assert fake_st.warnings[:1] == [
         (
-            "ANTHROPIC_API_KEY is not set. Using the non-LLM "
+            "OPENAI_API_KEY is not set. Using the non-LLM "
             "fallback flow for sponsor and contact review in this run."
         )
     ]
@@ -338,7 +338,7 @@ def test_render_shows_completion_text_once(settings, monkeypatch) -> None:
 def test_render_sidebar_qualification_toggle_overrides_settings(
     settings, monkeypatch
 ) -> None:
-    fake_st = FakeStreamlit(buttons={"Start": True}, use_claude_qualification=False)
+    fake_st = FakeStreamlit(buttons={"Start": True}, use_openai_qualification=False)
     monkeypatch.setattr(ui, "st", fake_st)
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
@@ -351,8 +351,8 @@ def test_render_sidebar_qualification_toggle_overrides_settings(
         limit_per_source,
         custom_urls,
     ):
-        captured["use_claude_qualification"] = (
-            incoming_settings.use_claude_qualification
+        captured["use_openai_qualification"] = (
+            incoming_settings.use_openai_qualification
         )
         active_run = _build_active_run("result.xlsx")
         fake_st.session_state[ui.ACTIVE_RUN_KEY] = active_run
@@ -362,16 +362,16 @@ def test_render_sidebar_qualification_toggle_overrides_settings(
 
     ui.render()
 
-    assert captured["use_claude_qualification"] is False
+    assert captured["use_openai_qualification"] is False
 
 
-def test_render_does_not_warn_when_claude_is_disabled(settings, monkeypatch) -> None:
+def test_render_does_not_warn_when_openai_is_disabled(settings, monkeypatch) -> None:
     fake_st = FakeStreamlit(
         buttons={"Start": True},
-        use_claude_qualification=False,
+        use_openai_qualification=False,
     )
     monkeypatch.setattr(ui, "st", fake_st)
-    settings.anthropic_api_key = ""
+    settings.openai_api_key = ""
     monkeypatch.setattr(ui.Settings, "load", lambda: settings)
 
     def fake_start(
@@ -389,7 +389,7 @@ def test_render_does_not_warn_when_claude_is_disabled(settings, monkeypatch) -> 
 
     ui.render()
 
-    assert not any("ANTHROPIC_API_KEY is not set" in text for text in fake_st.warnings)
+    assert not any("OPENAI_API_KEY is not set" in text for text in fake_st.warnings)
 
 
 def test_render_starts_with_custom_urls_only(settings, monkeypatch) -> None:
@@ -477,7 +477,7 @@ def test_render_shows_runtime_estimate_while_running(
 def test_estimate_total_seconds_increases_with_expensive_checks(settings) -> None:
     baseline = ui._estimate_total_seconds(settings, 2, 3)
 
-    settings.use_claude_qualification = False
+    settings.use_openai_qualification = False
     settings.qualification_enabled = False
     settings.smtp_precheck_required = False
     settings.website_precheck_required = False
