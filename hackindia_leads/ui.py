@@ -7,6 +7,7 @@ from queue import Empty, Queue
 
 import streamlit as st
 
+from hackindia_leads.auth import firebase_login_screen
 from hackindia_leads.config import Settings
 from hackindia_leads.models import PUBLIC_LEAD_COLUMNS
 from hackindia_leads.pipeline import LeadPipeline, PipelineControl, PipelineResult
@@ -59,6 +60,47 @@ class ActiveRunState:
 def render() -> None:
     st.set_page_config(page_title="HackIndia Lead Finder", layout="wide")
     _inject_styles()
+
+    settings = Settings.load()
+
+    if settings.firebase_api_key:
+        if "user" not in st.session_state:
+            st.session_state["user"] = None
+
+        if not st.session_state["user"]:
+            st.title("Welcome to HackIndia Lead Finder")
+            st.write("Please log in using your Google account to access the app.")
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                result = firebase_login_screen(
+                    {
+                        "apiKey": settings.firebase_api_key,
+                        "authDomain": settings.firebase_auth_domain,
+                        "projectId": settings.firebase_project_id,
+                    }
+                )
+                if result and "token" in result:
+                    st.session_state["user"] = result
+                    st.rerun()
+            return
+
+        email_col, logout_col = st.sidebar.columns([5, 1])
+        email_col.markdown(
+            (
+                f"<div style='line-height:1.3;padding-top:0.25rem;'>"
+                f"<span style='font-size:0.75rem;color:#5f6b7a;"
+                f"text-transform:uppercase;letter-spacing:0.04em;'>"
+                f"Logged in as</span><br>"
+                f"<strong style='font-size:0.85rem;'>"
+                f"{st.session_state['user'].get('email', 'User')}"
+                f"</strong></div>"
+            ),
+            unsafe_allow_html=True,
+        )
+        if logout_col.button("⏻", help="Log out", key="logout_btn"):
+            st.session_state["user"] = None
+            st.rerun()
+
     st.title("HackIndia Lead Finder")
     st.caption(
         (
@@ -67,7 +109,6 @@ def render() -> None:
         )
     )
 
-    settings = Settings.load()
     _ensure_session_state()
     active_run = _get_active_run()
     if active_run is not None:
@@ -270,6 +311,9 @@ def _run_pipeline_worker(
         )
         progress_queue.put(("result", result))
     except Exception as exc:
+        import traceback
+        with open("thread_error.log", "w") as f:
+            f.write(traceback.format_exc())
         progress_queue.put(("error", str(exc)))
 
 
@@ -520,10 +564,7 @@ def _estimate_total_seconds(
 
     return max(
         75,
-        base_seconds
-        + discovery_seconds
-        + event_fetch_seconds
-        + enrichment_seconds,
+        base_seconds + discovery_seconds + event_fetch_seconds + enrichment_seconds,
     )
 
 
@@ -701,6 +742,26 @@ def _inject_styles() -> None:
         <style>
         div[data-testid="column"] {
             align-self: stretch;
+        }
+
+        /* Compact icon-style logout button */
+        [data-testid="stSidebar"] button[kind="secondary"]:has(+ div[data-testid="stTooltipHoverTarget"]),
+        button[key="logout_btn"] {
+            padding: 0.3rem 0.5rem !important;
+            min-height: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            font-size: 1.15rem !important;
+            line-height: 1 !important;
+            color: #5f6b7a !important;
+            transition: color 0.2s ease, transform 0.15s ease;
+            margin-top: 0.35rem;
+        }
+        [data-testid="stSidebar"] button[kind="secondary"]:has(+ div[data-testid="stTooltipHoverTarget"]):hover,
+        button[key="logout_btn"]:hover {
+            color: #e53935 !important;
+            background: rgba(229, 57, 53, 0.08) !important;
+            transform: scale(1.12);
         }
 
         .source-status {

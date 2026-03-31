@@ -52,6 +52,9 @@ class Settings:
     qualification_preferred_recent_months: int
     google_search_api_key: str
     google_search_engine_id: str
+    firebase_api_key: str
+    firebase_auth_domain: str
+    firebase_project_id: str
 
     @classmethod
     def load(cls) -> "Settings":
@@ -110,4 +113,7 @@ class Settings:
             ),
             google_search_api_key=os.getenv("GOOGLE_SEARCH_API_KEY", "").strip(),
             google_search_engine_id=os.getenv("GOOGLE_SEARCH_ENGINE_ID", "").strip(),
+            firebase_api_key=os.getenv("FIREBASE_API_KEY", "").strip(),
+            firebase_auth_domain=os.getenv("FIREBASE_AUTH_DOMAIN", "").strip(),
+            firebase_project_id=os.getenv("FIREBASE_PROJECT_ID", "").strip(),
         )

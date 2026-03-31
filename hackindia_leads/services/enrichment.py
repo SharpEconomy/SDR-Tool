@@ -186,9 +186,31 @@ class ContactEnricher:
             f'site:linkedin.com/in "{sponsor.name}" "business development"',
             f'site:linkedin.com/in "{sponsor.name}" "developer relations"',
         ]
+
+        # Clean sponsor name for matching
+        sponsor_words = [
+            w
+            for w in sponsor.name.lower().split()
+            if len(w) > 2 and w not in {"inc", "llc", "corp", "ltd"}
+        ]
+        domain_main = domain.split(".")[0].lower() if domain else ""
+
         for query in queries:
             results = self.search_client.search(query, max_results=3)
             for item in results:
+                text = f"{item.title} {item.snippet}".lower()
+
+                # Verify contact is related to the company
+                match_sponsor = (
+                    any(word in text for word in sponsor_words)
+                    if sponsor_words
+                    else True
+                )
+                match_domain = bool(domain_main and domain_main in text)
+
+                if not (match_sponsor or match_domain):
+                    continue
+
                 candidates.extend(self._candidates_from_search_result(item, domain))
         return candidates
 

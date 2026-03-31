@@ -29,4 +29,7 @@ def settings() -> Settings:
         qualification_preferred_recent_months=3,
         google_search_api_key="",
         google_search_engine_id="",
+        firebase_api_key="",
+        firebase_auth_domain="",
+        firebase_project_id="",
     )
