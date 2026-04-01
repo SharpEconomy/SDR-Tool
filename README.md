@@ -107,3 +107,4 @@ The scraper now uses a shared adaptive sponsor extractor for every source:
 You still may want a dedicated source adapter only when you need automatic event
 discovery for a brand-new platform at scale. Sponsor extraction itself is no
 longer tied to per-site code.
+
