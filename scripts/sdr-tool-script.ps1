@@ -1,12 +1,23 @@
-# SDR Tool - Python Project Management Script
+# Growth Engine - Python Project Management Script
 
 param(
     [Parameter(Mandatory = $false)]
     [ValidateSet('install', 'run', 'build', 'format', 'lint', 'test', 'clean', 'all')]
     [string]$Task = 'all'
+    ,
+    [Parameter(Mandatory = $false)]
+    [switch]$NoBrowser
+    ,
+    [Parameter(Mandatory = $false)]
+    [ValidateRange(1, 65535)]
+    [int]$Port = 8501
 )
 
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+Set-StrictMode -Version Latest
+$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+Push-Location $RepoRoot
 
 function Test-PythonModule {
     param(
@@ -57,27 +68,37 @@ function Run-Project {
         throw "Required Python module 'streamlit' is not installed."
     }
 
-    $port = "8501"
-    $appUrl = "http://localhost:$port"
+    if (-not (Test-Path -LiteralPath "app.py")) {
+        throw "Could not find app.py in $RepoRoot."
+    }
+
+    $appUrl = "http://localhost:$Port"
     Start-Process -FilePath "python" -ArgumentList @(
         "-m",
         "streamlit",
         "run",
         "app.py",
         "--server.port",
-        $port,
+        "$Port",
         "--server.headless",
         "true"
     ) | Out-Null
 
     Start-Sleep -Seconds 3
-    Start-Process $appUrl | Out-Null
-    Write-Host "App opened at $appUrl" -ForegroundColor Green
+    if (-not $NoBrowser) {
+        try {
+            Start-Process $appUrl | Out-Null
+        }
+        catch {
+            Write-Host "Streamlit started, but opening the browser failed. Open $appUrl manually." -ForegroundColor Yellow
+        }
+    }
+    Write-Host "App started at $appUrl" -ForegroundColor Green
 }
 
 function Build-Project {
     Write-Host "Running build-style verification..." -ForegroundColor Cyan
-    python -m compileall app.py hackindia_leads tests
+    python -m compileall app.py growth_engine tests
     if ($LASTEXITCODE -ne 0) {
         throw "compileall failed with exit code $LASTEXITCODE."
     }
@@ -92,12 +113,12 @@ function Format-Code {
 function Lint-Code {
     Write-Host "Linting code..." -ForegroundColor Cyan
     Invoke-PythonModule -ModuleName "flake8" -Arguments @(
-        "--max-line-length", "88",
-        "hackindia_leads",
+        "--max-line-length", "160",
+        "growth_engine",
         "tests",
         "app.py"
     )
-    python -m compileall app.py hackindia_leads tests
+    python -m compileall app.py growth_engine tests
     if ($LASTEXITCODE -ne 0) {
         throw "compileall failed with exit code $LASTEXITCODE."
     }
@@ -118,22 +139,26 @@ function Clean-Project {
 }
 
 # Execute tasks
-switch ($Task) {
-    'install' { Install-Dependencies }
-    'run' { Run-Project }
-    'build' { Build-Project }
-    'format' { Format-Code }
-    'lint' { Lint-Code }
-    'test' { Test-Project }
-    'clean' { Clean-Project }
-    'all' {
-        Install-Dependencies
-        Format-Code
-        Lint-Code
-        Test-Project
-        Build-Project
-        Run-Project
+try {
+    switch ($Task) {
+        'install' { Install-Dependencies }
+        'run' { Run-Project }
+        'build' { Build-Project }
+        'format' { Format-Code }
+        'lint' { Lint-Code }
+        'test' { Test-Project }
+        'clean' { Clean-Project }
+        'all' {
+            Install-Dependencies
+            Format-Code
+            Lint-Code
+            Test-Project
+            Build-Project
+            Write-Host "Verification finished. Use -Task run to launch the UI." -ForegroundColor Green
+        }
     }
+    Write-Host "Task completed!" -ForegroundColor Green
 }
-
-Write-Host "Task completed!" -ForegroundColor Green
+finally {
+    Pop-Location
+}

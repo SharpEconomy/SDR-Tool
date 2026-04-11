@@ -1,1 +1,0 @@
-"""HackIndia sponsor lead scraper."""

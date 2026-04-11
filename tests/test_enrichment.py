@@ -1,97 +1,91 @@
 from __future__ import annotations
 
-from hackindia_leads.models import Sponsor
-from hackindia_leads.services.enrichment import ContactEnricher
-from hackindia_leads.services.fetcher import FetchResult
-from hackindia_leads.services.search import SearchResult
+from datetime import UTC, datetime
+
+from growth_engine.enrichment import OpportunityEnricher
+from growth_engine.intake import BusinessProfileBuilder
+from growth_engine.models import DiscoveryDocument
+from growth_engine.parsing import HtmlParsingService
 
 
-def test_resolve_website_prefers_valid_sponsor_website(settings, monkeypatch) -> None:
-    enricher = ContactEnricher(settings)
-    monkeypatch.setattr(enricher, "validate_website", lambda website: True)
+class _FakeEmailValidator:
+    def validate(self, email, include_smtp_probe=False, include_mx_lookup=True):
+        from growth_engine.models import ContactValidation
 
-    website = enricher.resolve_website(
-        Sponsor(name="ENS", website="https://ens.domains/about")
-    )
-
-    assert website == "https://ens.domains"
+        return ContactValidation(True, True, None, None)
 
 
-def test_resolve_website_uses_search_fallback(settings, monkeypatch) -> None:
-    enricher = ContactEnricher(settings)
-    monkeypatch.setattr(
-        enricher.search_client,
-        "search",
-        lambda query, max_results: [
-            SearchResult("LinkedIn", "https://linkedin.com/company/test", ""),
-            SearchResult("Official", "https://company.example/about", ""),
-        ],
-    )
-    monkeypatch.setattr(enricher, "validate_website", lambda website: True)
+class _FakeSearchClient:
+    def __init__(self, results):
+        self.results = results
 
-    website = enricher.resolve_website(Sponsor(name="Example"))
-
-    assert website == "https://company.example"
+    def search(self, query: str, max_results: int = 5):
+        return self.results[:max_results]
 
 
-def test_validate_website_accepts_live_statuses(settings, monkeypatch) -> None:
-    enricher = ContactEnricher(settings)
-    monkeypatch.setattr(
-        enricher.fetcher,
-        "fetch",
-        lambda url: FetchResult(
-            url=url,
-            status_code=403,
-            text="blocked",
-            used_browser=False,
-        ),
-    )
-
-    assert enricher.validate_website("https://example.com") is True
-
-
-def test_find_contact_candidates_combines_website_and_search(
-    settings, monkeypatch
+def test_enricher_builds_contact_paths_and_decision_maker(
+    intake, linkedin_search_result
 ) -> None:
-    enricher = ContactEnricher(settings)
-    monkeypatch.setattr(
-        enricher.fetcher,
-        "fetch",
-        lambda url: FetchResult(
-            url=url,
-            status_code=200,
-            text="<html><body>Reach jane@example.com</body></html>",
-            used_browser=False,
-        ),
+    profile = BusinessProfileBuilder().build(intake)
+    parser = HtmlParsingService()
+    document = DiscoveryDocument(
+        adapter_name="public_web",
+        source_type="public_web",
+        discovery_mode="partners",
+        url="https://example.com",
+        title="Example Retail - Partner with us",
+        snippet="Retail partner network India",
+        html="""
+        <html>
+          <head><title>Example Retail - Partner with us</title></head>
+          <body>
+            <h1>Example Retail</h1>
+            <a href="/contact">Contact</a>
+            Reach us at hello@example.com
+          </body>
+        </html>
+        """,
+        status_code=200,
+        fetched_at=datetime.now(UTC),
     )
-    monkeypatch.setattr(
-        enricher.search_client,
-        "search",
-        lambda query, max_results: [
-            SearchResult(
-                "Jane Doe - Head of Partnerships - Example | LinkedIn",
-                "https://www.linkedin.com/in/jane-doe/",
-                "",
-            )
-        ],
-    )
-
-    candidates = enricher.find_contact_candidates(
-        Sponsor(name="Example"),
-        "https://example.com",
-        "example.com",
+    parsed = parser.parse(document)
+    enricher = OpportunityEnricher(
+        _FakeSearchClient(linkedin_search_result), _FakeEmailValidator()
     )
 
-    emails = [candidate.email for candidate in candidates]
+    entity = enricher.enrich(
+        profile, "partners", "public_web", document.url, parsed, document.snippet
+    )
 
-    assert "jane@example.com" in emails
-    assert "jane.doe@example.com" in emails
-    assert candidates[0].email == "jane@example.com"
+    assert entity.entity_name == "Example Retail"
+    assert any(path.label == "hello@example.com" for path in entity.contact_paths)
+    assert entity.contact_paths[0].kind == "decision_maker_email"
+    assert entity.decision_maker_email == "riya.sharma@example.com"
 
 
-def test_title_score_and_bad_domain(settings) -> None:
-    enricher = ContactEnricher(settings)
+def test_enricher_respects_exclusion_keywords(intake, linkedin_search_result) -> None:
+    intake.exclusion_keywords = ["retail"]
+    profile = BusinessProfileBuilder().build(intake)
+    parser = HtmlParsingService()
+    document = DiscoveryDocument(
+        adapter_name="public_web",
+        source_type="public_web",
+        discovery_mode="customers",
+        url="https://example.com",
+        title="Example Retail",
+        snippet="Retail buyer India",
+        html="<html><body><h1>Example Retail</h1></body></html>",
+        status_code=200,
+        fetched_at=datetime.now(UTC),
+    )
+    parsed = parser.parse(document)
+    enricher = OpportunityEnricher(
+        _FakeSearchClient(linkedin_search_result), _FakeEmailValidator()
+    )
 
-    assert enricher._title_score("VP Partnerships") > 0
-    assert enricher._is_bad_domain("linkedin.com") is True
-    assert enricher._is_bad_domain("example.com") is False
+    entity = enricher.enrich(
+        profile, "customers", "public_web", document.url, parsed, document.snippet
+    )
+
+    assert entity.excluded is True
+    assert entity.exclusion_reason == "Matched exclusion keyword: retail"
