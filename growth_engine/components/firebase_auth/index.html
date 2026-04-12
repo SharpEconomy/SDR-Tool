@@ -51,63 +51,174 @@
     <p id="msg"></p>
 
     <script>
+      const btn = document.getElementById("btn");
+      const msg = document.getElementById("msg");
+      let authListenerAttached = false;
+      let lastReportedUserKey = "";
+      let lastProcessedLogoutVersion = 0;
+      let currentShowLoginButton = true;
+
       function sendMessageToStreamlitClient(type, data) {
-        window.parent.postMessage({
-          isStreamlitMessage: true,
-          type: type,
-          ...data
-        }, "*");
+        window.parent.postMessage(
+          {
+            isStreamlitMessage: true,
+            type: type,
+            ...data,
+          },
+          "*"
+        );
       }
 
       function setComponentValue(value) {
-        sendMessageToStreamlitClient("streamlit:setComponentValue", {value: value});
+        sendMessageToStreamlitClient("streamlit:setComponentValue", { value: value });
       }
 
       function setFrameHeight(height) {
-        sendMessageToStreamlitClient("streamlit:setFrameHeight", {height: height});
+        sendMessageToStreamlitClient("streamlit:setFrameHeight", { height: height });
       }
 
-      // Handle messages from the Streamlit framework
-      window.addEventListener("message", function(event) {
-        if (event.data.type === "streamlit:render") {
-          const args = event.data.args;
-          if (args && args.firebaseConfig && !firebase.apps.length) {
-            firebase.initializeApp(args.firebaseConfig);
+      function updateFrameHeight() {
+        const hasMessage = Boolean(msg.innerText);
+        if (!currentShowLoginButton && !hasMessage) {
+          setFrameHeight(16);
+          return;
+        }
+        setFrameHeight(hasMessage ? 140 : 120);
+      }
+
+      function reportError(message) {
+        msg.innerText = message;
+        setComponentValue({ status: "error", message: message });
+        updateFrameHeight();
+      }
+
+      function reportSignedOut() {
+        lastReportedUserKey = "";
+        setComponentValue({ status: "signed_out" });
+      }
+
+      function reportAuthenticated(user) {
+        user
+          .getIdToken()
+          .then((token) => {
+            const email = user.email || "";
+            const userKey = [user.uid || "", email, token].join("|");
+            if (userKey === lastReportedUserKey) {
+              return;
+            }
+            lastReportedUserKey = userKey;
+            setComponentValue({
+              status: "authenticated",
+              email: email,
+              token: token,
+              uid: user.uid || "",
+              displayName: user.displayName || "",
+            });
+          })
+          .catch((err) => {
+            reportError("Failed to restore the login session: " + err.message);
+          });
+      }
+
+      function ensureFirebase(firebaseConfig) {
+        if (firebase.apps.length) {
+          return true;
+        }
+        if (
+          !firebaseConfig ||
+          !firebaseConfig.apiKey ||
+          !firebaseConfig.authDomain ||
+          !firebaseConfig.projectId
+        ) {
+          reportError("Firebase configuration is missing.");
+          return false;
+        }
+
+        firebase.initializeApp(firebaseConfig);
+        firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch((err) => {
+          reportError("Failed to enable session persistence: " + err.message);
+        });
+        return true;
+      }
+
+      function ensureAuthListener() {
+        if (authListenerAttached || !firebase.apps.length) {
+          return;
+        }
+
+        authListenerAttached = true;
+        firebase.auth().onAuthStateChanged((user) => {
+          if (user) {
+            msg.innerText = "";
+            reportAuthenticated(user);
+          } else if (lastReportedUserKey || lastProcessedLogoutVersion > 0) {
+            msg.innerText = "";
+            reportSignedOut();
+          } else {
+            msg.innerText = "";
           }
-          setFrameHeight(120);
+          updateFrameHeight();
+        });
+      }
+
+      function applyRenderArgs(args) {
+        currentShowLoginButton = Boolean(args.showLoginButton);
+        btn.style.display = currentShowLoginButton ? "inline-flex" : "none";
+
+        if (!ensureFirebase(args.firebaseConfig)) {
+          return;
+        }
+
+        ensureAuthListener();
+
+        if (
+          typeof args.logoutVersion === "number" &&
+          args.logoutVersion > 0 &&
+          args.logoutVersion !== lastProcessedLogoutVersion
+        ) {
+          lastProcessedLogoutVersion = args.logoutVersion;
+          msg.innerText = "Signing out...";
+          updateFrameHeight();
+          firebase
+            .auth()
+            .signOut()
+            .catch((err) => {
+              reportError("Failed to sign out: " + err.message);
+            });
+          return;
+        }
+
+        updateFrameHeight();
+      }
+
+      window.addEventListener("message", function (event) {
+        if (event.data.type === "streamlit:render") {
+          applyRenderArgs(event.data.args || {});
         }
       });
 
-      // Tell Streamlit the component is ready
-      sendMessageToStreamlitClient("streamlit:componentReady", {apiVersion: 1});
+      sendMessageToStreamlitClient("streamlit:componentReady", { apiVersion: 1 });
 
-      // Handle the button click
-      const btn = document.getElementById('btn');
-      const msg = document.getElementById('msg');
-      
-      btn.onclick = function() {
-         if (!firebase.apps.length) {
-             msg.innerText = "Firebase configuration is missing.";
-             setFrameHeight(120);
-             return;
-         }
-         
-         const provider = new firebase.auth.GoogleAuthProvider();
-         firebase.auth().signInWithPopup(provider)
-           .then(res => {
-              const email = res.user.email;
-              msg.innerText = "Logged in: " + email;
-              res.user.getIdToken().then(token => {
-                  setComponentValue({ email: email, token: token });
-              }).catch(err => {
-                  msg.innerText = "Failed to get token: " + err.message;
-              });
-              setFrameHeight(120);
-           })
-           .catch(err => {
-              msg.innerText = "Error: " + err.message;
-              setFrameHeight(140);
-           });
+      btn.onclick = function () {
+        if (!firebase.apps.length) {
+          reportError("Firebase configuration is missing.");
+          return;
+        }
+
+        msg.innerText = "";
+        updateFrameHeight();
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase
+          .auth()
+          .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+          .then(() => firebase.auth().signInWithPopup(provider))
+          .then(() => {
+            msg.innerText = "";
+            updateFrameHeight();
+          })
+          .catch((err) => {
+            reportError("Error: " + err.message);
+          });
       };
     </script>
   </body>

@@ -5,6 +5,8 @@ import json
 import types
 from dataclasses import asdict
 
+import pytest
+
 from growth_engine.cloud.credentials import get_google_credentials
 from growth_engine.cloud.functions import pubsub_decision_handler, run_decision_job
 from growth_engine.cloud.pubsub import DEFAULT_PUBSUB_TOPIC, PubSubOrchestrator
@@ -91,6 +93,10 @@ def test_pubsub_orchestrator_publishes(settings, intake, monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "google", google_module)
     monkeypatch.setitem(sys.modules, "google.cloud", cloud_module)
     monkeypatch.setitem(sys.modules, "google.cloud.pubsub_v1", pubsub_module)
+    monkeypatch.setattr(
+        "growth_engine.cloud.pubsub.get_google_credentials",
+        lambda settings: ("creds", settings.google_cloud_project),
+    )
 
     message_id = PubSubOrchestrator(settings).publish_intake(intake)
 
@@ -139,3 +145,12 @@ def test_google_credentials_support_base64_service_account(
     assert project_id == "encoded-project"
     assert captured["info"]["client_email"] == "svc@test"
     assert captured["scopes"] == ["scope-1"]
+
+
+def test_google_credentials_require_base64_service_account(settings) -> None:
+    with pytest.raises(RuntimeError) as exc_info:
+        get_google_credentials(settings)
+
+    message = str(exc_info.value)
+    assert "GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64" in message
+    assert ".env.example" in message

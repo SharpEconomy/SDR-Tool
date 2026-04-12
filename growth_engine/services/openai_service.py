@@ -47,6 +47,18 @@ SYSTEM_PROMPTS = {
         "and follows from what is already known. Return JSON only with "
         '{"question":"","focus_fields":["field_name"],"rationale":""}.'
     ),
+    "profile_verification": (
+        "You verify a company's business profile from website and search evidence. "
+        "Cross-check the evidence, prefer facts that appear on the primary website, "
+        "and make one final grounded call. Return JSON only with keys: "
+        "business_name, website, description, industry, location, target_geographies, "
+        "budget, ideal_customer_profile, preferred_company_sizes, preferred_sectors, "
+        "offerings, goals, discovery_modes, opportunity_type_needed, "
+        "inclusion_keywords, exclusion_keywords, vendor_constraints, "
+        "supplier_constraints, user_urls, verification_summary. "
+        "Use arrays for list fields. If evidence is weak, use conservative defaults "
+        "instead of inventing specifics."
+    ),
 }
 
 
@@ -103,6 +115,13 @@ class OpenAIService:
             prompt_name="intake_question",
             payload=payload,
             max_output_tokens=400,
+        )
+
+    def verify_business_profile(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request_json(
+            prompt_name="profile_verification",
+            payload=payload,
+            max_output_tokens=1400,
         )
 
     def _request_json(

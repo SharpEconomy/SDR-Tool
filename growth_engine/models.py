@@ -102,6 +102,21 @@ class IntakeQuestion:
 
 
 @dataclass(slots=True)
+class ResearchSource:
+    kind: str
+    url: str
+    title: str
+    snippet: str
+
+
+@dataclass(slots=True)
+class ProfileResearchResult:
+    draft: IntakeDraft
+    sources: list[ResearchSource]
+    verification_summary: str
+
+
+@dataclass(slots=True)
 class TargetingModel:
     keywords: list[str]
     exclude_keywords: list[str]

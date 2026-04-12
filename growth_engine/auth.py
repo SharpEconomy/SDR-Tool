@@ -9,5 +9,16 @@ _firebase_auth_component = components.declare_component(
 )
 
 
-def firebase_login_screen(firebase_config: dict[str, str], key=None):
-    return _firebase_auth_component(firebaseConfig=firebase_config, key=key)
+def firebase_login_screen(
+    firebase_config: dict[str, str],
+    *,
+    show_login_button: bool = True,
+    logout_version: int = 0,
+    key=None,
+):
+    return _firebase_auth_component(
+        firebaseConfig=firebase_config,
+        showLoginButton=show_login_button,
+        logoutVersion=logout_version,
+        key=key,
+    )

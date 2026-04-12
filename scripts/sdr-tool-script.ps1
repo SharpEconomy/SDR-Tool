@@ -106,8 +106,8 @@ function Build-Project {
 
 function Format-Code {
     Write-Host "Formatting code..." -ForegroundColor Cyan
-    Invoke-PythonModule -ModuleName "black" -Arguments @(".")
-    Invoke-PythonModule -ModuleName "isort" -Arguments @(".", "--profile", "black")
+    Invoke-PythonModule -ModuleName "black" -Arguments @("app.py", "growth_engine", "tests", "scripts")
+    Invoke-PythonModule -ModuleName "isort" -Arguments @("app.py", "growth_engine", "tests", "scripts", "--profile", "black")
 }
 
 function Lint-Code {
@@ -132,7 +132,7 @@ function Test-Project {
 function Clean-Project {
     Write-Host "Cleaning project..." -ForegroundColor Cyan
     Get-ChildItem -Recurse -Directory -Force -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -in @("__pycache__", ".pytest_cache", "build", "dist") } |
+        Where-Object { $_.Name -in @("__pycache__", ".pytest_cache", ".pytest_tmp", "build", "dist") } |
         Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
     Get-ChildItem -Recurse -File -Filter "*.pyc" -ErrorAction SilentlyContinue |
         Remove-Item -Force -ErrorAction SilentlyContinue

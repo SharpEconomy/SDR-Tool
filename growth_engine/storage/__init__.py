@@ -3,8 +3,11 @@ from growth_engine.storage.artifacts import (
     AuditStore,
     FirebaseStorageArtifactStore,
     FirestoreAuditStore,
+    FirestoreProfileStore,
     NoOpArtifactStore,
     NoOpAuditStore,
+    NoOpProfileStore,
+    ProfileStore,
 )
 
 __all__ = [
@@ -12,6 +15,9 @@ __all__ = [
     "AuditStore",
     "FirebaseStorageArtifactStore",
     "FirestoreAuditStore",
+    "FirestoreProfileStore",
     "NoOpArtifactStore",
     "NoOpAuditStore",
+    "NoOpProfileStore",
+    "ProfileStore",
 ]

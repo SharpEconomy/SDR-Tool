@@ -5,7 +5,7 @@ This suite validates the production decision engine in business terms rather tha
 Coverage summary:
 
 - `test_intake.py`: business intake normalization and inferred targeting model construction.
-- `test_interview.py`: adaptive intake extraction, no-repeat follow-up selection, and refinement behavior.
+- `test_interview.py`: capped six-step intake flow, structured answer extraction, and refinement behavior.
 - `test_discovery.py`: seed URL handling and discovery adapter registration.
 - `test_parsing.py`: deterministic HTML parsing for entity extraction inputs.
 - `test_enrichment.py`: entity enrichment, contact-path creation, decision-maker inference, and exclusion handling.
@@ -13,7 +13,9 @@ Coverage summary:
 - `test_matching.py`: final opportunity assembly, reasoning plumbing, and best-contact selection.
 - `test_export.py`: Excel export structure for prioritized and skipped entities.
 - `test_engine.py`: orchestration flow and pause/stop control behavior.
-- `test_ui.py`: UI helper parsing and active-run state synchronization.
+- `test_ui.py`: UI helper parsing, confirmation-form normalization, auth session payload normalization, and workspace reset.
 - `test_validation.py`: email syntax and validation fallback behavior.
 - `test_services.py`: fetch/search/OpenAI retry and fallback behavior.
 - `test_cloud.py`: Cloud Run and Pub/Sub-facing integration helpers.
+- `test_profile_research.py`: website-plus-search evidence gathering and GPT-backed profile draft generation.
+- `test_storage_profiles.py`: Firestore profile persistence payload and document routing.

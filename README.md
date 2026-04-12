@@ -1,19 +1,15 @@
 # Growth Opportunity Decision Engine
 
-Production-ready Streamlit application for small and mid-sized businesses that need ranked growth opportunities instead of raw search results. The app accepts a structured business profile and returns prioritized customers, partners, vendors, suppliers, and service providers with transparent reasoning, confidence, and next action.
+Production-ready Streamlit application for capturing a verified business foundation from minimal input. The app starts with only a business name and website, researches public evidence, asks `gpt-5.4-mini` to cross-check the findings, and lets the user confirm or edit the full profile before saving it to Firestore.
 
 ## What the app does
 
-- Normalizes business intake into a reusable targeting model.
-- Discovers public opportunities across user URLs, public web pages, directories, company sites, and procurement-style listings.
-- Parses pages deterministically first and uses `gpt-5.4-mini` only where ambiguity remains.
-- Enriches each entity with category, location, company size, contact paths, and decision-maker signals.
-- Scores every entity using deterministic rules with optional bounded model refinement.
-- Produces a ranked opportunity list plus a skipped-entities audit trail.
-- Exports a business-ready Excel workbook with two sheets:
-  `Prioritized Opportunities` and `Skipped Entities`.
-- Writes an audit record for each run so decisions remain explainable and reviewable later.
-- Surfaces a human-readable reasoning summary and next action for every ranked result.
+- Accepts only a business name and website as manual input.
+- Fetches the company website and supporting public search results.
+- Parses public evidence deterministically and sends the evidence set to `gpt-5.4-mini` for a final cross-verified profile call.
+- Builds a complete editable business profile draft with market, ICP, offerings, goals, and guardrails.
+- Presents the gathered evidence and model summary in a review-first confirmation UI.
+- Saves the confirmed profile to Firestore after user approval.
 
 ## Product intent
 
@@ -23,23 +19,23 @@ This is not a scraper marketplace, listing site, or general-purpose search tool.
 - Processing: discovery, filtering, enrichment, scoring, matching
 - Output: a short prioritized list with reasoning and next action
 
-## QA-based intake experience
+## Verification-first intake experience
 
-The intake UI is a guided conversation rather than a long form.
+The current UI is optimized for speed and review quality rather than long-form manual intake.
 
-- The app asks adaptive questions in plain language and skips fields that are already known.
-- `gpt-5.4-mini` is used to extract structured intake updates and generate the next best follow-up question when available.
-- The interview layer falls back to deterministic extraction and rule-based next-question logic if the model is unavailable.
-- Users can refine business basics, need definition, or filters without restarting the whole brief.
-- The right-hand summary panel shows the live business brief that will drive discovery and scoring.
+- The user enters only the business name and website.
+- The app performs web research automatically using the primary site plus custom search results.
+- `gpt-5.4-mini` makes the final structured call from that evidence set.
+- Every generated field remains editable before confirmation.
+- The confirmed record is written to Firestore for downstream use.
 
 ## Core flows
 
-1. Answer a few adaptive questions about the business and what kind of opportunity is needed.
-2. Review the generated business brief, constraints, and targeting summary.
-3. Run discovery and optionally pause, resume, or stop the pipeline.
-4. Review ranked matches with reasoning and next action.
-5. Download the Excel workbook with prioritized and skipped entities.
+1. Enter the business name and website.
+2. Let the app fetch website and search evidence.
+3. Review the GPT-cross-verified business profile.
+4. Edit any field that needs correction.
+5. Confirm and save the final record to Firestore.
 
 The UI stays non-technical on purpose. It is designed for operators, founders, growth teams, procurement leads, and business owners who want a simple guided flow.
 
@@ -57,7 +53,8 @@ Main package: `growth_engine`
 - `scoring/`: deterministic scoring plus bounded LLM refinement.
 - `matching/`: business-facing output assembly.
 - `export/`: Excel workbook generation.
-- `storage/`: Firebase Storage export persistence and Firestore audit persistence.
+- `profile_research/`: public-web evidence gathering and model-backed profile verification.
+- `storage/`: Firebase Storage export persistence plus Firestore audit and profile persistence.
 - `orchestration/`: end-to-end decision engine and pause/resume/stop control.
 - `ui/`: guided Streamlit interface.
 
@@ -70,7 +67,7 @@ The app centralizes all model calls in `growth_engine/services/openai_service.py
 Model responsibilities:
 
 - targeting model refinement
-- conversational intake extraction and adaptive follow-up generation
+- evidence-backed business profile verification
 - ambiguous entity extraction
 - bounded scoring refinement, matching guidance, and decision explanation
 
@@ -143,6 +140,7 @@ Important settings:
 - `SMTP_PROBE_ENABLED=false`
 - `AUDIT_BACKEND=firestore`
 - `FIRESTORE_COLLECTION`
+- `FIRESTORE_PROFILE_COLLECTION`
 - `FIRESTORE_DATABASE`
 - `GOOGLE_CLOUD_PROJECT`
 - `GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64`
@@ -154,22 +152,28 @@ Optional Firebase sign-in:
 - `FIREBASE_AUTH_DOMAIN`
 - `FIREBASE_PROJECT_ID`
 
+Firebase sign-in behavior:
+
+- Google sign-in is persisted in the browser with Firebase local auth persistence.
+- Reloading the page or reopening the app in the same browser restores the session automatically.
+- `Log out` now signs out both the Streamlit session and the persisted Firebase browser session.
+
 Leave the Firebase values blank if you do not want sign-in enabled for local runs.
 
 ## Firestore and Google Cloud credentials
 
-The app uses Firestore for audit persistence when `AUDIT_BACKEND=firestore`. There is no Realtime Database dependency in the current backend.
+The app uses Firestore for confirmed business profile persistence and optional audit persistence. There is no Realtime Database dependency in the current backend.
 
-Google Cloud credentials can be supplied in one of these ways:
+Google Cloud credentials are supplied through:
 
 1. `GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64`
-2. default ambient credentials in the environment
 
 Recommended for encrypted secrets in CI/CD or hosted deployments:
 
 - store the service account JSON as a base64-encoded secret
 - set that secret as `GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64`
 - set `GOOGLE_CLOUD_PROJECT` explicitly
+- place the value in `.env` or `.env.example`
 
 The same credential source is used for Firestore, Firebase Storage, and Pub/Sub helpers.
 
@@ -180,7 +184,7 @@ The app runs locally without cloud dependencies. The codebase also supports simp
 - Cloud Run: `growth_engine/cloud/run_api.py` exposes `/healthz` and `/api/run`.
 - Cloud Functions: `growth_engine/cloud/functions.py` exposes request and Pub/Sub job handlers.
 - Pub/Sub: `growth_engine/cloud/pubsub.py` publishes intake jobs for async orchestration with a built-in topic name.
-- Firestore: store audit records when `AUDIT_BACKEND=firestore`, using the configured Firestore collection and database.
+- Firestore: store confirmed business profiles in `FIRESTORE_PROFILE_COLLECTION` and audit records in `FIRESTORE_COLLECTION`.
 - Firebase Storage: persist exports to the configured `FIREBASE_STORAGE_BUCKET`.
 
 The Google Cloud integrations are lazy-imported so local runs remain lightweight.
@@ -207,8 +211,8 @@ python -m pytest
 
 Test coverage includes:
 
-- intake normalization
-- adaptive interview extraction and follow-up selection
+- profile research and model-backed verification fallback behavior
+- intake normalization and legacy interview helpers
 - discovery adapters
 - parsing
 - enrichment
@@ -218,7 +222,8 @@ Test coverage includes:
 - orchestration
 - cloud helpers
 - fetch/search/OpenAI retry behavior
-- UI helpers
+- UI helpers, confirmation-form parsing, and auth session restoration
+- Firestore profile persistence
 - email validation
 
 Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)

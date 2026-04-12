@@ -9,7 +9,7 @@ from growth_engine.models import BusinessIntake, SearchResult
 
 
 @pytest.fixture
-def settings(tmp_path) -> Settings:
+def settings() -> Settings:
     return Settings(
         app_name="Growth Opportunity Decision Engine",
         request_timeout_seconds=5,
@@ -32,6 +32,7 @@ def settings(tmp_path) -> Settings:
         google_search_engine_id="",
         audit_backend="local",
         firestore_collection="growth_runs",
+        firestore_profile_collection="growth_profiles",
         firestore_database="(default)",
         google_cloud_project="demo-project",
         google_cloud_service_account_json_b64="",

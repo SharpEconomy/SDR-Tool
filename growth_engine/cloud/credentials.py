@@ -32,4 +32,7 @@ def get_google_credentials(
         )
         return credentials, service_account_info.get("project_id", project_id) or ""
 
-    return None, project_id
+    raise RuntimeError(
+        "Google Cloud credentials are not configured. Set "
+        "`GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64` in `.env` or `.env.example`."
+    )

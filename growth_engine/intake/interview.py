@@ -25,10 +25,10 @@ LIST_FIELDS = {
 
 REQUIRED_FIELDS = [
     "business_name",
+    "website",
     "description",
     "industry",
     "location",
-    "website",
     "discovery_modes",
     "opportunity_type_needed",
     "goals",
@@ -38,11 +38,143 @@ REQUIRED_FIELDS = [
     "preferred_sectors",
     "budget",
     "offerings",
-    "inclusion_keywords",
-    "exclusion_keywords",
-    "vendor_constraints",
-    "supplier_constraints",
 ]
+
+QUESTION_FIELD_LABELS = {
+    "business_name": "Name",
+    "website": "Website",
+    "description": "What you sell",
+    "industry": "Industry",
+    "location": "Base location",
+    "discovery_modes": "Opportunity types",
+    "opportunity_type_needed": "Primary need",
+    "goals": "Goals",
+    "target_geographies": "Target markets",
+    "ideal_customer_profile": "Ideal customer profile",
+    "preferred_company_sizes": "Preferred company sizes",
+    "preferred_sectors": "Preferred sectors",
+    "budget": "Budget comfort",
+    "offerings": "Offerings",
+    "inclusion_keywords": "Must-have keywords",
+    "exclusion_keywords": "Avoid keywords",
+    "vendor_constraints": "Vendor constraints",
+    "supplier_constraints": "Supplier constraints",
+    "user_urls": "Trusted URLs",
+}
+
+QUESTION_PLAN = (
+    (
+        "plan_business",
+        (
+            "business_name",
+            "website",
+            "description",
+            "industry",
+            "location",
+        ),
+        "Reply in one block:",
+    ),
+    (
+        "plan_opportunity",
+        (
+            "discovery_modes",
+            "opportunity_type_needed",
+            "goals",
+        ),
+        "Reply in one block:",
+    ),
+    (
+        "plan_target_market",
+        (
+            "target_geographies",
+            "ideal_customer_profile",
+        ),
+        "Reply in one block:",
+    ),
+    (
+        "plan_fit",
+        (
+            "preferred_company_sizes",
+            "preferred_sectors",
+            "offerings",
+        ),
+        "Reply in one block:",
+    ),
+    (
+        "plan_commercial",
+        (
+            "budget",
+            "inclusion_keywords",
+            "exclusion_keywords",
+            "vendor_constraints",
+            "supplier_constraints",
+        ),
+        "Reply in one block. Write `None` if a field does not matter:",
+    ),
+    (
+        "plan_final_sweep",
+        tuple(REQUIRED_FIELDS),
+        "Reply only with these missing labels:",
+    ),
+)
+
+FIELD_LABEL_ALIASES = {
+    "business_name": {"name", "business name", "company name", "business"},
+    "website": {"website", "site", "url", "domain"},
+    "description": {"what you sell", "description", "offer", "business description"},
+    "industry": {"industry", "sector"},
+    "location": {"base location", "location", "hq", "headquarters"},
+    "discovery_modes": {"opportunity types", "discovery modes", "who to find"},
+    "opportunity_type_needed": {
+        "primary need",
+        "opportunity need",
+        "need",
+    },
+    "goals": {"goals", "goal", "outcomes", "objective"},
+    "target_geographies": {
+        "target markets",
+        "markets",
+        "target geographies",
+        "geographies",
+        "regions",
+    },
+    "ideal_customer_profile": {
+        "ideal customer profile",
+        "icp",
+        "ideal target",
+    },
+    "preferred_company_sizes": {
+        "preferred company sizes",
+        "company sizes",
+        "sizes",
+    },
+    "preferred_sectors": {"preferred sectors", "sectors", "target sectors"},
+    "budget": {"budget comfort", "budget", "price sensitivity"},
+    "offerings": {"offerings", "products", "services"},
+    "inclusion_keywords": {
+        "must-have keywords",
+        "inclusion keywords",
+        "include",
+    },
+    "exclusion_keywords": {
+        "avoid keywords",
+        "exclusion keywords",
+        "exclude",
+    },
+    "vendor_constraints": {"vendor constraints", "vendor rules"},
+    "supplier_constraints": {"supplier constraints", "supplier rules"},
+    "user_urls": {"trusted urls", "seed urls", "urls"},
+}
+
+NONEISH_VALUES = {
+    "na",
+    "n/a",
+    "no",
+    "none",
+    "not applicable",
+    "not important",
+    "skip",
+}
 
 DISCOVERY_MODE_ALIASES = {
     "customer": "customers",
@@ -76,13 +208,10 @@ class IntakeInterviewer:
         self.openai_service = openai_service
 
     def opening_question(self) -> IntakeQuestion:
-        return IntakeQuestion(
-            question=(
-                "Tell me about the business in your own words. Include the name, "
-                "what you sell, the industry, and where you are based."
-            ),
-            focus_fields=["business_name", "description", "industry", "location"],
-            rationale="start_broad",
+        return self._build_planned_question(
+            QUESTION_PLAN[0][0],
+            list(QUESTION_PLAN[0][1]),
+            QUESTION_PLAN[0][2],
         )
 
     def apply_answer(
@@ -128,32 +257,22 @@ class IntakeInterviewer:
         missing_fields = self.missing_fields(draft)
         if not missing_fields:
             return None
-        if self.openai_service is not None and self.openai_service.is_available():
-            try:
-                data = self.openai_service.generate_intake_question(
-                    {
-                        "draft": self._draft_payload(draft),
-                        "missing_fields": missing_fields,
-                        "transcript": transcript or [],
-                    }
+        answered_questions = self._answered_question_count(transcript or [])
+        for (
+            rationale,
+            planned_fields,
+            prompt_intro,
+        ) in QUESTION_PLAN[answered_questions:]:
+            focus_fields = [
+                field for field in planned_fields if field in missing_fields
+            ]
+            if focus_fields:
+                return self._build_planned_question(
+                    rationale,
+                    focus_fields,
+                    prompt_intro,
                 )
-                question = normalize_whitespace(str(data.get("question", "")))
-                focus_fields = [
-                    field
-                    for field in data.get("focus_fields", [])
-                    if field in missing_fields
-                ]
-                if question and focus_fields:
-                    return IntakeQuestion(
-                        question=question,
-                        focus_fields=focus_fields,
-                        rationale=normalize_whitespace(
-                            str(data.get("rationale", "")) or ""
-                        ),
-                    )
-            except ModelUnavailableError:
-                pass
-        return self._fallback_question(draft, missing_fields)
+        return None
 
     def missing_fields(self, draft: IntakeDraft) -> list[str]:
         missing: list[str] = []
@@ -234,48 +353,56 @@ class IntakeInterviewer:
         candidate_fields = dedupe_keep_order(
             focus_fields + self._detected_fields(cleaned, lowered)
         )
-        update: dict[str, object] = {}
+        update = {
+            field: value
+            for field, value in self._extract_structured_answers(answer).items()
+            if field in candidate_fields
+        }
 
-        if "business_name" in candidate_fields:
+        if "business_name" in candidate_fields and "business_name" not in update:
             business_name = self._extract_business_name(cleaned)
             if business_name:
                 update["business_name"] = business_name
 
-        if "description" in candidate_fields and len(cleaned.split()) >= 5:
+        if (
+            "description" in candidate_fields
+            and "description" not in update
+            and len(cleaned.split()) >= 5
+        ):
             update["description"] = cleaned
 
-        if "location" in candidate_fields:
+        if "location" in candidate_fields and "location" not in update:
             location = self._extract_location(cleaned)
             if location:
                 update["location"] = location
 
-        if "industry" in candidate_fields:
+        if "industry" in candidate_fields and "industry" not in update:
             industry = self._extract_industry(cleaned)
             if industry:
                 update["industry"] = industry
 
-        if "website" in candidate_fields:
+        if "website" in candidate_fields and "website" not in update:
             website = self._extract_website(cleaned)
             if website:
                 update["website"] = website
 
-        if "discovery_modes" in candidate_fields:
+        if "discovery_modes" in candidate_fields and "discovery_modes" not in update:
             modes = self._extract_discovery_modes(lowered)
             if modes:
                 update["discovery_modes"] = modes
 
-        if "budget" in candidate_fields:
+        if "budget" in candidate_fields and "budget" not in update:
             budget = self._extract_budget(lowered)
             if budget:
                 update["budget"] = budget
 
-        if "user_urls" in candidate_fields:
+        if "user_urls" in candidate_fields and "user_urls" not in update:
             urls = self._extract_urls(cleaned)
             if urls:
                 update["user_urls"] = urls
 
         for field in LIST_FIELDS - {"discovery_modes", "user_urls"}:
-            if field not in candidate_fields:
+            if field not in candidate_fields or field in update:
                 continue
             values = self._extract_list(cleaned)
             if values:
@@ -287,178 +414,10 @@ class IntakeInterviewer:
             "vendor_constraints",
             "supplier_constraints",
         ):
-            if field in candidate_fields and cleaned:
+            if field in candidate_fields and field not in update and cleaned:
                 update[field] = cleaned
 
         return update
-
-    def _fallback_question(
-        self,
-        draft: IntakeDraft,
-        missing_fields: list[str],
-    ) -> IntakeQuestion:
-        name = normalize_whitespace(draft.business_name or "the business")
-        if any(
-            field in missing_fields
-            for field in ("business_name", "description", "industry", "location")
-        ):
-            focus = [
-                field
-                for field in ("business_name", "description", "industry", "location")
-                if field in missing_fields
-            ]
-            if focus == ["business_name"]:
-                return IntakeQuestion(
-                    question="What should I call the business in the report?",
-                    focus_fields=focus,
-                    rationale="fallback_specific",
-                )
-            if focus == ["description"]:
-                return IntakeQuestion(
-                    question=f"In one or two lines, what does {name} actually sell?",
-                    focus_fields=focus,
-                    rationale="fallback_specific",
-                )
-            if focus == ["industry"]:
-                return IntakeQuestion(
-                    question="Which industry should I optimize discovery around?",
-                    focus_fields=focus,
-                    rationale="fallback_specific",
-                )
-            if focus == ["location"]:
-                return IntakeQuestion(
-                    question=f"Where is {name} based right now?",
-                    focus_fields=focus,
-                    rationale="fallback_specific",
-                )
-            return IntakeQuestion(
-                question=(
-                    "Give me the missing business basics: name, what you sell, "
-                    "industry, and base location."
-                ),
-                focus_fields=focus,
-                rationale="fallback_core",
-            )
-
-        if "website" in missing_fields:
-            return IntakeQuestion(
-                question=(
-                    f"What website should I use for {name}? If there is no website "
-                    "yet, say 'no website yet'."
-                ),
-                focus_fields=["website"],
-                rationale="fallback_website",
-            )
-
-        opportunity_fields = [
-            field
-            for field in ("discovery_modes", "opportunity_type_needed", "goals")
-            if field in missing_fields
-        ]
-        if opportunity_fields:
-            return IntakeQuestion(
-                question=(
-                    "What should I help you find first, and what outcome matters most? "
-                    "You can mention customers, partners, vendors, suppliers, or "
-                    "service providers."
-                ),
-                focus_fields=opportunity_fields,
-                rationale="fallback_opportunity",
-            )
-
-        if any(
-            field in missing_fields
-            for field in ("target_geographies", "ideal_customer_profile")
-        ):
-            focus = [
-                field
-                for field in ("target_geographies", "ideal_customer_profile")
-                if field in missing_fields
-            ]
-            return IntakeQuestion(
-                question=(
-                    "Which markets should I focus on, and what does the ideal target "
-                    "company look like?"
-                ),
-                focus_fields=focus,
-                rationale="fallback_targeting",
-            )
-
-        if any(
-            field in missing_fields
-            for field in ("preferred_company_sizes", "preferred_sectors")
-        ):
-            focus = [
-                field
-                for field in ("preferred_company_sizes", "preferred_sectors")
-                if field in missing_fields
-            ]
-            return IntakeQuestion(
-                question=(
-                    "Which company sizes and sectors should I lean toward when I rank matches?"
-                ),
-                focus_fields=focus,
-                rationale="fallback_fit",
-            )
-
-        if "budget" in missing_fields:
-            return IntakeQuestion(
-                question=(
-                    "How price-sensitive should I assume this search is: lean and "
-                    "careful, balanced, growth-focused, or enterprise-scale?"
-                ),
-                focus_fields=["budget"],
-                rationale="fallback_budget",
-            )
-
-        if "offerings" in missing_fields:
-            return IntakeQuestion(
-                question="What exact products or services should I represent when I match opportunities?",
-                focus_fields=["offerings"],
-                rationale="fallback_offerings",
-            )
-
-        if any(
-            field in missing_fields
-            for field in ("inclusion_keywords", "exclusion_keywords")
-        ):
-            focus = [
-                field
-                for field in ("inclusion_keywords", "exclusion_keywords")
-                if field in missing_fields
-            ]
-            return IntakeQuestion(
-                question=(
-                    "Any must-have words or red-flag words I should use while filtering? "
-                    "You can give both."
-                ),
-                focus_fields=focus,
-                rationale="fallback_filters",
-            )
-
-        if any(
-            field in missing_fields
-            for field in ("vendor_constraints", "supplier_constraints")
-        ):
-            focus = [
-                field
-                for field in ("vendor_constraints", "supplier_constraints")
-                if field in missing_fields
-            ]
-            return IntakeQuestion(
-                question=(
-                    "Any vendor or supplier constraints I should enforce, such as "
-                    "geography, trust, MOQ, delivery, or compliance expectations?"
-                ),
-                focus_fields=focus,
-                rationale="fallback_constraints",
-            )
-
-        return IntakeQuestion(
-            question="If you have a few public URLs you already trust, paste them now. Otherwise say skip.",
-            focus_fields=["user_urls"],
-            rationale="fallback_optional_urls",
-        )
 
     def _detected_fields(self, cleaned: str, lowered: str) -> list[str]:
         detected: list[str] = []
@@ -475,6 +434,78 @@ class IntakeInterviewer:
         if any(token in lowered for token in ("based in", "from ", "located in")):
             detected.append("location")
         return dedupe_keep_order(detected)
+
+    def _build_planned_question(
+        self,
+        rationale: str,
+        focus_fields: list[str],
+        prompt_intro: str,
+    ) -> IntakeQuestion:
+        prompt_lines = "\n".join(
+            f"{QUESTION_FIELD_LABELS[field]}:" for field in focus_fields
+        )
+        return IntakeQuestion(
+            question=f"{prompt_intro}\n```text\n{prompt_lines}\n```",
+            focus_fields=focus_fields,
+            rationale=rationale,
+        )
+
+    def _answered_question_count(self, transcript: list[dict[str, str]]) -> int:
+        return sum(1 for item in transcript if item.get("role") == "user")
+
+    def _extract_structured_answers(self, answer: str) -> dict[str, object]:
+        update: dict[str, object] = {}
+        alias_lookup = {
+            alias: field
+            for field, aliases in FIELD_LABEL_ALIASES.items()
+            for alias in aliases
+        }
+        label_pattern = "|".join(
+            re.escape(alias) for alias in sorted(alias_lookup, key=len, reverse=True)
+        )
+        matches = list(
+            re.finditer(
+                rf"(?i)(?P<label>{label_pattern})\s*:",
+                answer,
+            )
+        )
+        for index, match in enumerate(matches):
+            field = alias_lookup.get(normalize_whitespace(match.group("label")).lower())
+            if field is None:
+                continue
+            value_start = match.end()
+            value_end = (
+                matches[index + 1].start() if index + 1 < len(matches) else len(answer)
+            )
+            raw_value = answer[value_start:value_end]
+            parsed_value = self._coerce_structured_value(field, raw_value)
+            if parsed_value in (None, "", []):
+                continue
+            update[field] = parsed_value
+        return update
+
+    def _coerce_structured_value(self, field: str, raw_value: str) -> object:
+        cleaned = normalize_whitespace(raw_value)
+        if not cleaned:
+            return None
+        lowered = cleaned.lower()
+        if field in {"vendor_constraints", "supplier_constraints"}:
+            return "None" if lowered in NONEISH_VALUES else cleaned
+        if field == "website":
+            website = self._extract_website(cleaned)
+            return website or cleaned
+        if field == "discovery_modes":
+            modes = self._extract_discovery_modes(lowered)
+            return modes or self._extract_list(cleaned)
+        if field == "budget":
+            return self._extract_budget(lowered) or cleaned
+        if field == "user_urls":
+            return self._extract_urls(cleaned)
+        if field in LIST_FIELDS:
+            if lowered in NONEISH_VALUES:
+                return []
+            return self._extract_list(cleaned)
+        return cleaned
 
     def _extract_business_name(self, value: str) -> str | None:
         if not value:
@@ -508,7 +539,10 @@ class IntakeInterviewer:
     def _extract_industry(self, value: str) -> str | None:
         patterns = (
             r"(?:industry|sector)\s*(?:is|:)?\s*([^.;]+)",
-            r"(?:we are|we're|it is|it's)\s+(?:an?|the)?\s*([^.;,]+?)\s+(?:company|business|brand|manufacturer|startup|firm)",
+            (
+                r"(?:we are|we're|it is|it's)\s+(?:an?|the)?\s*([^.;,]+?)\s+"
+                r"(?:company|business|brand|manufacturer|startup|firm)"
+            ),
         )
         for pattern in patterns:
             match = re.search(pattern, value, flags=re.IGNORECASE)

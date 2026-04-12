@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path=Path(".env"))
+load_dotenv(dotenv_path=Path(".env.example"))
 
 
 def _as_bool(value: str | None, default: bool) -> bool:
@@ -52,6 +54,7 @@ class Settings:
     google_search_engine_id: str
     audit_backend: str
     firestore_collection: str
+    firestore_profile_collection: str
     firestore_database: str
     google_cloud_project: str
     google_cloud_service_account_json_b64: str
@@ -103,6 +106,10 @@ class Settings:
             firestore_collection=os.getenv(
                 "FIRESTORE_COLLECTION",
                 "growth_engine_runs",
+            ).strip(),
+            firestore_profile_collection=os.getenv(
+                "FIRESTORE_PROFILE_COLLECTION",
+                "growth_engine_profiles",
             ).strip(),
             firestore_database=os.getenv("FIRESTORE_DATABASE", "(default)").strip(),
             google_cloud_project=os.getenv("GOOGLE_CLOUD_PROJECT", "").strip(),
