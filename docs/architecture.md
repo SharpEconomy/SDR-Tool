@@ -172,22 +172,22 @@ Every run produces:
 
 ## UI
 
-`growth_engine/ui/app.py`
+`growth_engine_web/views.py`
 
 Design goals:
 
-- guided chat intake instead of a dashboard
+- guided web intake instead of a dashboard
 - minimal language
-- visible business-brief snapshot while the conversation progresses
-- visible progress
-- pause, resume, and stop when needed
-- ranked cards before the raw table
+- editable business-brief snapshot before persistence
+- explicit request/response state instead of framework-managed reruns
+- Firebase-backed optional Google sign-in with Django session continuity
+- Firestore persistence without introducing a second database
 
 ## Deployment shape
 
 Local:
 
-- Streamlit app
+- Django web app
 - filesystem exports
 - filesystem audit records
 

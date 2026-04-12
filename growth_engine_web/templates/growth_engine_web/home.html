@@ -1,0 +1,180 @@
+{% extends "growth_engine_web/base.html" %}
+
+{% block content %}
+  {% if auth_required and not current_user %}
+    <section class="auth-shell">
+      <div class="hero-shell">
+        <div class="hero-kicker">Protected workspace</div>
+        <h1>Sign in before researching and saving profiles.</h1>
+        <p>Google sign-in protects the Firestore-backed profile workspace.</p>
+      </div>
+      <article class="step-card auth-card">
+        <div class="step-label">Sign in</div>
+        <h2>Use Google to continue</h2>
+        <p>The session stays in this browser until you explicitly sign out.</p>
+        <button type="button" class="primary-button auth-button" data-firebase-login>
+          Sign in with Google
+        </button>
+        <p class="auth-feedback" data-auth-feedback aria-live="polite"></p>
+      </article>
+    </section>
+  {% else %}
+    <header class="topbar">
+      <div>
+        <div class="hero-kicker">AI business foundation capture</div>
+        {% if current_user %}
+          <p class="signed-in-copy">Signed in as {{ current_user.email }}</p>
+        {% endif %}
+      </div>
+      {% if current_user %}
+        <form method="post" action="{% url 'growth_engine_web:logout' %}" data-firebase-logout-form>
+          {% csrf_token %}
+          <button type="submit" class="secondary-button">Log out</button>
+        </form>
+      {% endif %}
+    </header>
+
+    <section class="hero-grid">
+      <div class="hero-shell">
+        <div class="hero-kicker">AI business foundation capture</div>
+        <h1>Start with a name and website.</h1>
+        <p>
+          The app researches the company, cross-checks the public evidence,
+          drafts the full business profile, and asks you to confirm before saving.
+        </p>
+      </div>
+
+      <article class="step-card source-card-shell">
+        <div class="step-label">Step 1</div>
+        <h2>Business source</h2>
+        <p>Enter the business name and primary website. The app will gather the rest.</p>
+        <form method="post" action="{% url 'growth_engine_web:research' %}" novalidate>
+          {% csrf_token %}
+          {% for field in source_form %}
+            <div class="form-field">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="field-error">{{ field.errors|join:", " }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+          <button type="submit" class="primary-button wide-button">Research from web</button>
+        </form>
+      </article>
+    </section>
+
+    {% if research_result and draft %}
+      <section class="content-grid">
+        <div>
+          <article class="step-card">
+            <div class="step-label">Step 2</div>
+            <h2>Review the business profile</h2>
+            <p>
+              Start with the three summary cards. If something looks wrong,
+              open that section, update it, then confirm the full profile.
+            </p>
+          </article>
+
+          <div class="summary-grid">
+            {% for card in summary_cards %}
+              <article class="summary-card">
+                <div class="summary-card-head">
+                  <div>
+                    <div class="summary-kicker">{{ card.subtitle }}</div>
+                    <h3>{{ card.title }}</h3>
+                  </div>
+                  <a class="secondary-button summary-action" href="{% url 'growth_engine_web:edit_section' card.id %}">
+                    Edit
+                  </a>
+                </div>
+
+                {% for row in card.rows %}
+                  {% if row.kind == "paragraph" %}
+                    <div class="summary-paragraph">
+                      <span>{{ row.label }}</span>
+                      <p>{{ row.value }}</p>
+                    </div>
+                  {% elif row.kind == "chips" %}
+                    <div class="summary-line">
+                      <span>{{ row.label }}</span>
+                      <div class="chip-group">
+                        {% for item in row.value %}
+                          <span class="summary-chip{% if row.wrap %} summary-chip-wrap{% endif %}">{{ item }}</span>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% else %}
+                    <div class="summary-line">
+                      <span>{{ row.label }}</span>
+                      <strong>{{ row.value }}</strong>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </article>
+            {% endfor %}
+          </div>
+
+          <div class="confirm-shell">
+            <div class="edit-guide">
+              <strong>Ready to save?</strong>
+              Confirm only after each card reads naturally and reflects the business correctly.
+            </div>
+            <form method="post" action="{% url 'growth_engine_web:save_profile' %}">
+              {% csrf_token %}
+              <button type="submit" class="primary-button wide-button">Confirm this profile and save</button>
+            </form>
+          </div>
+
+          {% if save_uri %}
+            <article class="step-card">
+              <div class="step-label">Next step</div>
+              <h2>What data do you want next?</h2>
+              <p>Select the type of data you want the engine to find from this saved profile.</p>
+              <form method="post" action="{% url 'growth_engine_web:request_data' %}">
+                {% csrf_token %}
+                <div class="form-field checkbox-field">
+                  <span class="field-label">{{ post_save_form.requested_data.label }}</span>
+                  {{ post_save_form.requested_data }}
+                </div>
+                <div class="form-field">
+                  <label for="{{ post_save_form.notes.id_for_label }}">{{ post_save_form.notes.label }}</label>
+                  {{ post_save_form.notes }}
+                </div>
+                <button type="submit" class="secondary-button wide-button">Save data request</button>
+              </form>
+              {% if requested_data_summary %}
+                <p class="request-summary">Requested next data: {{ requested_data_summary }}</p>
+              {% endif %}
+              <p class="save-uri">Saved record: <code>{{ save_uri }}</code></p>
+            </article>
+          {% endif %}
+        </div>
+
+        <aside>
+          <article class="step-card">
+            <div class="step-label">Step 3</div>
+            <h2>Verification</h2>
+          </article>
+          <div class="verification-shell">{{ research_result.verification_summary }}</div>
+          {% for source in research_result.sources|slice:":6" %}
+            <article class="source-card">
+              <div class="source-kind">{{ source.kind }}</div>
+              <h3>{{ source.title }}</h3>
+              <p>{{ source.snippet|truncatechars:280 }}</p>
+              <a href="{{ source.url }}" target="_blank" rel="noreferrer">{{ source.url }}</a>
+            </article>
+          {% endfor %}
+        </aside>
+      </section>
+    {% else %}
+      <article class="empty-shell">
+        <h2>What happens next</h2>
+        <p>
+          The app fetches the public website, runs custom search, asks GPT-5.4 mini
+          to cross-check the evidence, and then gives you an editable profile to approve.
+        </p>
+      </article>
+    {% endif %}
+  {% endif %}
+{% endblock %}

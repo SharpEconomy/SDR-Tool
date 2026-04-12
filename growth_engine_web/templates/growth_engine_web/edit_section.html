@@ -1,0 +1,33 @@
+{% extends "growth_engine_web/base.html" %}
+
+{% block content %}
+  <section class="edit-page">
+    <article class="step-card">
+      <div class="step-label">Edit profile section</div>
+      <h1>{{ card_config.title }}</h1>
+      <p>{{ card_config.subtitle }}. Update this section only, then save changes.</p>
+    </article>
+
+    <form method="post" class="edit-form">
+      {% csrf_token %}
+      <div class="edit-grid">
+        {% for field in form %}
+          <div class="form-field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <p class="field-help">{{ field.help_text }}</p>
+            {% endif %}
+            {% if field.errors %}
+              <div class="field-error">{{ field.errors|join:", " }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="action-row">
+        <button type="submit" class="primary-button">Save section changes</button>
+        <a class="secondary-button" href="{% url 'growth_engine_web:home' %}">Close without saving</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

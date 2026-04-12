@@ -1,6 +1,6 @@
 # Growth Opportunity Decision Engine
 
-Production-ready Streamlit application for capturing a verified business foundation from minimal input. The app starts with only a business name and website, researches public evidence, asks `gpt-5.4-mini` to cross-check the findings, and lets the user confirm or edit the full profile before saving it to Firestore.
+Production-ready Django application for capturing a verified business foundation from minimal input. The app starts with only a business name and website, researches public evidence, asks `gpt-5.4-mini` to cross-check the findings, and lets the user confirm or edit the full profile before saving it to Firestore.
 
 ## What the app does
 
@@ -56,7 +56,8 @@ Main package: `growth_engine`
 - `profile_research/`: public-web evidence gathering and model-backed profile verification.
 - `storage/`: Firebase Storage export persistence plus Firestore audit and profile persistence.
 - `orchestration/`: end-to-end decision engine and pause/resume/stop control.
-- `ui/`: guided Streamlit interface.
+- `growth_engine_web/`: Django forms, views, templates, Firebase login bridge, and session flow.
+- `growth_engine_django/`: Django project settings, routing, and WSGI entrypoint.
 
 More detail: [docs/architecture.md](/c:/Users/MCN/Dev/SDR-Tool/docs/architecture.md)
 
@@ -84,14 +85,14 @@ Reliability rules:
 1. Create a virtual environment.
 2. Install dependencies.
 3. Create `.env` from `.env.example`.
-4. Run the UI.
+4. Run the Django app.
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 python -m pip install -r requirements.txt
 playwright install chromium
-streamlit run app.py
+python manage.py runserver
 ```
 
 ## PowerShell helper script
@@ -110,7 +111,7 @@ powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task run -
 Script behavior:
 
 - `all` runs install, format, lint, test, and build without launching a browser.
-- `run` starts Streamlit on the selected port and can skip browser launch with `-NoBrowser`.
+- `run` starts Django on the selected port and can skip browser launch with `-NoBrowser`.
 - `clean` removes local caches such as `__pycache__`, `.pytest_cache`, and compiled `.pyc` files.
 
 Verified tasks:
@@ -156,7 +157,16 @@ Firebase sign-in behavior:
 
 - Google sign-in is persisted in the browser with Firebase local auth persistence.
 - Reloading the page or reopening the app in the same browser restores the session automatically.
-- `Log out` now signs out both the Streamlit session and the persisted Firebase browser session.
+- `Log out` now signs out both the Django session workspace and the persisted Firebase browser session.
+- Local development uses Firebase redirect sign-in on `localhost` for better browser compatibility.
+- Production keeps popup sign-in when available and falls back to redirect if the popup is blocked or closed.
+
+Firebase console requirements:
+
+- Enable the Google provider under `Authentication -> Sign-in method`.
+- Add every app host to `Authentication -> Settings -> Authorized domains`.
+- For local development, authorize `localhost`.
+- For production, authorize the deployed app domain as well as the Firebase project auth domain.
 
 Leave the Firebase values blank if you do not want sign-in enabled for local runs.
 
@@ -179,7 +189,7 @@ The same credential source is used for Firestore, Firebase Storage, and Pub/Sub 
 
 ## Google Cloud support
 
-The app runs locally without cloud dependencies. The codebase also supports simple cloud-oriented extension points:
+The app runs locally without any SQL database. Firestore remains the only database in the stack. The codebase also supports simple cloud-oriented extension points:
 
 - Cloud Run: `growth_engine/cloud/run_api.py` exposes `/healthz` and `/api/run`.
 - Cloud Functions: `growth_engine/cloud/functions.py` exposes request and Pub/Sub job handlers.
@@ -200,6 +210,17 @@ Representative use cases:
 - A Jaipur furniture manufacturer screens reliable suppliers before outreach.
 - A Chennai healthcare service business finds hospital procurement opportunities.
 - A Pune D2C brand maps service providers for warehousing, logistics, and retail activation.
+
+## Django runtime
+
+The web experience is now served through Django with file-backed sessions and cookie-backed messages so no SQLite or Postgres database is introduced.
+
+Runtime notes:
+
+- `python manage.py runserver` starts the web app locally.
+- Django session state stores the in-progress profile draft, research result, auth session, and follow-up request state.
+- Firestore remains the only database used for persisted application data.
+- Firebase sign-in is optional and only enforced when the Firebase settings are populated.
 
 ## Testing
 
@@ -222,7 +243,7 @@ Test coverage includes:
 - orchestration
 - cloud helpers
 - fetch/search/OpenAI retry behavior
-- UI helpers, confirmation-form parsing, and auth session restoration
+- Django helper parsing, session serialization, Firebase auth verification hooks, and view flows
 - Firestore profile persistence
 - email validation
 

@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 
+import django
 import pytest
 
 from growth_engine.config import Settings
 from growth_engine.models import BusinessIntake, SearchResult
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "growth_engine_django.settings")
+django.setup()
 
 
 @pytest.fixture
@@ -80,3 +85,21 @@ def linkedin_search_result() -> list[SearchResult]:
             published_at=datetime.now(UTC),
         )
     ]
+
+
+@pytest.fixture(autouse=True)
+def patch_runtime_settings(settings: Settings, monkeypatch) -> None:
+    monkeypatch.setattr(
+        "growth_engine_web.runtime.get_runtime_settings", lambda: settings
+    )
+    monkeypatch.setattr(
+        "growth_engine_web.views.get_runtime_settings", lambda: settings
+    )
+    monkeypatch.setattr(
+        "growth_engine_web.context_processors.get_runtime_settings",
+        lambda: settings,
+    )
+    monkeypatch.setattr(
+        "growth_engine_web.firebase_auth.get_runtime_settings",
+        lambda: settings,
+    )

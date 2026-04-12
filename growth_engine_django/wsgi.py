@@ -2,13 +2,8 @@ from __future__ import annotations
 
 import os
 
-from django.core.management import execute_from_command_line
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "growth_engine_django.settings")
 
 application = get_wsgi_application()
-
-
-if __name__ == "__main__":
-    execute_from_command_line(["manage.py", "runserver", "localhost:8000"])

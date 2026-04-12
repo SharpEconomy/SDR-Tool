@@ -10,7 +10,7 @@ param(
     ,
     [Parameter(Mandatory = $false)]
     [ValidateRange(1, 65535)]
-    [int]$Port = 8501
+    [int]$Port = 8000
 )
 
 $ErrorActionPreference = "Stop"
@@ -64,24 +64,20 @@ function Install-Dependencies {
 
 function Run-Project {
     Write-Host "Starting web app in browser..." -ForegroundColor Cyan
-    if (-not (Test-PythonModule -ModuleName "streamlit")) {
-        throw "Required Python module 'streamlit' is not installed."
+    if (-not (Test-PythonModule -ModuleName "django")) {
+        throw "Required Python module 'django' is not installed."
     }
 
-    if (-not (Test-Path -LiteralPath "app.py")) {
-        throw "Could not find app.py in $RepoRoot."
+    if (-not (Test-Path -LiteralPath "manage.py")) {
+        throw "Could not find manage.py in $RepoRoot."
     }
 
     $appUrl = "http://localhost:$Port"
     Start-Process -FilePath "python" -ArgumentList @(
-        "-m",
-        "streamlit",
-        "run",
-        "app.py",
-        "--server.port",
-        "$Port",
-        "--server.headless",
-        "true"
+        "manage.py",
+        "runserver",
+        "localhost:$Port",
+        "--noreload"
     ) | Out-Null
 
     Start-Sleep -Seconds 3
@@ -90,7 +86,7 @@ function Run-Project {
             Start-Process $appUrl | Out-Null
         }
         catch {
-            Write-Host "Streamlit started, but opening the browser failed. Open $appUrl manually." -ForegroundColor Yellow
+            Write-Host "Django started, but opening the browser failed. Open $appUrl manually." -ForegroundColor Yellow
         }
     }
     Write-Host "App started at $appUrl" -ForegroundColor Green
@@ -98,7 +94,7 @@ function Run-Project {
 
 function Build-Project {
     Write-Host "Running build-style verification..." -ForegroundColor Cyan
-    python -m compileall app.py growth_engine tests
+    python -m compileall app.py manage.py growth_engine growth_engine_django growth_engine_web tests
     if ($LASTEXITCODE -ne 0) {
         throw "compileall failed with exit code $LASTEXITCODE."
     }
@@ -106,8 +102,8 @@ function Build-Project {
 
 function Format-Code {
     Write-Host "Formatting code..." -ForegroundColor Cyan
-    Invoke-PythonModule -ModuleName "black" -Arguments @("app.py", "growth_engine", "tests", "scripts")
-    Invoke-PythonModule -ModuleName "isort" -Arguments @("app.py", "growth_engine", "tests", "scripts", "--profile", "black")
+    Invoke-PythonModule -ModuleName "black" -Arguments @("app.py", "manage.py", "growth_engine", "growth_engine_django", "growth_engine_web", "tests", "scripts")
+    Invoke-PythonModule -ModuleName "isort" -Arguments @("app.py", "manage.py", "growth_engine", "growth_engine_django", "growth_engine_web", "tests", "scripts", "--profile", "black")
 }
 
 function Lint-Code {
@@ -115,10 +111,13 @@ function Lint-Code {
     Invoke-PythonModule -ModuleName "flake8" -Arguments @(
         "--max-line-length", "160",
         "growth_engine",
+        "growth_engine_django",
+        "growth_engine_web",
         "tests",
-        "app.py"
+        "app.py",
+        "manage.py"
     )
-    python -m compileall app.py growth_engine tests
+    python -m compileall app.py manage.py growth_engine growth_engine_django growth_engine_web tests
     if ($LASTEXITCODE -ne 0) {
         throw "compileall failed with exit code $LASTEXITCODE."
     }

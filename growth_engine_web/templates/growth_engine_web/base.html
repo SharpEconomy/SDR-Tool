@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ app_name }}</title>
+    <meta name="server-authenticated" content="{% if request.session.growth_engine_auth_user %}true{% else %}false{% endif %}">
+    <link rel="stylesheet" href="{% static 'growth_engine_web/app.css' %}">
+    {% if firebase_auth_enabled %}
+      <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+      <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+      {{ firebase_client_config|json_script:"firebase-client-config" }}
+      <script defer src="{% static 'growth_engine_web/firebase-auth.js' %}"></script>
+    {% endif %}
+  </head>
+  <body>
+    <div class="page-shell">
+      {% if messages %}
+        <section class="message-stack" aria-label="System messages">
+          {% for message in messages %}
+            <div class="message message-{{ message.tags|default:'info' }}">{{ message }}</div>
+          {% endfor %}
+        </section>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

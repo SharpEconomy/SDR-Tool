@@ -62,6 +62,8 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+.django_sessions/
+staticfiles/
 
 # Flask stuff:
 instance/
@@ -138,7 +140,6 @@ celerybeat.pid
 
 # Environments
 .env
-.env.example
 .envrc
 .venv
 env/
@@ -208,3 +209,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+pytest*
