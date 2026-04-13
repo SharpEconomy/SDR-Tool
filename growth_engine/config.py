@@ -85,7 +85,7 @@ class Settings:
     firestore_database: str
     google_cloud_project: str
     google_cloud_service_account_json_b64: str
-    firebase_storage_bucket: str
+    google_sign_in_enabled: bool
     google_oauth_client_id: str
     google_oauth_client_secret: str
     google_oauth_redirect_uri: str
@@ -139,7 +139,10 @@ class Settings:
             google_cloud_service_account_json_b64=str(
                 env.get("GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64", "")
             ).strip(),
-            firebase_storage_bucket=str(env.get("FIREBASE_STORAGE_BUCKET", "")).strip(),
+            google_sign_in_enabled=_as_bool(
+                env.get("GOOGLE_SIGN_IN_ENABLED"),
+                True,
+            ),
             google_oauth_client_id=_first_present(
                 env,
                 "GOOGLE_OAUTH_CLIENT_ID",

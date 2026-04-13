@@ -14,11 +14,6 @@ from growth_engine.orchestration import DecisionEngine, PipelineControl
 
 def test_decision_engine_end_to_end(settings, intake, monkeypatch) -> None:
     engine = DecisionEngine(settings)
-    engine.artifact_store = type(
-        "ArtifactStore",
-        (),
-        {"save_bytes": lambda self, name, payload: f"gs://demo-bucket/{name}"},
-    )()
     engine.audit_store = type(
         "AuditStore",
         (),
@@ -99,7 +94,7 @@ def test_decision_engine_end_to_end(settings, intake, monkeypatch) -> None:
     assert isinstance(result, DecisionRunResult)
     assert result.opportunities[0].entity_name == "Example Retail"
     assert result.audit_record.opportunity_count == 1
-    assert result.export_uri is not None
+    assert result.export_uri is None
 
 
 def test_pipeline_control_pause_resume_stop() -> None:

@@ -45,7 +45,11 @@ def _format_google_provider_error(
 
 def google_auth_is_configured() -> bool:
     settings = get_runtime_settings()
-    return bool(settings.google_oauth_client_id and settings.google_oauth_client_secret)
+    return bool(
+        settings.google_sign_in_enabled
+        and settings.google_oauth_client_id
+        and settings.google_oauth_client_secret
+    )
 
 
 def create_google_oauth_state() -> str:

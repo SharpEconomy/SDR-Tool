@@ -13,6 +13,7 @@ def localhost_client(**kwargs) -> Client:
 
 
 def enable_google_auth(settings) -> None:
+    settings.google_sign_in_enabled = True
     settings.google_oauth_client_id = "google-client-id"
     settings.google_oauth_client_secret = "google-client-secret"
 

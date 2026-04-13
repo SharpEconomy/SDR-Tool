@@ -28,10 +28,6 @@
           {% if current_user.email %}
             <p class="auth-email">{{ current_user.email }}</p>
           {% endif %}
-        {% else %}
-          <p class="signed-in-copy">Workspace access</p>
-          <strong class="auth-identity">Open session</strong>
-          <p class="auth-email">Google sign-in is not required in this environment.</p>
         {% endif %}
         {% if can_access_admin_analytics %}
           <a class="secondary-button topbar-link" href="{% url 'growth_engine_web:analytics' %}">Admin analytics</a>

@@ -59,7 +59,7 @@ Main package: `growth_engine`
 - `matching/`: business-facing output assembly.
 - `export/`: Excel workbook generation.
 - `profile_research/`: public-web evidence gathering and model-backed profile verification.
-- `storage/`: Firebase Storage export persistence plus Firestore audit and profile persistence.
+- `storage/`: Firestore audit and profile persistence helpers.
 - `orchestration/`: end-to-end decision engine and pause/resume/stop control.
 - `growth_engine_web/`: Django forms, views, templates, Google OAuth session flow, and session-backed workspace state.
 - `growth_engine_web/`: Django forms, views, templates, admin analytics dashboard, Google OAuth session flow, and session-backed workspace state.
@@ -103,32 +103,25 @@ python manage.py runserver
 
 ## PowerShell helper script
 
-Use the project helper at `scripts/sdr-tool-script.ps1` for common tasks:
+Use the project helper at `scripts/sdr-tool-script.ps1` to launch the app directly:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task install
-powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task lint
-powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task test
-powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task build
-powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task all
-powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Task run -NoBrowser -Port 8503
+powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1
+powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -Port 8503
+powershell -ExecutionPolicy Bypass -File scripts\sdr-tool-script.ps1 -NoBrowser
 ```
 
 Script behavior:
 
-- `all` runs install, format, lint, test, and build without launching a browser.
-- `run` starts Django on the selected port and can skip browser launch with `-NoBrowser`.
-- `clean` removes local caches such as `__pycache__`, `.pytest_cache`, and compiled `.pyc` files.
-
-Verified tasks:
-
-- `install`
-- `lint`
-- `test`
-- `build`
-- `clean`
-- `all`
-- `run -NoBrowser -Port 8503`
+- when the script runs, it stops other project-related terminal and server processes for this repo
+- it clears `__pycache__` folders and `.pyc` files before starting Django
+- it installs dependencies automatically if required runtime/test/lint modules are missing
+- it runs lint checks before startup
+- it runs the test suite before startup
+- it runs build/compile verification before startup
+- it starts Django in the current terminal so startup errors are visible immediately
+- it opens the browser automatically unless `-NoBrowser` is supplied
+- the UI opens only after the verification pipeline passes
 
 ## Environment configuration
 
@@ -151,10 +144,10 @@ Important settings:
 - `FIRESTORE_DATABASE`
 - `GOOGLE_CLOUD_PROJECT`
 - `GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64`
-- `FIREBASE_STORAGE_BUCKET`
 
 Optional Google sign-in:
 
+- `GOOGLE_SIGN_IN_ENABLED=true`
 - `GOOGLE_OAUTH_CLIENT_ID`
 - `GOOGLE_OAUTH_CLIENT_SECRET`
 - `GOOGLE_OAUTH_REDIRECT_URI=https://<host>/auth/google/callback/`
@@ -163,6 +156,7 @@ Optional Google sign-in:
 Google sign-in behavior:
 
 - Sign-in now uses a backend-owned Google OAuth authorization-code flow.
+- If `GOOGLE_SIGN_IN_ENABLED=false`, the app skips Google sign-in and the analytics dashboard no longer requires admin-email verification.
 - Django stores the authenticated user in the existing session workspace after the callback succeeds.
 - Reloading the page keeps the session active until `Log out` clears the auth session and workspace state.
 - If `GOOGLE_OAUTH_REDIRECT_URI` is set in `.env`, the app sends that exact callback URI to Google.
@@ -192,7 +186,7 @@ Recommended for encrypted secrets in CI/CD or hosted deployments:
 - set `GOOGLE_CLOUD_PROJECT` explicitly
 - place the value in `.env.example`
 
-The same credential source is used for Firestore, Firebase Storage, and Pub/Sub helpers.
+The same credential source is used for Firestore and Pub/Sub helpers.
 
 ## Google Cloud support
 
@@ -202,7 +196,6 @@ The app runs locally without any SQL database. Firestore remains the only databa
 - Cloud Functions: `growth_engine/cloud/functions.py` exposes request and Pub/Sub job handlers.
 - Pub/Sub: `growth_engine/cloud/pubsub.py` publishes intake jobs for async orchestration with a built-in topic name.
 - Firestore: store confirmed business profiles in `FIRESTORE_PROFILE_COLLECTION` and audit records in `FIRESTORE_COLLECTION`.
-- Firebase Storage: persist exports to the configured `FIREBASE_STORAGE_BUCKET`.
 
 The Google Cloud integrations are lazy-imported so local runs remain lightweight.
 
@@ -261,5 +254,5 @@ Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)
 - Discovery uses public pages and internal search queries, not private platform scraping.
 - Email validation is best-effort and should not be treated as guaranteed deliverability.
 - Decision-maker inference is intentionally cautious and favors transparent guessed patterns over false precision.
-- Export files are persisted to Firebase Storage when `FIREBASE_STORAGE_BUCKET` is configured.
+- Export files are generated in memory and returned directly to the caller; there is no bucket-backed export persistence path.
 - Audit records are persisted to Firestore when `AUDIT_BACKEND=firestore`.

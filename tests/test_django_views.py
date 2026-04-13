@@ -447,6 +447,22 @@ def test_home_shows_signed_in_user_and_logout_for_session_user() -> None:
     assert "Log out" in content
 
 
+def test_home_shows_open_analytics_when_google_sign_in_is_disabled(
+    settings,
+) -> None:
+    settings.google_sign_in_enabled = False
+    settings.google_oauth_client_id = "google-client-id"
+    settings.google_oauth_client_secret = "google-client-secret"
+    client = localhost_client()
+
+    response = client.get("/")
+
+    assert response.status_code == 200
+    content = response.content.decode("utf-8")
+    assert "Admin analytics" in content
+    assert "Sign in with Google" not in content
+
+
 def test_home_clears_stale_workspace_on_new_boot() -> None:
     client = localhost_client()
     session = client.session
@@ -575,6 +591,34 @@ def test_analytics_dashboard_renders_for_allowlisted_admin(monkeypatch) -> None:
     assert "Log out" in content
 
 
+def test_analytics_dashboard_skips_admin_verification_when_google_sign_in_is_disabled(
+    settings,
+    monkeypatch,
+) -> None:
+    settings.google_sign_in_enabled = False
+    client = localhost_client()
+
+    monkeypatch.setattr(
+        "growth_engine_web.views.build_admin_analytics_snapshot",
+        lambda settings: AdminAnalyticsSnapshot(
+            metrics=[],
+            recent_profiles=[],
+            recent_runs=[],
+            discovery_breakdown=[],
+            industry_breakdown=[],
+            availability_notes=[],
+        ),
+    )
+
+    response = client.get("/admin/analytics/")
+
+    assert response.status_code == 200
+    content = response.content.decode("utf-8")
+    assert "Workspace analytics" in content
+    assert "Open workspace session" in content
+    assert "Log out" not in content
+
+
 def test_research_profile_requires_auth_when_google_auth_is_enabled(
     settings,
     monkeypatch,
@@ -598,6 +642,30 @@ def test_research_profile_requires_auth_when_google_auth_is_enabled(
     assert PROFILE_DRAFT_KEY not in client.session
 
 
+def test_research_profile_does_not_require_auth_when_google_sign_in_is_disabled(
+    settings,
+    monkeypatch,
+) -> None:
+    settings.google_sign_in_enabled = False
+    settings.google_oauth_client_id = "google-client-id"
+    settings.google_oauth_client_secret = "google-client-secret"
+    client = localhost_client()
+    result = build_research_result()
+
+    monkeypatch.setattr(
+        "growth_engine_web.views.BusinessProfileResearcher.research",
+        lambda self, *, business_name, website: result,
+    )
+
+    response = client.post(
+        "/research/",
+        {"business_name": "Demo Co", "website": "demo.example"},
+    )
+
+    assert response.status_code == 302
+    assert client.session[PROFILE_DRAFT_KEY]["business_name"] == "Demo Co"
+
+
 def test_save_profile_requires_auth_when_google_auth_is_enabled(settings) -> None:
     enable_google_auth(settings)
     client = localhost_client()
@@ -614,6 +682,34 @@ def test_save_profile_requires_auth_when_google_auth_is_enabled(settings) -> Non
 
     assert response.status_code == 302
     assert PROFILE_SAVE_URI_KEY not in client.session
+
+
+def test_save_profile_does_not_require_auth_when_google_sign_in_is_disabled(
+    settings,
+    monkeypatch,
+) -> None:
+    settings.google_sign_in_enabled = False
+    settings.google_oauth_client_id = "google-client-id"
+    settings.google_oauth_client_secret = "google-client-secret"
+    client = localhost_client()
+    session = client.session
+    session[PROFILE_DRAFT_KEY] = build_draft_payload()
+    session[PROFILE_RESEARCH_RESULT_KEY] = {
+        "draft": session[PROFILE_DRAFT_KEY],
+        "sources": [],
+        "verification_summary": "Verified from website and search results.",
+    }
+    session.save()
+
+    monkeypatch.setattr(
+        "growth_engine_web.views.FirestoreProfileStore.save",
+        lambda self, document_id, payload: f"firestore://demo/{document_id}",
+    )
+
+    response = client.post("/save/")
+
+    assert response.status_code == 302
+    assert client.session[PROFILE_SAVE_URI_KEY].startswith("firestore://demo/")
 
 
 def test_save_profile_redirects_when_research_state_is_missing() -> None:

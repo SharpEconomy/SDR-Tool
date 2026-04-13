@@ -26,7 +26,6 @@ from growth_engine.profile_flow import (
 from growth_engine.profile_research import BusinessProfileResearcher
 from growth_engine.storage import (
     FirestoreProfileStore,
-    NoOpArtifactStore,
     NoOpAuditStore,
 )
 from growth_engine.utils import normalize_whitespace
@@ -70,10 +69,17 @@ def _auth_is_required() -> bool:
     return google_auth_is_configured()
 
 
+def _admin_verification_is_required() -> bool:
+    return get_runtime_settings().google_sign_in_enabled
+
+
 APP_BOOT_ID = uuid4().hex
 
 
 def _is_admin_request(request: HttpRequest) -> bool:
+    if not _admin_verification_is_required():
+        return True
+
     django_user = getattr(request, "user", None)
     if getattr(django_user, "is_authenticated", False) and (
         getattr(django_user, "is_staff", False)
@@ -120,6 +126,7 @@ def _home_context(
         "auth_required": _auth_is_required(),
         "current_user": current_user,
         "can_access_admin_analytics": _is_admin_request(request),
+        "admin_verification_required": _admin_verification_is_required(),
         "source_form": source_form,
         "draft": draft,
         "research_result": research_result,
@@ -214,6 +221,7 @@ def analytics_dashboard(request: HttpRequest) -> HttpResponse:
         {
             "current_user": get_auth_user(request.session),
             "can_access_admin_analytics": True,
+            "admin_verification_required": _admin_verification_is_required(),
             "analytics": snapshot,
         },
     )
@@ -395,7 +403,6 @@ def request_data(request: HttpRequest) -> HttpResponse:
     clear_lead_results(request.session)
     settings = get_runtime_settings()
     engine = DecisionEngine(settings)
-    engine.artifact_store = NoOpArtifactStore()
     engine.audit_store = NoOpAuditStore()
 
     try:

@@ -42,7 +42,7 @@ def settings() -> Settings:
         firestore_database="(default)",
         google_cloud_project="demo-project",
         google_cloud_service_account_json_b64="",
-        firebase_storage_bucket="",
+        google_sign_in_enabled=True,
         google_oauth_client_id="",
         google_oauth_client_secret="",
         google_oauth_redirect_uri="",

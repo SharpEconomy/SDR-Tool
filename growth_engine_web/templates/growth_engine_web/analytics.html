@@ -3,21 +3,30 @@
 {% block content %}
   <header class="topbar">
     <div class="topbar-meta">
-      <p class="signed-in-copy">Admin analytics</p>
+      <p class="signed-in-copy">
+        {% if admin_verification_required %}Admin analytics{% else %}Workspace analytics{% endif %}
+      </p>
       {% if current_user %}
         <strong class="auth-identity">
           {% if current_user.display_name %}{{ current_user.display_name }}{% else %}{{ current_user.email }}{% endif %}
         </strong>
         <p class="auth-email">{{ current_user.email }}</p>
       {% else %}
-        <strong class="auth-identity">Authorized admin session</strong>
+        <strong class="auth-identity">
+          {% if admin_verification_required %}Authorized admin session{% else %}Open workspace session{% endif %}
+        </strong>
+        {% if not admin_verification_required %}
+          <p class="auth-email">Google sign-in is disabled in this environment.</p>
+        {% endif %}
       {% endif %}
       <a class="secondary-button topbar-link" href="{% url 'growth_engine_web:home' %}">Back to workspace</a>
     </div>
-    <form method="post" action="{% url 'growth_engine_web:logout' %}" data-processing-label="Signing you out...">
-      {% csrf_token %}
-      <button type="submit" class="secondary-button">Log out</button>
-    </form>
+    {% if current_user %}
+      <form method="post" action="{% url 'growth_engine_web:logout' %}" data-processing-label="Signing you out...">
+        {% csrf_token %}
+        <button type="submit" class="secondary-button">Log out</button>
+      </form>
+    {% endif %}
   </header>
 
   <section class="analytics-hero">

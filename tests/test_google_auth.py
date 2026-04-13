@@ -10,6 +10,7 @@ from growth_engine_web.google_auth import (
     GoogleAuthenticationError,
     build_google_oauth_authorization_url,
     exchange_google_code,
+    google_auth_is_configured,
     verify_google_id_token,
 )
 
@@ -232,3 +233,22 @@ def test_settings_load_supports_google_oauth_redirect_uri(monkeypatch) -> None:
         settings.google_oauth_redirect_uri
         == "https://sdr.buidwithai.ai/auth/google/callback/"
     )
+
+
+def test_settings_load_supports_google_sign_in_enabled(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "growth_engine.config._load_env_values",
+        lambda: {"GOOGLE_SIGN_IN_ENABLED": "false"},
+    )
+
+    settings = Settings.load()
+
+    assert settings.google_sign_in_enabled is False
+
+
+def test_google_auth_is_configured_respects_disable_flag(settings) -> None:
+    settings.google_sign_in_enabled = False
+    settings.google_oauth_client_id = "google-client-id"
+    settings.google_oauth_client_secret = "google-client-secret"
+
+    assert google_auth_is_configured() is False

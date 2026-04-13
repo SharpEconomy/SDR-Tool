@@ -26,9 +26,7 @@ from growth_engine.parsing import HtmlParsingService
 from growth_engine.scoring import ScoringEngine
 from growth_engine.services import OpenAIService, PageFetcher, SearchClient
 from growth_engine.storage import (
-    FirebaseStorageArtifactStore,
     FirestoreAuditStore,
-    NoOpArtifactStore,
     NoOpAuditStore,
 )
 from growth_engine.utils import slugify
@@ -83,7 +81,6 @@ class DecisionEngine:
         self.scoring_engine = ScoringEngine(self.openai_service)
         self.matching_engine = MatchingEngine()
         self.export_service = ExportService()
-        self.artifact_store = self._build_artifact_store()
         self.audit_store = self._build_audit_store()
 
     def run(
@@ -107,7 +104,7 @@ class DecisionEngine:
         export_name, export_bytes = self.export_service.build_workbook(
             opportunities, skipped_entities
         )
-        export_uri = self.artifact_store.save_bytes(export_name, export_bytes)
+        export_uri = None
         audit_record = AuditRecord(
             run_id=run_id,
             created_at=datetime.now(UTC),
@@ -306,14 +303,6 @@ class DecisionEngine:
                 f"ranked: {opportunity.entity_name} ({opportunity.priority_score})",
             )
         return opportunities
-
-    def _build_artifact_store(self):
-        if self.settings.firebase_storage_bucket:
-            return FirebaseStorageArtifactStore(
-                self.settings,
-                self.settings.firebase_storage_bucket,
-            )
-        return NoOpArtifactStore()
 
     def _build_audit_store(self):
         if self.settings.audit_backend == "firestore":
