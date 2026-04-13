@@ -8,7 +8,7 @@
       <p>{{ card_config.subtitle }}. Update this section only, then save changes.</p>
     </article>
 
-    <form method="post" class="edit-form">
+    <form method="post" class="edit-form" data-processing-label="Saving section changes...">
       {% csrf_token %}
       <div class="edit-grid">
         {% for field in form %}

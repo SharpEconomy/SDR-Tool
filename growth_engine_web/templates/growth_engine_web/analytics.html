@@ -1,0 +1,177 @@
+{% extends "growth_engine_web/base.html" %}
+
+{% block content %}
+  <header class="topbar">
+    <div class="topbar-meta">
+      <p class="signed-in-copy">Admin analytics</p>
+      {% if current_user %}
+        <strong class="auth-identity">
+          {% if current_user.display_name %}{{ current_user.display_name }}{% else %}{{ current_user.email }}{% endif %}
+        </strong>
+        <p class="auth-email">{{ current_user.email }}</p>
+      {% else %}
+        <strong class="auth-identity">Authorized admin session</strong>
+      {% endif %}
+      <a class="secondary-button topbar-link" href="{% url 'growth_engine_web:home' %}">Back to workspace</a>
+    </div>
+    <form method="post" action="{% url 'growth_engine_web:logout' %}" data-processing-label="Signing you out...">
+      {% csrf_token %}
+      <button type="submit" class="secondary-button">Log out</button>
+    </form>
+  </header>
+
+  <section class="analytics-hero">
+    <div class="hero-kicker">Admin-only operations surface</div>
+    <h1>Workspace analytics</h1>
+    <p>
+      Track confirmed profile volume, operator activity, discovery mix, and the latest
+      Firestore-backed profile and run records from one screen.
+    </p>
+  </section>
+
+  {% if analytics.availability_notes %}
+    <section class="message-stack" aria-label="Analytics notes">
+      {% for note in analytics.availability_notes %}
+        <div class="message message-info">{{ note }}</div>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <section class="analytics-metric-grid">
+    {% for metric in analytics.metrics %}
+      <article class="analytics-metric-card">
+        <div class="summary-kicker">{{ metric.label }}</div>
+        <strong class="analytics-metric-value">{{ metric.value }}</strong>
+        <p>{{ metric.detail }}</p>
+      </article>
+    {% endfor %}
+  </section>
+
+  <section class="analytics-grid">
+    <article class="analytics-panel">
+      <div class="analytics-panel-head">
+        <div>
+          <div class="step-label">Profiles</div>
+          <h2>Discovery mix</h2>
+        </div>
+      </div>
+      {% if analytics.discovery_breakdown %}
+        <div class="analytics-bar-stack">
+          {% for item in analytics.discovery_breakdown %}
+            <div class="analytics-bar-row">
+              <div class="analytics-bar-label">{{ item.label }}</div>
+              <div class="analytics-bar-track">
+                <div class="analytics-bar-fill" style="width: {{ item.width }}%"></div>
+              </div>
+              <strong class="analytics-bar-count">{{ item.count }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="request-summary">No discovery-mode data is available yet.</p>
+      {% endif %}
+    </article>
+
+    <article class="analytics-panel">
+      <div class="analytics-panel-head">
+        <div>
+          <div class="step-label">Profiles</div>
+          <h2>Industry mix</h2>
+        </div>
+      </div>
+      {% if analytics.industry_breakdown %}
+        <div class="analytics-bar-stack">
+          {% for item in analytics.industry_breakdown %}
+            <div class="analytics-bar-row">
+              <div class="analytics-bar-label">{{ item.label }}</div>
+              <div class="analytics-bar-track">
+                <div class="analytics-bar-fill analytics-bar-fill-alt" style="width: {{ item.width }}%"></div>
+              </div>
+              <strong class="analytics-bar-count">{{ item.count }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="request-summary">No industry data is available yet.</p>
+      {% endif %}
+    </article>
+  </section>
+
+  <section class="analytics-grid analytics-grid-tall">
+    <article class="analytics-panel">
+      <div class="analytics-panel-head">
+        <div>
+          <div class="step-label">Latest confirmed profiles</div>
+          <h2>Profile ledger</h2>
+        </div>
+      </div>
+      {% if analytics.recent_profiles %}
+        <div class="analytics-list">
+          {% for item in analytics.recent_profiles %}
+            <article class="analytics-list-card">
+              <div class="analytics-list-head">
+                <div>
+                  <h3>{{ item.business_name }}</h3>
+                  <p>{{ item.industry }} | {{ item.location }}</p>
+                </div>
+                <span class="analytics-pill">{{ item.confirmed_at }}</span>
+              </div>
+              <div class="analytics-detail-grid">
+                <div>
+                  <span>Operator</span>
+                  <strong>{{ item.confirmed_by }}</strong>
+                </div>
+                <div>
+                  <span>Discovery modes</span>
+                  <strong>{{ item.discovery_modes|default:"Not set" }}</strong>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="request-summary">No confirmed profiles are available yet.</p>
+      {% endif %}
+    </article>
+
+    <article class="analytics-panel">
+      <div class="analytics-panel-head">
+        <div>
+          <div class="step-label">Latest decision runs</div>
+          <h2>Run ledger</h2>
+        </div>
+      </div>
+      {% if analytics.recent_runs %}
+        <div class="analytics-list">
+          {% for item in analytics.recent_runs %}
+            <article class="analytics-list-card">
+              <div class="analytics-list-head">
+                <div>
+                  <h3>{{ item.business_name }}</h3>
+                  <p>{{ item.discovery_modes|default:"No discovery modes" }}</p>
+                </div>
+                <span class="analytics-pill">{{ item.created_at }}</span>
+              </div>
+              <div class="analytics-detail-grid">
+                <div>
+                  <span>Prioritized</span>
+                  <strong>{{ item.opportunity_count }}</strong>
+                </div>
+                <div>
+                  <span>Skipped</span>
+                  <strong>{{ item.skipped_count }}</strong>
+                </div>
+                <div class="analytics-detail-wide">
+                  <span>Workbook</span>
+                  <strong>{{ item.export_name }}</strong>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="request-summary">No decision-run audit records are available yet.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

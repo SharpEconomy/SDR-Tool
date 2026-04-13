@@ -5,14 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ app_name }}</title>
-    <meta name="server-authenticated" content="{% if request.session.growth_engine_auth_user %}true{% else %}false{% endif %}">
     <link rel="stylesheet" href="{% static 'growth_engine_web/app.css' %}">
-    {% if firebase_auth_enabled %}
-      <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-      <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-      {{ firebase_client_config|json_script:"firebase-client-config" }}
-      <script defer src="{% static 'growth_engine_web/firebase-auth.js' %}"></script>
-    {% endif %}
+    <script defer src="{% static 'growth_engine_web/app.js' %}"></script>
   </head>
   <body>
     <div class="page-shell">
@@ -24,6 +18,62 @@
         </section>
       {% endif %}
       {% block content %}{% endblock %}
+    </div>
+    <div class="loading-shell" data-loading-shell hidden aria-hidden="true">
+      <div class="loading-backdrop"></div>
+      <section
+        class="loading-panel"
+        role="status"
+        aria-live="polite"
+        aria-label="Processing request"
+      >
+        <div class="loading-kicker">Processing</div>
+        <h2 data-loading-title>Working on your request...</h2>
+        <p>Please wait while the engine completes the current step.</p>
+        <div class="loading-tip-rail" aria-live="polite">
+          <article class="loading-tip is-active" data-loading-tip>
+            <div class="loading-tip-label">Marketing tip</div>
+            <strong>Keep the first outreach painfully specific.</strong>
+            <p>Reference one live signal from the lead's market, location, or buying motion before talking about your offer.</p>
+          </article>
+          <article class="loading-tip" data-loading-tip>
+            <div class="loading-tip-label">Marketing tip</div>
+            <strong>Message to timing, not only fit.</strong>
+            <p>A decent-fit company with an active expansion or procurement trigger usually converts faster than a perfect-fit company with no urgency.</p>
+          </article>
+          <article class="loading-tip" data-loading-tip>
+            <div class="loading-tip-label">Marketing tip</div>
+            <strong>Trim your ICP before scaling volume.</strong>
+            <p>When win rates flatten, narrow by buyer role, geography, or budget posture instead of adding more broad top-of-funnel outreach.</p>
+          </article>
+          <article class="loading-tip" data-loading-tip>
+            <div class="loading-tip-label">Marketing tip</div>
+            <strong>Offer a next step that feels lightweight.</strong>
+            <p>Short audits, examples, and proof points outperform vague asks for a call when the lead is still validating relevance.</p>
+          </article>
+        </div>
+        <div class="loading-skeleton-grid" aria-hidden="true">
+          <div class="loading-card loading-card-wide">
+            <div class="loading-line loading-line-short"></div>
+            <div class="loading-line"></div>
+            <div class="loading-line"></div>
+          </div>
+          <div class="loading-card">
+            <div class="loading-line loading-line-short"></div>
+            <div class="loading-line"></div>
+            <div class="loading-line loading-line-short"></div>
+          </div>
+          <div class="loading-card">
+            <div class="loading-line loading-line-short"></div>
+            <div class="loading-chip-row">
+              <span class="loading-chip"></span>
+              <span class="loading-chip"></span>
+              <span class="loading-chip"></span>
+            </div>
+            <div class="loading-line"></div>
+          </div>
+        </div>
+      </section>
     </div>
   </body>
 </html>

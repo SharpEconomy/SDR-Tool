@@ -12,10 +12,9 @@ def localhost_client(**kwargs) -> Client:
     return Client(HTTP_HOST="localhost", **kwargs)
 
 
-def enable_firebase_auth(settings) -> None:
-    settings.firebase_api_key = "firebase-api-key"
-    settings.firebase_auth_domain = "demo.firebaseapp.com"
-    settings.firebase_project_id = "demo-project"
+def enable_google_auth(settings) -> None:
+    settings.google_oauth_client_id = "google-client-id"
+    settings.google_oauth_client_secret = "google-client-secret"
 
 
 def build_intake_draft(**overrides: Any) -> IntakeDraft:

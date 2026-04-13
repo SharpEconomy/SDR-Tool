@@ -1,9 +1,16 @@
 from __future__ import annotations
 
+import os
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 
 from growth_engine.config import Settings
-from growth_engine.models import IntakeDraft, ProfileResearchResult, ResearchSource
+from growth_engine.models import (
+    IntakeDraft,
+    ProfileResearchResult,
+    ResearchSource,
+    SearchResult,
+)
 from growth_engine.parsing.html import HtmlParsingService
 from growth_engine.services.fetcher import PageFetcher
 from growth_engine.services.openai_service import ModelUnavailableError, OpenAIService
@@ -31,6 +38,9 @@ class BusinessProfileResearcher:
         self.search_client = search_client or SearchClient(settings)
         self.openai_service = openai_service or OpenAIService(settings)
         self.parser = parser or HtmlParsingService()
+        self._custom_fetcher = fetcher is not None
+        self._custom_search_client = search_client is not None
+        self._custom_openai_service = openai_service is not None
 
     def research(
         self,
@@ -42,8 +52,9 @@ class BusinessProfileResearcher:
         normalized_website = normalize_url(website) or normalize_whitespace(website)
         domain = extract_domain(normalized_website) or ""
 
-        website_source = self._website_source(normalized_website)
-        search_sources = self._search_sources(normalized_name, domain)
+        website_source, search_sources = self._collect_sources_parallel(
+            normalized_website, normalized_name, domain
+        )
         sources = dedupe_sources(
             [
                 source
@@ -59,7 +70,7 @@ class BusinessProfileResearcher:
             "default_discovery_modes": self.settings.default_discovery_modes,
             "default_target_geographies": self.settings.default_target_geographies,
         }
-        model_result = self._model_profile(model_payload)
+        model_result = self._model_profile_parallel(model_payload)
         draft = self._build_draft(
             business_name=normalized_name,
             website=normalized_website,
@@ -84,7 +95,10 @@ class BusinessProfileResearcher:
                 kind="website",
                 url=website,
                 title="Primary website",
-                snippet="The homepage could not be fetched. Review this field manually before saving.",
+                snippet=(
+                    "The homepage could not be fetched. Review this field manually "
+                    "before saving."
+                ),
             )
         parsed = self.parser.parse(
             type(
@@ -113,6 +127,93 @@ class BusinessProfileResearcher:
             title=parsed.title or "Primary website",
             snippet=normalize_whitespace(snippet)[:900],
         )
+
+    def _collect_sources_parallel(
+        self,
+        website: str,
+        business_name: str,
+        domain: str,
+    ) -> tuple[ResearchSource | None, list[ResearchSource]]:
+        if self._custom_fetcher or self._custom_search_client:
+            return (
+                self._website_source(website),
+                self._search_sources(business_name, domain),
+            )
+        queries = [
+            f'"{business_name}" "{domain}"' if domain else business_name,
+            f"site:{domain} about" if domain else f'"{business_name}" company',
+            f'"{business_name}" industry location',
+        ]
+        tasks: list[tuple[str, str]] = []
+        if website:
+            tasks.append(("website", website))
+        for query in queries:
+            tasks.append(("search", query))
+
+        if not tasks:
+            return None, []
+
+        website_source: ResearchSource | None = None
+        search_results: list[SearchResult] = []
+
+        with _parallel_executor(len(tasks)) as executor:
+            futures = []
+            for task_type, payload in tasks:
+                if task_type == "website":
+                    futures.append(
+                        executor.submit(_website_source_worker, self.settings, payload)
+                    )
+                else:
+                    futures.append(
+                        executor.submit(_search_query_worker, self.settings, payload, 3)
+                    )
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                except Exception:
+                    continue
+                if isinstance(result, dict) and result.get("kind") == "website":
+                    website_source = ResearchSource(**result)
+                elif isinstance(result, list):
+                    search_results.extend(result)
+
+        filtered_sources = self._filter_search_sources(
+            search_results, business_name, domain
+        )
+        return website_source, filtered_sources
+
+    def _filter_search_sources(
+        self,
+        results: list[SearchResult],
+        business_name: str,
+        domain: str,
+    ) -> list[ResearchSource]:
+        sources: list[ResearchSource] = []
+        seen_urls: set[str] = set()
+        for result in results:
+            normalized_url = normalize_whitespace(result.url)
+            if not normalized_url or normalized_url in seen_urls:
+                continue
+            if not self._is_relevant_search_result(
+                business_name=business_name,
+                domain=domain,
+                title=str(result.title or ""),
+                snippet=str(result.snippet or ""),
+                url=normalized_url,
+            ):
+                continue
+            seen_urls.add(normalized_url)
+            sources.append(
+                ResearchSource(
+                    kind="search",
+                    url=normalized_url,
+                    title=normalize_whitespace(result.title) or normalized_url,
+                    snippet=normalize_whitespace(result.snippet),
+                )
+            )
+            if len(sources) >= 6:
+                return sources
+        return sources
 
     def _search_sources(self, business_name: str, domain: str) -> list[ResearchSource]:
         queries = [
@@ -199,6 +300,22 @@ class BusinessProfileResearcher:
             pass
         return {}
 
+    def _model_profile_parallel(self, payload: dict[str, object]) -> dict[str, object]:
+        if not self.openai_service.is_available():
+            return {}
+        if self._custom_openai_service:
+            return self._model_profile(payload)
+        try:
+            with _parallel_executor(1) as executor:
+                future = executor.submit(
+                    _verify_profile_worker,
+                    self.settings,
+                    payload,
+                )
+                return future.result()
+        except Exception:
+            return self._model_profile(payload)
+
     def _build_draft(
         self,
         *,
@@ -269,10 +386,14 @@ class BusinessProfileResearcher:
 
     def _fallback_summary(self, sources: list[ResearchSource]) -> str:
         if not sources:
-            return "No public evidence was fetched. Review every field manually before saving."
+            return (
+                "No public evidence was fetched. Review every field manually before "
+                "saving."
+            )
         return (
             "Built the draft from the primary website and supporting search results. "
-            "Review and adjust any field that needs a business-side correction before saving."
+            "Review and adjust any field that needs a business-side correction "
+            "before saving."
         )
 
 
@@ -362,3 +483,80 @@ def build_default_need(discovery_modes: list[str]) -> str:
 
 def safe_first_list(items: list[str]) -> str:
     return normalize_whitespace(items[0]) if items else ""
+
+
+def _process_workers(task_count: int) -> int:
+    cpu_count = os.cpu_count() or 2
+    return max(1, min(cpu_count, task_count))
+
+
+def _parallel_executor(task_count: int):
+    max_workers = _process_workers(task_count)
+    try:
+        return ProcessPoolExecutor(max_workers=max_workers)
+    except Exception:
+        return ThreadPoolExecutor(max_workers=max_workers)
+
+
+def _website_source_worker(settings: Settings, website: str) -> dict[str, str] | None:
+    if not website:
+        return None
+    fetcher = PageFetcher(settings)
+    parser = HtmlParsingService()
+    result = fetcher.fetch(website, prefer_browser=True)
+    if not result.text:
+        return {
+            "kind": "website",
+            "url": website,
+            "title": "Primary website",
+            "snippet": (
+                "The homepage could not be fetched. Review this field manually "
+                "before saving."
+            ),
+        }
+    parsed = parser.parse(
+        type(
+            "Document",
+            (),
+            {
+                "html": result.text,
+                "title": "",
+                "url": website,
+            },
+        )()
+    )
+    snippet = " ".join(
+        item
+        for item in [
+            parsed.title,
+            parsed.meta_description,
+            " ".join(parsed.headings[:3]),
+            parsed.visible_text[:600],
+        ]
+        if normalize_whitespace(item)
+    )
+    return {
+        "kind": "website",
+        "url": website,
+        "title": parsed.title or "Primary website",
+        "snippet": normalize_whitespace(snippet)[:900],
+    }
+
+
+def _search_query_worker(
+    settings: Settings,
+    query: str,
+    max_results: int,
+) -> list[SearchResult]:
+    search_client = SearchClient(settings)
+    return search_client.search(query, max_results=max_results)
+
+
+def _verify_profile_worker(
+    settings: Settings,
+    payload: dict[str, object],
+) -> dict[str, object]:
+    openai_service = OpenAIService(settings)
+    if not openai_service.is_available():
+        return {}
+    return openai_service.verify_business_profile(payload)

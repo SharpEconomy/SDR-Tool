@@ -154,3 +154,4 @@ def test_google_credentials_require_base64_service_account(settings) -> None:
     message = str(exc_info.value)
     assert "GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64" in message
     assert ".env.example" in message
+    assert ".env` or `.env.example" not in message

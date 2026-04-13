@@ -14,11 +14,12 @@ Coverage summary:
 - `test_export.py`: Excel export structure for prioritized and skipped entities.
 - `test_engine.py`: orchestration flow and pause/stop control behavior.
 - `test_profile_flow.py`: framework-neutral profile parsing, summary-card shaping, and draft update helpers.
-- `test_django_views.py`: Django session-backed research, edit, save, request-data, and Firebase login/logout flows.
-- `test_firebase_auth.py`: Firebase token verification success and failure behavior.
+- `test_django_views.py`: Django session-backed research, edit, save, lead-generation, workbook download, and Google OAuth login/logout flows.
+- `test_admin_analytics.py`: admin analytics aggregation from Firestore-backed profile and run records.
+- `test_google_auth.py`: Google OAuth authorization URL, code exchange, and ID token verification behavior.
 - `test_session_state.py`: Django session serialization and workspace state lifecycle.
 - `test_forms.py`: Django form normalization and coercion rules.
-- `test_frontend_auth_contract.py`: frontend auth script contract for local redirect and popup fallback behavior.
+- `test_auth_templates.py`: server-rendered Google sign-in template contract and Firebase-removal guardrails.
 - `test_validation.py`: email syntax and validation fallback behavior.
 - `test_services.py`: fetch/search/OpenAI retry and fallback behavior.
 - `test_cloud.py`: Cloud Run and Pub/Sub-facing integration helpers.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import threading
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -143,10 +143,9 @@ class DecisionEngine:
         control,
     ) -> list[DiscoveryDocument]:
         documents: list[DiscoveryDocument] = []
+        tasks: list[tuple[str, object]] = []
         for mode in profile.discovery_modes:
             for adapter in self.discovery_adapters:
-                if not self._checkpoint(control):
-                    return documents
                 if adapter.name == "procurement" and mode not in {
                     "vendors",
                     "suppliers",
@@ -155,22 +154,38 @@ class DecisionEngine:
                     continue
                 if adapter.name == "user_urls" and not profile.user_urls:
                     continue
-                self._emit(
-                    progress_callback, log, f"{adapter.name}: discovering {mode}"
-                )
-                documents.extend(
-                    adapter.discover(
-                        profile,
-                        mode,
-                        progress_callback=lambda message: self._emit(
-                            progress_callback, log, message
-                        ),
-                    )
-                )
+                tasks.append((mode, adapter))
+
+        if not tasks:
+            return documents
+
+        emit_lock = threading.Lock()
+
+        def _progress(message: str) -> None:
+            with emit_lock:
+                self._emit(progress_callback, log, message)
+
+        def _run_discovery(task: tuple[str, object]) -> list[DiscoveryDocument]:
+            mode, adapter = task
+            _progress(f"{adapter.name}: discovering {mode}")
+            return adapter.discover(profile, mode, progress_callback=_progress)
+
+        with ThreadPoolExecutor(
+            max_workers=min(self.settings.max_fetch_workers, len(tasks))
+        ) as executor:
+            futures = [executor.submit(_run_discovery, task) for task in tasks]
+            for future in as_completed(futures):
+                if not self._checkpoint(control):
+                    break
+                documents.extend(future.result())
+
         deduped: dict[tuple[str, str], DiscoveryDocument] = {}
         for document in documents:
             deduped[(document.discovery_mode, document.url)] = document
-        return list(deduped.values())
+        return sorted(
+            deduped.values(),
+            key=lambda item: (item.discovery_mode, item.url),
+        )
 
     def _enrich_documents(
         self,
@@ -245,10 +260,21 @@ class DecisionEngine:
         log,
         control,
     ) -> list[Opportunity]:
-        scored = [
-            (entity, self.scoring_engine.score(profile, entity))
-            for entity in enriched_entities
-        ]
+        if not enriched_entities:
+            return []
+
+        with ThreadPoolExecutor(
+            max_workers=min(
+                self.settings.max_validation_workers, len(enriched_entities)
+            )
+        ) as executor:
+            scores = list(
+                executor.map(
+                    lambda entity: self.scoring_engine.score(profile, entity),
+                    enriched_entities,
+                )
+            )
+        scored = list(zip(enriched_entities, scores))
         scored.sort(key=lambda item: item[1].priority_score, reverse=True)
         refined_scores = self.scoring_engine.refine_top_scores(
             profile, scored[: self.settings.max_llm_refinements]

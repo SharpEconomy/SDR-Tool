@@ -10,6 +10,8 @@ Production-ready Django application for capturing a verified business foundation
 - Builds a complete editable business profile draft with market, ICP, offerings, goals, and guardrails.
 - Presents the gathered evidence and model summary in a review-first confirmation UI.
 - Saves the confirmed profile to Firestore after user approval.
+- Generates prioritized leads from the confirmed profile and supports Excel download.
+- Exposes an admin-only analytics page for profile volume, run activity, and mix trends.
 
 ## Product intent
 
@@ -28,6 +30,8 @@ The current UI is optimized for speed and review quality rather than long-form m
 - `gpt-5.4-mini` makes the final structured call from that evidence set.
 - Every generated field remains editable before confirmation.
 - The confirmed record is written to Firestore for downstream use.
+- After confirmation, the operator can generate prioritized leads and download the workbook.
+- Admin allowlisted users can open a Firestore-backed analytics dashboard from the workspace header.
 
 ## Core flows
 
@@ -36,6 +40,7 @@ The current UI is optimized for speed and review quality rather than long-form m
 3. Review the GPT-cross-verified business profile.
 4. Edit any field that needs correction.
 5. Confirm and save the final record to Firestore.
+6. Generate prioritized leads and download the Excel workbook.
 
 The UI stays non-technical on purpose. It is designed for operators, founders, growth teams, procurement leads, and business owners who want a simple guided flow.
 
@@ -56,7 +61,8 @@ Main package: `growth_engine`
 - `profile_research/`: public-web evidence gathering and model-backed profile verification.
 - `storage/`: Firebase Storage export persistence plus Firestore audit and profile persistence.
 - `orchestration/`: end-to-end decision engine and pause/resume/stop control.
-- `growth_engine_web/`: Django forms, views, templates, Firebase login bridge, and session flow.
+- `growth_engine_web/`: Django forms, views, templates, Google OAuth session flow, and session-backed workspace state.
+- `growth_engine_web/`: Django forms, views, templates, admin analytics dashboard, Google OAuth session flow, and session-backed workspace state.
 - `growth_engine_django/`: Django project settings, routing, and WSGI entrypoint.
 
 More detail: [docs/architecture.md](/c:/Users/MCN/Dev/SDR-Tool/docs/architecture.md)
@@ -84,7 +90,7 @@ Reliability rules:
 
 1. Create a virtual environment.
 2. Install dependencies.
-3. Create `.env` from `.env.example`.
+3. Fill in `.env.example` with your real local values.
 4. Run the Django app.
 
 ```bash
@@ -126,7 +132,7 @@ Verified tasks:
 
 ## Environment configuration
 
-Use `.env.example` as the reference configuration.
+Use `.env.example` as the runtime configuration file.
 
 Important settings:
 
@@ -147,28 +153,29 @@ Important settings:
 - `GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64`
 - `FIREBASE_STORAGE_BUCKET`
 
-Optional Firebase sign-in:
+Optional Google sign-in:
 
-- `FIREBASE_API_KEY`
-- `FIREBASE_AUTH_DOMAIN`
-- `FIREBASE_PROJECT_ID`
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+- `GOOGLE_OAUTH_REDIRECT_URI=https://<host>/auth/google/callback/`
+- `ADMIN_EMAILS=admin@example.com,ops@example.com`
 
-Firebase sign-in behavior:
+Google sign-in behavior:
 
-- Google sign-in is persisted in the browser with Firebase local auth persistence.
-- Reloading the page or reopening the app in the same browser restores the session automatically.
-- `Log out` now signs out both the Django session workspace and the persisted Firebase browser session.
-- Local development uses Firebase redirect sign-in on `localhost` for better browser compatibility.
-- Production keeps popup sign-in when available and falls back to redirect if the popup is blocked or closed.
+- Sign-in now uses a backend-owned Google OAuth authorization-code flow.
+- Django stores the authenticated user in the existing session workspace after the callback succeeds.
+- Reloading the page keeps the session active until `Log out` clears the auth session and workspace state.
+- If `GOOGLE_OAUTH_REDIRECT_URI` is set in `.env`, the app sends that exact callback URI to Google.
+- If `GOOGLE_OAUTH_REDIRECT_URI` is blank, the app falls back to `APP_BASE_URL` and then the incoming request host.
+- The callback URI must be registered in Google Cloud Console for every host you use.
 
-Firebase console requirements:
+Google Cloud Console requirements:
 
-- Enable the Google provider under `Authentication -> Sign-in method`.
-- Add every app host to `Authentication -> Settings -> Authorized domains`.
-- For local development, authorize `localhost`.
-- For production, authorize the deployed app domain as well as the Firebase project auth domain.
+- Create an OAuth client for a web application.
+- Add each callback URI in the format `https://<host>/auth/google/callback/`.
+- For local development, register the exact local callback URI, for example `http://localhost:8000/auth/google/callback/`.
 
-Leave the Firebase values blank if you do not want sign-in enabled for local runs.
+Leave the Google OAuth values blank if you do not want sign-in enabled for local runs.
 
 ## Firestore and Google Cloud credentials
 
@@ -183,7 +190,7 @@ Recommended for encrypted secrets in CI/CD or hosted deployments:
 - store the service account JSON as a base64-encoded secret
 - set that secret as `GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64`
 - set `GOOGLE_CLOUD_PROJECT` explicitly
-- place the value in `.env` or `.env.example`
+- place the value in `.env.example`
 
 The same credential source is used for Firestore, Firebase Storage, and Pub/Sub helpers.
 
@@ -218,9 +225,9 @@ The web experience is now served through Django with file-backed sessions and co
 Runtime notes:
 
 - `python manage.py runserver` starts the web app locally.
-- Django session state stores the in-progress profile draft, research result, auth session, and follow-up request state.
+- Django session state stores the in-progress profile draft, research result, auth session, lead request state, and generated workbook payload.
 - Firestore remains the only database used for persisted application data.
-- Firebase sign-in is optional and only enforced when the Firebase settings are populated.
+- Google sign-in is optional and only enforced when the Google OAuth settings are populated.
 
 ## Testing
 
@@ -243,7 +250,7 @@ Test coverage includes:
 - orchestration
 - cloud helpers
 - fetch/search/OpenAI retry behavior
-- Django helper parsing, session serialization, Firebase auth verification hooks, and view flows
+- Django helper parsing, session serialization, Google OAuth verification hooks, lead generation flow, and workbook download views
 - Firestore profile persistence
 - email validation
 

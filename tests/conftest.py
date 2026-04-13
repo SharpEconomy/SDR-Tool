@@ -17,6 +17,7 @@ django.setup()
 def settings() -> Settings:
     return Settings(
         app_name="Growth Opportunity Decision Engine",
+        app_base_url="",
         request_timeout_seconds=5,
         request_retry_attempts=1,
         request_retry_backoff_seconds=0,
@@ -42,9 +43,10 @@ def settings() -> Settings:
         google_cloud_project="demo-project",
         google_cloud_service_account_json_b64="",
         firebase_storage_bucket="",
-        firebase_api_key="",
-        firebase_auth_domain="",
-        firebase_project_id="",
+        google_oauth_client_id="",
+        google_oauth_client_secret="",
+        google_oauth_redirect_uri="",
+        admin_emails=["admin@example.com"],
         default_discovery_modes=["customers", "partners"],
         default_target_geographies=["India"],
     )
@@ -100,6 +102,6 @@ def patch_runtime_settings(settings: Settings, monkeypatch) -> None:
         lambda: settings,
     )
     monkeypatch.setattr(
-        "growth_engine_web.firebase_auth.get_runtime_settings",
+        "growth_engine_web.google_auth.get_runtime_settings",
         lambda: settings,
     )

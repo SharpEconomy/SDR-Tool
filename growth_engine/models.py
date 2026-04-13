@@ -13,29 +13,13 @@ DISCOVERY_MODES = [
 ]
 
 EXPORT_OPPORTUNITY_COLUMNS = [
-    "priority_rank",
-    "priority_score",
-    "confidence",
-    "discovery_mode",
     "market_side",
     "entity_name",
-    "entity_website",
-    "entity_domain",
     "category",
-    "location",
     "company_size",
-    "budget_signal",
-    "expected_value",
-    "timing_signal",
+    "location",
     "decision_maker",
     "decision_maker_email",
-    "email_validation",
-    "contact_path",
-    "source_type",
-    "source_url",
-    "why_it_matters",
-    "reasoning_summary",
-    "next_action",
 ]
 
 EXPORT_SKIPPED_COLUMNS = [

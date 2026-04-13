@@ -180,7 +180,7 @@ Design goals:
 - minimal language
 - editable business-brief snapshot before persistence
 - explicit request/response state instead of framework-managed reruns
-- Firebase-backed optional Google sign-in with Django session continuity
+- optional Google OAuth sign-in with Django session continuity
 - Firestore persistence without introducing a second database
 
 ## Deployment shape

@@ -34,5 +34,5 @@ def get_google_credentials(
 
     raise RuntimeError(
         "Google Cloud credentials are not configured. Set "
-        "`GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64` in `.env` or `.env.example`."
+        "`GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64` in `.env.example`."
     )

@@ -12,22 +12,33 @@
         <div class="step-label">Sign in</div>
         <h2>Use Google to continue</h2>
         <p>The session stays in this browser until you explicitly sign out.</p>
-        <button type="button" class="primary-button auth-button" data-firebase-login>
+        <a class="primary-button auth-button" href="{% url 'growth_engine_web:google_login' %}">
           Sign in with Google
-        </button>
-        <p class="auth-feedback" data-auth-feedback aria-live="polite"></p>
+        </a>
       </article>
     </section>
   {% else %}
     <header class="topbar">
-      <div>
-        <div class="hero-kicker">AI business foundation capture</div>
+      <div class="topbar-meta">
         {% if current_user %}
-          <p class="signed-in-copy">Signed in as {{ current_user.email }}</p>
+          <p class="signed-in-copy">Signed in</p>
+          <strong class="auth-identity">
+            {% if current_user.display_name %}{{ current_user.display_name }}{% else %}{{ current_user.email }}{% endif %}
+          </strong>
+          {% if current_user.email %}
+            <p class="auth-email">{{ current_user.email }}</p>
+          {% endif %}
+        {% else %}
+          <p class="signed-in-copy">Workspace access</p>
+          <strong class="auth-identity">Open session</strong>
+          <p class="auth-email">Google sign-in is not required in this environment.</p>
+        {% endif %}
+        {% if can_access_admin_analytics %}
+          <a class="secondary-button topbar-link" href="{% url 'growth_engine_web:analytics' %}">Admin analytics</a>
         {% endif %}
       </div>
       {% if current_user %}
-        <form method="post" action="{% url 'growth_engine_web:logout' %}" data-firebase-logout-form>
+        <form method="post" action="{% url 'growth_engine_web:logout' %}" data-processing-label="Signing you out...">
           {% csrf_token %}
           <button type="submit" class="secondary-button">Log out</button>
         </form>
@@ -35,136 +46,365 @@
     </header>
 
     <section class="hero-grid">
-      <div class="hero-shell">
-        <div class="hero-kicker">AI business foundation capture</div>
-        <h1>Start with a name and website.</h1>
-        <p>
-          The app researches the company, cross-checks the public evidence,
-          drafts the full business profile, and asks you to confirm before saving.
-        </p>
-      </div>
-
-      <article class="step-card source-card-shell">
-        <div class="step-label">Step 1</div>
-        <h2>Business source</h2>
-        <p>Enter the business name and primary website. The app will gather the rest.</p>
-        <form method="post" action="{% url 'growth_engine_web:research' %}" novalidate>
-          {% csrf_token %}
-          {% for field in source_form %}
-            <div class="form-field">
-              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.errors %}
-                <div class="field-error">{{ field.errors|join:", " }}</div>
-              {% endif %}
+      {% if research_result and draft %}
+        <details class="state-accordion hero-accordion">
+          <summary class="accordion-toggle">
+            <div>
+              <div class="hero-kicker">AI business foundation capture</div>
+              <h1>Start with a name and website.</h1>
+              <p>Research completed from the original source inputs.</p>
             </div>
-          {% endfor %}
-          <button type="submit" class="primary-button wide-button">Research from web</button>
-        </form>
-      </article>
+            <span class="accordion-status">Research ready</span>
+          </summary>
+          <div class="accordion-panel">
+            <p>
+              The app researched the company, cross-checked the public evidence,
+              drafted the business profile, and prepared it for confirmation.
+            </p>
+          </div>
+        </details>
+
+        <details class="state-accordion source-accordion">
+          <summary class="accordion-toggle">
+            <div>
+              <div class="step-label">Step 1</div>
+              <h2>Business source</h2>
+              <p>The original inputs are locked below for reference.</p>
+            </div>
+            <span class="accordion-status">Submitted</span>
+          </summary>
+          <div class="accordion-panel">
+            <div class="readonly-form">
+              <div class="form-field">
+                <label for="id_locked_business_name">Business name</label>
+                <input id="id_locked_business_name" type="text" value="{{ draft.business_name }}" readonly disabled>
+              </div>
+              <div class="form-field">
+                <label for="id_locked_website">Website</label>
+                <input id="id_locked_website" type="text" value="{{ draft.website }}" readonly disabled>
+              </div>
+              <button type="button" class="primary-button wide-button" disabled>Research from web</button>
+            </div>
+          </div>
+        </details>
+      {% else %}
+        <div class="hero-shell">
+          <div class="hero-kicker">AI business foundation capture</div>
+          <h1>Start with a name and website.</h1>
+          <p>
+            The app researches the company, cross-checks the public evidence,
+            drafts the full business profile, and asks you to confirm before saving.
+          </p>
+        </div>
+
+        <article class="step-card source-card-shell">
+          <div class="step-label">Step 1</div>
+          <h2>Business source</h2>
+          <p>Enter the business name and primary website. The app will gather the rest.</p>
+          <form method="post" action="{% url 'growth_engine_web:research' %}" novalidate data-processing-label="Researching the business and drafting the profile...">
+            {% csrf_token %}
+            {% for field in source_form %}
+              <div class="form-field">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                  <div class="field-error">{{ field.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+            <button type="submit" class="primary-button wide-button">Research from web</button>
+          </form>
+        </article>
+      {% endif %}
     </section>
 
     {% if research_result and draft %}
       <section class="content-grid">
         <div>
-          <article class="step-card">
-            <div class="step-label">Step 2</div>
-            <h2>Review the business profile</h2>
-            <p>
-              Start with the three summary cards. If something looks wrong,
-              open that section, update it, then confirm the full profile.
-            </p>
-          </article>
+          {% if save_uri %}
+            <details class="state-accordion review-accordion">
+              <summary class="accordion-toggle">
+                <div>
+                  <div class="step-label">Step 2</div>
+                  <h2>Review the business profile</h2>
+                  <p>The confirmed profile is saved as a locked snapshot.</p>
+                </div>
+                <span class="accordion-status">Confirmed</span>
+              </summary>
+              <div class="accordion-panel">
+                <div class="summary-grid">
+                  {% for card in summary_cards %}
+                    <article class="summary-card{% if card.id == 'commercial_setup' %} summary-card-double{% endif %}">
+                      <div class="summary-card-head">
+                        <div>
+                          <div class="summary-kicker">{{ card.subtitle }}</div>
+                          <h3>{{ card.title }}</h3>
+                        </div>
+                        <button type="button" class="secondary-button summary-action" disabled>Saved</button>
+                      </div>
 
-          <div class="summary-grid">
-            {% for card in summary_cards %}
-              <article class="summary-card">
-                <div class="summary-card-head">
-                  <div>
-                    <div class="summary-kicker">{{ card.subtitle }}</div>
-                    <h3>{{ card.title }}</h3>
-                  </div>
-                  <a class="secondary-button summary-action" href="{% url 'growth_engine_web:edit_section' card.id %}">
-                    Edit
-                  </a>
+                      {% for row in card.rows %}
+                        {% if row.kind == "paragraph" %}
+                          <div class="summary-paragraph">
+                            <span>{{ row.label }}</span>
+                            <p>{{ row.value }}</p>
+                          </div>
+                        {% elif row.kind == "chips" %}
+                          <div class="summary-line">
+                            <span>{{ row.label }}</span>
+                            <div class="chip-group">
+                              {% for item in row.value %}
+                                <span class="summary-chip{% if row.wrap %} summary-chip-wrap{% endif %}">{{ item }}</span>
+                              {% endfor %}
+                            </div>
+                          </div>
+                        {% else %}
+                          <div class="summary-line">
+                            <span>{{ row.label }}</span>
+                            <strong>{{ row.value }}</strong>
+                          </div>
+                        {% endif %}
+                      {% endfor %}
+                    </article>
+                  {% endfor %}
                 </div>
 
-                {% for row in card.rows %}
-                  {% if row.kind == "paragraph" %}
-                    <div class="summary-paragraph">
-                      <span>{{ row.label }}</span>
-                      <p>{{ row.value }}</p>
-                    </div>
-                  {% elif row.kind == "chips" %}
-                    <div class="summary-line">
-                      <span>{{ row.label }}</span>
-                      <div class="chip-group">
-                        {% for item in row.value %}
-                          <span class="summary-chip{% if row.wrap %} summary-chip-wrap{% endif %}">{{ item }}</span>
-                        {% endfor %}
-                      </div>
-                    </div>
-                  {% else %}
-                    <div class="summary-line">
-                      <span>{{ row.label }}</span>
-                      <strong>{{ row.value }}</strong>
-                    </div>
-                  {% endif %}
-                {% endfor %}
-              </article>
-            {% endfor %}
-          </div>
+                <div class="confirm-shell">
+                  <div class="edit-guide">
+                    <strong>Profile saved.</strong>
+                    The confirmation action is complete and the review snapshot is now read-only.
+                  </div>
+                  <button type="button" class="primary-button wide-button" disabled>Confirm this profile and save</button>
+                </div>
+              </div>
+            </details>
+          {% else %}
+            <article class="step-card">
+              <div class="step-label">Step 2</div>
+              <h2>Review the business profile</h2>
+              <p>
+                Start with the three summary cards. If something looks wrong,
+                open that section, update it, then confirm the full profile.
+              </p>
+            </article>
 
-          <div class="confirm-shell">
-            <div class="edit-guide">
-              <strong>Ready to save?</strong>
-              Confirm only after each card reads naturally and reflects the business correctly.
+            <div class="summary-grid">
+              {% for card in summary_cards %}
+                <article class="summary-card{% if card.id == 'commercial_setup' %} summary-card-double{% endif %}">
+                  <div class="summary-card-head">
+                    <div>
+                      <div class="summary-kicker">{{ card.subtitle }}</div>
+                      <h3>{{ card.title }}</h3>
+                    </div>
+                    <a class="secondary-button summary-action" href="{% url 'growth_engine_web:edit_section' card.id %}">
+                      Edit
+                    </a>
+                  </div>
+
+                  {% for row in card.rows %}
+                    {% if row.kind == "paragraph" %}
+                      <div class="summary-paragraph">
+                        <span>{{ row.label }}</span>
+                        <p>{{ row.value }}</p>
+                      </div>
+                    {% elif row.kind == "chips" %}
+                      <div class="summary-line">
+                        <span>{{ row.label }}</span>
+                        <div class="chip-group">
+                          {% for item in row.value %}
+                            <span class="summary-chip{% if row.wrap %} summary-chip-wrap{% endif %}">{{ item }}</span>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    {% else %}
+                      <div class="summary-line">
+                        <span>{{ row.label }}</span>
+                        <strong>{{ row.value }}</strong>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </article>
+              {% endfor %}
             </div>
-            <form method="post" action="{% url 'growth_engine_web:save_profile' %}">
-              {% csrf_token %}
-              <button type="submit" class="primary-button wide-button">Confirm this profile and save</button>
-            </form>
-          </div>
+
+            <div class="confirm-shell">
+              <div class="edit-guide">
+                <strong>Ready to save?</strong>
+                Confirm only after each card reads naturally and reflects the business correctly.
+              </div>
+              <form method="post" action="{% url 'growth_engine_web:save_profile' %}" data-processing-label="Saving the confirmed profile...">
+                {% csrf_token %}
+                <button type="submit" class="primary-button wide-button">Confirm this profile and save</button>
+              </form>
+            </div>
+          {% endif %}
 
           {% if save_uri %}
-            <article class="step-card">
-              <div class="step-label">Next step</div>
-              <h2>What data do you want next?</h2>
-              <p>Select the type of data you want the engine to find from this saved profile.</p>
-              <form method="post" action="{% url 'growth_engine_web:request_data' %}">
-                {% csrf_token %}
-                <div class="form-field checkbox-field">
-                  <span class="field-label">{{ post_save_form.requested_data.label }}</span>
-                  {{ post_save_form.requested_data }}
-                </div>
-                <div class="form-field">
-                  <label for="{{ post_save_form.notes.id_for_label }}">{{ post_save_form.notes.label }}</label>
-                  {{ post_save_form.notes }}
-                </div>
-                <button type="submit" class="secondary-button wide-button">Save data request</button>
-              </form>
-              {% if requested_data_summary %}
-                <p class="request-summary">Requested next data: {{ requested_data_summary }}</p>
+            <div class="post-save-grid{% if lead_results %} post-save-grid-live{% endif %}">
+              {% if lead_results %}
+                <details class="state-accordion lead-request-accordion">
+                  <summary class="accordion-toggle">
+                    <div>
+                      <div class="step-label">Next step</div>
+                      <h2>Generate leads</h2>
+                      <p>The submitted request is now locked for review.</p>
+                    </div>
+                    <span class="accordion-status">Requested</span>
+                  </summary>
+                  <div class="accordion-panel">
+                    <div class="readonly-form">
+                      <div class="form-field checkbox-field readonly-checkbox-field">
+                        <span class="field-label">{{ post_save_form.requested_data.label }}</span>
+                        <ul>
+                          {% for mode, label in discovery_mode_options %}
+                            <li>
+                              <label>
+                                <input type="checkbox" {% if mode in requested_data_selected %}checked{% endif %} disabled>
+                                <span>{{ label }}</span>
+                              </label>
+                            </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                      <div class="form-field">
+                        <label for="id_locked_notes">Anything specific you want in that data?</label>
+                        <textarea id="id_locked_notes" rows="4" readonly disabled>{{ post_save_form.initial.notes }}</textarea>
+                      </div>
+                      <button type="button" class="secondary-button wide-button" disabled>Generate leads</button>
+                    </div>
+                    {% if requested_data_summary %}
+                      <p class="request-summary">Requested lead types: {{ requested_data_summary }}</p>
+                    {% endif %}
+                  </div>
+                </details>
+              {% else %}
+                <article class="step-card">
+                  <div class="step-label">Next step</div>
+                  <h2>Generate leads</h2>
+                  <p>Select the lead types you want from this saved profile, then review them here or download the Excel workbook.</p>
+                  <form method="post" action="{% url 'growth_engine_web:request_data' %}" data-processing-label="Generating leads and preparing the workbook...">
+                    {% csrf_token %}
+                    <div class="form-field checkbox-field">
+                      <span class="field-label">{{ post_save_form.requested_data.label }}</span>
+                      {{ post_save_form.requested_data }}
+                    </div>
+                    <div class="form-field">
+                      <label for="{{ post_save_form.notes.id_for_label }}">{{ post_save_form.notes.label }}</label>
+                      {{ post_save_form.notes }}
+                    </div>
+                    <button type="submit" class="secondary-button wide-button">Generate leads</button>
+                  </form>
+                  {% if requested_data_summary %}
+                    <p class="request-summary">Requested lead types: {{ requested_data_summary }}</p>
+                  {% endif %}
+                </article>
               {% endif %}
-              <p class="save-uri">Saved record: <code>{{ save_uri }}</code></p>
-            </article>
+
+              {% if lead_results %}
+                <article class="step-card prioritized-leads-card">
+                  <div class="step-label">Lead results</div>
+                  <h2>Prioritized leads</h2>
+                  <p>
+                    {{ lead_results.opportunity_rows|length }} prioritized leads ready.
+                    {% if lead_results.skipped_rows %}
+                      {{ lead_results.skipped_rows|length }} additional entities were skipped.
+                    {% endif %}
+                  </p>
+                  <div class="action-row">
+                    <a class="primary-button" href="{% url 'growth_engine_web:download_leads_export' %}">Download Excel workbook</a>
+                    <p class="save-uri">Workbook: <code>{{ lead_results.export_name }}</code></p>
+                  </div>
+                  {% if lead_results.opportunity_rows %}
+                    <div class="lead-list">
+                      {% for lead in lead_results.opportunity_rows %}
+                        <article class="lead-entry">
+                          <div class="lead-entry-head">
+                            <div>
+                              <div class="summary-kicker">Rank {{ lead.priority_rank }}</div>
+                              <h3>{{ lead.entity_name }}</h3>
+                            </div>
+                            <span class="lead-score">Score {{ lead.priority_score }}</span>
+                          </div>
+                          <div class="lead-meta">
+                            <span class="summary-chip">{{ lead.discovery_mode|title }}</span>
+                            <span class="summary-chip">{{ lead.location }}</span>
+                            {% if lead.decision_maker %}
+                              <span class="summary-chip">{{ lead.decision_maker }}</span>
+                            {% endif %}
+                          </div>
+                          {% if lead.entity_website %}
+                            <p class="lead-link-row"><a href="{{ lead.entity_website }}" target="_blank" rel="noreferrer">{{ lead.entity_website }}</a></p>
+                          {% endif %}
+                          <div class="lead-detail-grid">
+                            <div>
+                              <span>Contact</span>
+                              <strong>
+                                {% if lead.decision_maker_email %}
+                                  {{ lead.decision_maker_email }}
+                                {% else %}
+                                  {{ lead.contact_path }}
+                                {% endif %}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>Next action</span>
+                              <strong>{{ lead.next_action }}</strong>
+                            </div>
+                          </div>
+                          {% if lead.why_it_matters %}
+                            <p>{{ lead.why_it_matters }}</p>
+                          {% endif %}
+                          <a class="lead-source-link" href="{{ lead.source_url }}" target="_blank" rel="noreferrer">Open source</a>
+                        </article>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <p class="request-summary">No prioritized leads matched this request. Download the workbook to review skipped entities.</p>
+                  {% endif %}
+                </article>
+              {% endif %}
+            </div>
           {% endif %}
         </div>
 
         <aside>
-          <article class="step-card">
-            <div class="step-label">Step 3</div>
-            <h2>Verification</h2>
-          </article>
-          <div class="verification-shell">{{ research_result.verification_summary }}</div>
-          {% for source in research_result.sources|slice:":6" %}
-            <article class="source-card">
-              <div class="source-kind">{{ source.kind }}</div>
-              <h3>{{ source.title }}</h3>
-              <p>{{ source.snippet|truncatechars:280 }}</p>
-              <a href="{{ source.url }}" target="_blank" rel="noreferrer">{{ source.url }}</a>
+          {% if save_uri %}
+            <details class="state-accordion verification-accordion">
+              <summary class="accordion-toggle">
+                <div>
+                  <div class="step-label">Step 3</div>
+                  <h2>Verification</h2>
+                  <p>The research evidence is preserved as a locked reference set.</p>
+                </div>
+                <span class="accordion-status">Verified</span>
+              </summary>
+              <div class="accordion-panel">
+                <div class="verification-shell">{{ research_result.verification_summary }}</div>
+                {% for source in research_result.sources|slice:":6" %}
+                  <article class="source-card">
+                    <div class="source-kind">{{ source.kind }}</div>
+                    <h3>{{ source.title }}</h3>
+                    <p>{{ source.snippet|truncatechars:280 }}</p>
+                    <a href="{{ source.url }}" target="_blank" rel="noreferrer">{{ source.url }}</a>
+                  </article>
+                {% endfor %}
+              </div>
+            </details>
+          {% else %}
+            <article class="step-card">
+              <div class="step-label">Step 3</div>
+              <h2>Verification</h2>
             </article>
-          {% endfor %}
+            <div class="verification-shell">{{ research_result.verification_summary }}</div>
+            {% for source in research_result.sources|slice:":6" %}
+              <article class="source-card">
+                <div class="source-kind">{{ source.kind }}</div>
+                <h3>{{ source.title }}</h3>
+                <p>{{ source.snippet|truncatechars:280 }}</p>
+                <a href="{{ source.url }}" target="_blank" rel="noreferrer">{{ source.url }}</a>
+              </article>
+            {% endfor %}
+          {% endif %}
         </aside>
       </section>
     {% else %}

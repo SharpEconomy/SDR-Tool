@@ -3,9 +3,15 @@ from __future__ import annotations
 from io import BytesIO
 
 import pandas as pd
+from openpyxl import load_workbook
 
 from growth_engine.export import ExportService
-from growth_engine.models import Opportunity, OpportunityScore, SkippedEntity
+from growth_engine.models import (
+    EXPORT_OPPORTUNITY_COLUMNS,
+    Opportunity,
+    OpportunityScore,
+    SkippedEntity,
+)
 
 
 def test_export_service_builds_two_sheet_workbook() -> None:
@@ -49,6 +55,68 @@ def test_export_service_builds_two_sheet_workbook() -> None:
 
     export_name, payload = service.build_workbook([opportunity], [skipped])
     workbook = pd.ExcelFile(BytesIO(payload))
+    sheet = load_workbook(BytesIO(payload))["Prioritized Opportunities"]
 
     assert export_name.endswith(".xlsx")
     assert workbook.sheet_names == ["Prioritized Opportunities", "Skipped Entities"]
+    assert [cell.value for cell in sheet[1]] == EXPORT_OPPORTUNITY_COLUMNS
+    assert sheet["B2"].hyperlink.target == "https://example.com"
+    assert sheet["F2"].hyperlink.target.startswith(
+        "https://www.linkedin.com/search/results/people/?keywords="
+    )
+    assert sheet["B2"].comment is not None
+    assert sheet["B2"].comment.text == "Strong fit Fit score 70 | Intent score 88"
+
+
+def test_export_service_builds_workbook_from_rows() -> None:
+    service = ExportService()
+
+    export_name, payload = service.build_workbook_from_rows(
+        [
+            {
+                "priority_rank": 1,
+                "priority_score": 84,
+                "confidence": 78,
+                "discovery_mode": "customers",
+                "market_side": "Demand-side",
+                "entity_name": "Example Retail",
+                "entity_website": "https://example.com",
+                "entity_domain": "example.com",
+                "category": "Retail",
+                "location": "India",
+                "company_size": "SMB",
+                "budget_signal": "Medium",
+                "expected_value": "High",
+                "timing_signal": "Active",
+                "decision_maker": "Riya Sharma",
+                "decision_maker_email": "riya@example.com",
+                "email_validation": "score 2/3",
+                "contact_path": "riya@example.com",
+                "source_type": "public_web",
+                "source_url": "https://example.com",
+                "why_it_matters": "Strong fit",
+                "reasoning_summary": "Fit score 70 | Intent score 88",
+                "next_action": "Email the partner lead",
+            }
+        ],
+        [
+            {
+                "discovery_mode": "partners",
+                "entity_name": "Noise Listing",
+                "entity_website": "https://noise.example",
+                "source_type": "directory",
+                "source_url": "https://noise.example",
+                "reason": "Matched exclusion keyword",
+            }
+        ],
+    )
+    workbook = pd.ExcelFile(BytesIO(payload))
+    sheet = load_workbook(BytesIO(payload))["Prioritized Opportunities"]
+
+    assert export_name.endswith(".xlsx")
+    assert workbook.sheet_names == ["Prioritized Opportunities", "Skipped Entities"]
+    assert [cell.value for cell in sheet[1]] == EXPORT_OPPORTUNITY_COLUMNS
+    assert sheet["B2"].hyperlink.target == "https://example.com"
+    assert sheet["F2"].hyperlink.target.endswith("Riya+Sharma+Example+Retail")
+    assert sheet["B2"].comment is not None
+    assert sheet["B2"].comment.text == "Strong fit Fit score 70 | Intent score 88"

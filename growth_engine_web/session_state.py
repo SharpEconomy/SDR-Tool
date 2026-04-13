@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from dataclasses import asdict
 from typing import Any
 
@@ -13,6 +14,7 @@ PROFILE_RESEARCH_RESULT_KEY = "growth_engine_profile_research_result"
 PROFILE_SAVE_URI_KEY = "growth_engine_profile_save_uri"
 POST_SAVE_REQUESTED_DATA_KEY = "growth_engine_post_save_requested_data"
 POST_SAVE_REQUEST_NOTES_KEY = "growth_engine_post_save_request_notes"
+LEAD_RESULTS_KEY = "growth_engine_lead_results"
 
 
 def _serialize_source(source: ResearchSource) -> dict[str, str]:
@@ -80,6 +82,7 @@ def clear_workspace_state(session, *, clear_auth: bool = False) -> None:
         PROFILE_SAVE_URI_KEY,
         POST_SAVE_REQUESTED_DATA_KEY,
         POST_SAVE_REQUEST_NOTES_KEY,
+        LEAD_RESULTS_KEY,
     ]
     if clear_auth:
         keys.append(AUTH_USER_KEY)
@@ -127,4 +130,51 @@ def set_post_save_request(
 ) -> None:
     session[POST_SAVE_REQUESTED_DATA_KEY] = requested_data
     session[POST_SAVE_REQUEST_NOTES_KEY] = notes
+    session.modified = True
+
+
+def clear_lead_results(session) -> None:
+    session.pop(LEAD_RESULTS_KEY, None)
+    session.modified = True
+
+
+def get_lead_results(session) -> dict[str, Any] | None:
+    payload = session.get(LEAD_RESULTS_KEY)
+    if not isinstance(payload, dict):
+        return None
+    if not isinstance(payload.get("opportunity_rows"), list):
+        return None
+    if not isinstance(payload.get("skipped_rows"), list):
+        return None
+    if not isinstance(payload.get("export_name"), str):
+        return None
+    if not isinstance(payload.get("export_payload_b64"), str):
+        return None
+    return payload
+
+
+def get_lead_export_bytes(session) -> bytes | None:
+    payload = get_lead_results(session)
+    if payload is None:
+        return None
+    try:
+        return base64.b64decode(payload["export_payload_b64"].encode("ascii"))
+    except (ValueError, UnicodeEncodeError):
+        return None
+
+
+def set_lead_results(
+    session,
+    *,
+    opportunity_rows: list[dict[str, object]],
+    skipped_rows: list[dict[str, object]],
+    export_name: str,
+    export_bytes: bytes,
+) -> None:
+    session[LEAD_RESULTS_KEY] = {
+        "opportunity_rows": opportunity_rows,
+        "skipped_rows": skipped_rows,
+        "export_name": export_name,
+        "export_payload_b64": base64.b64encode(export_bytes).decode("ascii"),
+    }
     session.modified = True
