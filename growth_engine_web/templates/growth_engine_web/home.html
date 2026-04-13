@@ -179,8 +179,8 @@
               <div class="step-label">Step 2</div>
               <h2>Review the business profile</h2>
               <p>
-                Start with the three summary cards. If something looks wrong,
-                open that section, update it, then confirm the full profile.
+                Start with the three summary cards. This shared profile feeds both
+                lead generation and social content creation after confirmation.
               </p>
             </article>
 
@@ -224,141 +224,337 @@
             </div>
 
             <div class="confirm-shell">
-              <div class="edit-guide">
-                <strong>Ready to save?</strong>
-                Confirm only after each card reads naturally and reflects the business correctly.
-              </div>
-              <form method="post" action="{% url 'growth_engine_web:save_profile' %}" data-processing-label="Saving the confirmed profile...">
-                {% csrf_token %}
-                <button type="submit" class="primary-button wide-button">Confirm this profile and save</button>
-              </form>
+                <div class="edit-guide">
+                  <strong>Ready to save?</strong>
+                  Confirm only after each card reads naturally and reflects the business correctly for both downstream workflows.
+                </div>
+                <form method="post" action="{% url 'growth_engine_web:save_profile' %}" data-processing-label="Saving the confirmed profile...">
+                  {% csrf_token %}
+                  <button type="submit" class="primary-button wide-button">Confirm this profile and save</button>
+                </form>
             </div>
           {% endif %}
 
           {% if save_uri %}
-            <div class="post-save-grid{% if lead_results %} post-save-grid-live{% endif %}">
-              {% if lead_results %}
-                <details class="state-accordion lead-request-accordion">
-                  <summary class="accordion-toggle">
-                    <div>
-                      <div class="step-label">Next step</div>
-                      <h2>Generate leads</h2>
-                      <p>The submitted request is now locked for review.</p>
+            <article class="step-card workflow-selector-card">
+              <div class="step-label">Choose flow</div>
+              <h2>Select the next workflow</h2>
+              <p>Pick one path to continue. The selected workflow expands to the full width of the workspace.</p>
+              <div class="flow-choice-row" role="group" aria-label="Workflow selection">
+                <button
+                  type="button"
+                  class="secondary-button flow-choice-button"
+                  data-flow-choice="lead"
+                  aria-pressed="false"
+                >
+                  Lead generation
+                </button>
+                <button
+                  type="button"
+                  class="secondary-button flow-choice-button"
+                  data-flow-choice="social"
+                  aria-pressed="false"
+                >
+                  Social media content
+                </button>
+              </div>
+            </article>
+
+            <div
+              class="workflow-grid"
+              data-workflow-grid
+              data-default-flow="{% if lead_results and not social_results %}lead{% elif social_results and not lead_results %}social{% endif %}"
+            >
+              <div class="workflow-column" data-workflow-panel="lead" hidden>
+                <article class="step-card workflow-intro-card">
+                  <div class="step-label">Workflow 1</div>
+                  <h2>Lead generation</h2>
+                  <p>Use the confirmed profile to generate prioritized leads and download the Excel workbook.</p>
+                </article>
+                {% if lead_results %}
+                  <details class="state-accordion lead-request-accordion">
+                    <summary class="accordion-toggle">
+                      <div>
+                        <div class="step-label">Lead request</div>
+                        <h2>Generate leads</h2>
+                        <p>The submitted request is now locked for review.</p>
+                      </div>
+                      <span class="accordion-status">Requested</span>
+                    </summary>
+                    <div class="accordion-panel">
+                      <div class="readonly-form">
+                        <div class="form-field checkbox-field readonly-checkbox-field">
+                          <span class="field-label">{{ post_save_form.requested_data.label }}</span>
+                          <ul>
+                            {% for mode, label in discovery_mode_options %}
+                              <li>
+                                <label>
+                                  <input type="checkbox" {% if mode in requested_data_selected %}checked{% endif %} disabled>
+                                  <span>{{ label }}</span>
+                                </label>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+                        <div class="form-field">
+                          <label for="id_locked_notes">Anything specific you want in that data?</label>
+                          <textarea id="id_locked_notes" rows="4" readonly disabled>{{ post_save_form.initial.notes }}</textarea>
+                        </div>
+                        <button type="button" class="secondary-button wide-button" disabled>Generate leads</button>
+                      </div>
+                      {% if requested_data_summary %}
+                        <p class="request-summary">Requested lead types: {{ requested_data_summary }}</p>
+                      {% endif %}
                     </div>
-                    <span class="accordion-status">Requested</span>
-                  </summary>
-                  <div class="accordion-panel">
-                    <div class="readonly-form">
-                      <div class="form-field checkbox-field readonly-checkbox-field">
+                  </details>
+                {% else %}
+                  <article class="step-card">
+                    <div class="step-label">Lead request</div>
+                    <h2>Generate leads</h2>
+                    <p>Select the lead types you want from this saved profile, then review them here or download the Excel workbook.</p>
+                    <form method="post" action="{% url 'growth_engine_web:request_data' %}" data-processing-label="Generating leads and preparing the workbook...">
+                      {% csrf_token %}
+                      <div class="form-field checkbox-field">
                         <span class="field-label">{{ post_save_form.requested_data.label }}</span>
-                        <ul>
-                          {% for mode, label in discovery_mode_options %}
-                            <li>
-                              <label>
-                                <input type="checkbox" {% if mode in requested_data_selected %}checked{% endif %} disabled>
-                                <span>{{ label }}</span>
-                              </label>
-                            </li>
-                          {% endfor %}
-                        </ul>
+                        {{ post_save_form.requested_data }}
                       </div>
                       <div class="form-field">
-                        <label for="id_locked_notes">Anything specific you want in that data?</label>
-                        <textarea id="id_locked_notes" rows="4" readonly disabled>{{ post_save_form.initial.notes }}</textarea>
+                        <label for="{{ post_save_form.notes.id_for_label }}">{{ post_save_form.notes.label }}</label>
+                        {{ post_save_form.notes }}
                       </div>
-                      <button type="button" class="secondary-button wide-button" disabled>Generate leads</button>
-                    </div>
+                      <button type="submit" class="secondary-button wide-button">Generate leads</button>
+                    </form>
                     {% if requested_data_summary %}
                       <p class="request-summary">Requested lead types: {{ requested_data_summary }}</p>
                     {% endif %}
-                  </div>
-                </details>
-              {% else %}
-                <article class="step-card">
-                  <div class="step-label">Next step</div>
-                  <h2>Generate leads</h2>
-                  <p>Select the lead types you want from this saved profile, then review them here or download the Excel workbook.</p>
-                  <form method="post" action="{% url 'growth_engine_web:request_data' %}" data-processing-label="Generating leads and preparing the workbook...">
-                    {% csrf_token %}
-                    <div class="form-field checkbox-field">
-                      <span class="field-label">{{ post_save_form.requested_data.label }}</span>
-                      {{ post_save_form.requested_data }}
-                    </div>
-                    <div class="form-field">
-                      <label for="{{ post_save_form.notes.id_for_label }}">{{ post_save_form.notes.label }}</label>
-                      {{ post_save_form.notes }}
-                    </div>
-                    <button type="submit" class="secondary-button wide-button">Generate leads</button>
-                  </form>
-                  {% if requested_data_summary %}
-                    <p class="request-summary">Requested lead types: {{ requested_data_summary }}</p>
-                  {% endif %}
-                </article>
-              {% endif %}
+                  </article>
+                {% endif %}
 
-              {% if lead_results %}
-                <article class="step-card prioritized-leads-card">
-                  <div class="step-label">Lead results</div>
-                  <h2>Prioritized leads</h2>
-                  <p>
-                    {{ lead_results.opportunity_rows|length }} prioritized leads ready.
-                    {% if lead_results.skipped_rows %}
-                      {{ lead_results.skipped_rows|length }} additional entities were skipped.
+                {% if lead_results %}
+                  <article class="step-card prioritized-leads-card">
+                    <div class="step-label">Lead results</div>
+                    <h2>Prioritized leads</h2>
+                    <p>
+                      {{ lead_results.opportunity_rows|length }} prioritized leads ready.
+                      {% if lead_results.skipped_rows %}
+                        {{ lead_results.skipped_rows|length }} additional entities were skipped.
+                      {% endif %}
+                    </p>
+                    <div class="action-row">
+                      <a class="primary-button" href="{% url 'growth_engine_web:download_leads_export' %}">Download Excel workbook</a>
+                      <p class="save-uri">Workbook: <code>{{ lead_results.export_name }}</code></p>
+                    </div>
+                    {% if lead_results.opportunity_rows %}
+                      <div class="lead-list">
+                        {% for lead in lead_results.opportunity_rows %}
+                          <article class="lead-entry">
+                            <div class="lead-entry-head">
+                              <div>
+                                <div class="summary-kicker">Rank {{ lead.priority_rank }}</div>
+                                <h3>{{ lead.entity_name }}</h3>
+                              </div>
+                              <span class="lead-score">Score {{ lead.priority_score }}</span>
+                            </div>
+                            <div class="lead-meta">
+                              <span class="summary-chip">{{ lead.discovery_mode|title }}</span>
+                              <span class="summary-chip">{{ lead.location }}</span>
+                              {% if lead.decision_maker %}
+                                <span class="summary-chip">{{ lead.decision_maker }}</span>
+                              {% endif %}
+                            </div>
+                            {% if lead.entity_website %}
+                              <p class="lead-link-row"><a href="{{ lead.entity_website }}" target="_blank" rel="noreferrer">{{ lead.entity_website }}</a></p>
+                            {% endif %}
+                            <div class="lead-detail-grid">
+                              <div>
+                                <span>Contact</span>
+                                <strong>
+                                  {% if lead.decision_maker_email %}
+                                    {{ lead.decision_maker_email }}
+                                  {% else %}
+                                    {{ lead.contact_path }}
+                                  {% endif %}
+                                </strong>
+                              </div>
+                              <div>
+                                <span>Next action</span>
+                                <strong>{{ lead.next_action }}</strong>
+                              </div>
+                            </div>
+                            {% if lead.why_it_matters %}
+                              <p>{{ lead.why_it_matters }}</p>
+                            {% endif %}
+                            <a class="lead-source-link" href="{{ lead.source_url }}" target="_blank" rel="noreferrer">Open source</a>
+                          </article>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <p class="request-summary">No prioritized leads matched this request. Download the workbook to review skipped entities.</p>
                     {% endif %}
-                  </p>
-                  <div class="action-row">
-                    <a class="primary-button" href="{% url 'growth_engine_web:download_leads_export' %}">Download Excel workbook</a>
-                    <p class="save-uri">Workbook: <code>{{ lead_results.export_name }}</code></p>
-                  </div>
-                  {% if lead_results.opportunity_rows %}
-                    <div class="lead-list">
-                      {% for lead in lead_results.opportunity_rows %}
-                        <article class="lead-entry">
+                  </article>
+                {% endif %}
+              </div>
+
+              <div class="workflow-column" data-workflow-panel="social" hidden>
+                <article class="step-card workflow-intro-card">
+                  <div class="step-label">Workflow 2</div>
+                  <h2>Social media content creation</h2>
+                  <p>Build a strategy from the confirmed business goals, generate channel-ready content, and email the package for manual posting.</p>
+                </article>
+                {% if social_results %}
+                  <details class="state-accordion lead-request-accordion">
+                    <summary class="accordion-toggle">
+                      <div>
+                        <div class="step-label">Social request</div>
+                        <h2>Create social content</h2>
+                        <p>The submitted request is now locked for review.</p>
+                      </div>
+                      <span class="accordion-status">Requested</span>
+                    </summary>
+                    <div class="accordion-panel">
+                      <div class="readonly-form">
+                        <div class="form-field">
+                          <label for="id_locked_social_goal">Primary social campaign goal</label>
+                          <input id="id_locked_social_goal" type="text" value="{{ social_request.campaign_goal }}" readonly disabled>
+                        </div>
+                        <div class="form-field checkbox-field readonly-checkbox-field">
+                          <span class="field-label">{{ social_form.channels.label }}</span>
+                          <ul>
+                            {% for channel, label in social_channel_options %}
+                              <li>
+                                <label>
+                                  <input type="checkbox" {% if channel in social_channels_selected %}checked{% endif %} disabled>
+                                  <span>{{ label }}</span>
+                                </label>
+                              </li>
+                            {% endfor %}
+                          </ul>
+                        </div>
+                        <div class="form-field">
+                          <label for="id_locked_social_notes">{{ social_form.notes.label }}</label>
+                          <textarea id="id_locked_social_notes" rows="4" readonly disabled>{{ social_form.initial.notes }}</textarea>
+                        </div>
+                        <div class="form-field">
+                          <label for="id_locked_social_email">{{ social_form.delivery_email.label }}</label>
+                          <input id="id_locked_social_email" type="email" value="{{ social_results.delivery_email }}" readonly disabled>
+                        </div>
+                        <button type="button" class="secondary-button wide-button" disabled>Create social content</button>
+                      </div>
+                      {% if social_channels_summary %}
+                        <p class="request-summary">Requested channels: {{ social_channels_summary }}</p>
+                      {% endif %}
+                    </div>
+                  </details>
+                {% else %}
+                  <article class="step-card">
+                    <div class="step-label">Social request</div>
+                    <h2>Create social content</h2>
+                    <p>Generate a strategy first, then create posts, reply ideas, image briefs, and short-video scripts for manual publishing.</p>
+                    <form method="post" action="{% url 'growth_engine_web:generate_social_content' %}" data-processing-label="Creating the social strategy, content package, and email delivery...">
+                      {% csrf_token %}
+                      <div class="form-field">
+                        <label for="{{ social_form.campaign_goal.id_for_label }}">{{ social_form.campaign_goal.label }}</label>
+                        {{ social_form.campaign_goal }}
+                        <p class="field-help">Leave blank to use the confirmed business goals from step 2.</p>
+                      </div>
+                      <div class="form-field checkbox-field">
+                        <span class="field-label">{{ social_form.channels.label }}</span>
+                        {{ social_form.channels }}
+                      </div>
+                      <div class="form-field">
+                        <label for="{{ social_form.notes.id_for_label }}">{{ social_form.notes.label }}</label>
+                        {{ social_form.notes }}
+                      </div>
+                      <div class="form-field">
+                        <label for="{{ social_form.delivery_email.id_for_label }}">{{ social_form.delivery_email.label }}</label>
+                        {{ social_form.delivery_email }}
+                      </div>
+                      <button type="submit" class="secondary-button wide-button">Create social content</button>
+                    </form>
+                    {% if social_channels_summary %}
+                      <p class="request-summary">Default channels: {{ social_channels_summary }}</p>
+                    {% endif %}
+                  </article>
+                {% endif %}
+
+                {% if social_results %}
+                  <article class="step-card social-results-card">
+                    <div class="step-label">Social results</div>
+                    <h2>Strategy and content package</h2>
+                    <p>
+                      {{ social_results.channel_content|length }} channel packages ready.
+                      Email delivery status: {{ social_results.email_status|title }}.
+                    </p>
+                    <div class="social-strategy-grid">
+                      <div class="social-strategy-panel">
+                        <span>Objective</span>
+                        <strong>{{ social_results.strategy.objective }}</strong>
+                      </div>
+                      <div class="social-strategy-panel">
+                        <span>Audience</span>
+                        <strong>{{ social_results.strategy.audience_summary }}</strong>
+                      </div>
+                      <div class="social-strategy-panel">
+                        <span>Brand voice</span>
+                        <strong>{{ social_results.strategy.brand_voice }}</strong>
+                      </div>
+                      <div class="social-strategy-panel">
+                        <span>Email delivery</span>
+                        <strong>{{ social_results.delivery_email }}</strong>
+                      </div>
+                    </div>
+                    <div class="social-chip-group">
+                      {% for pillar in social_results.strategy.content_pillars %}
+                        <span class="summary-chip">{{ pillar }}</span>
+                      {% endfor %}
+                    </div>
+                    <p class="request-summary">Humans handle posting. This workflow only prepares the package and email delivery.</p>
+                    {% if social_results.email_error %}
+                      <p class="field-error">{{ social_results.email_error }}</p>
+                    {% endif %}
+                    <div class="social-channel-list">
+                      {% for item in social_results.channel_content %}
+                        <article class="social-channel-card">
                           <div class="lead-entry-head">
                             <div>
-                              <div class="summary-kicker">Rank {{ lead.priority_rank }}</div>
-                              <h3>{{ lead.entity_name }}</h3>
+                              <div class="summary-kicker">{{ item.channel|cut:"_"|title }}</div>
+                              <h3>
+                                {% if item.channel == "twitter_x" %}Twitter/X{% else %}{{ item.channel|cut:"_"|title }}{% endif %}
+                              </h3>
                             </div>
-                            <span class="lead-score">Score {{ lead.priority_score }}</span>
+                            <span class="lead-score">Manual post</span>
                           </div>
-                          <div class="lead-meta">
-                            <span class="summary-chip">{{ lead.discovery_mode|title }}</span>
-                            <span class="summary-chip">{{ lead.location }}</span>
-                            {% if lead.decision_maker %}
-                              <span class="summary-chip">{{ lead.decision_maker }}</span>
-                            {% endif %}
+                          <div class="social-content-block">
+                            <span>Post copy</span>
+                            <p>{{ item.post_copy }}</p>
                           </div>
-                          {% if lead.entity_website %}
-                            <p class="lead-link-row"><a href="{{ lead.entity_website }}" target="_blank" rel="noreferrer">{{ lead.entity_website }}</a></p>
-                          {% endif %}
-                          <div class="lead-detail-grid">
-                            <div>
-                              <span>Contact</span>
-                              <strong>
-                                {% if lead.decision_maker_email %}
-                                  {{ lead.decision_maker_email }}
-                                {% else %}
-                                  {{ lead.contact_path }}
-                                {% endif %}
-                              </strong>
-                            </div>
-                            <div>
-                              <span>Next action</span>
-                              <strong>{{ lead.next_action }}</strong>
-                            </div>
+                          <div class="social-content-block">
+                            <span>Reply ideas</span>
+                            <ul class="social-list">
+                              {% for reply in item.reply_ideas %}
+                                <li>{{ reply }}</li>
+                              {% endfor %}
+                            </ul>
                           </div>
-                          {% if lead.why_it_matters %}
-                            <p>{{ lead.why_it_matters }}</p>
-                          {% endif %}
-                          <a class="lead-source-link" href="{{ lead.source_url }}" target="_blank" rel="noreferrer">Open source</a>
+                          <div class="social-content-block">
+                            <span>Image brief</span>
+                            <p>{{ item.image_prompt }}</p>
+                          </div>
+                          <div class="social-content-block">
+                            <span>Short video script</span>
+                            <p>{{ item.short_video_script }}</p>
+                          </div>
+                          <div class="social-chip-group">
+                            {% for tag in item.hashtags %}
+                              <span class="summary-chip">{{ tag }}</span>
+                            {% endfor %}
+                          </div>
                         </article>
                       {% endfor %}
                     </div>
-                  {% else %}
-                    <p class="request-summary">No prioritized leads matched this request. Download the workbook to review skipped entities.</p>
-                  {% endif %}
-                </article>
-              {% endif %}
+                  </article>
+                {% endif %}
+              </div>
             </div>
           {% endif %}
         </div>
@@ -370,7 +566,7 @@
                 <div>
                   <div class="step-label">Step 3</div>
                   <h2>Verification</h2>
-                  <p>The research evidence is preserved as a locked reference set.</p>
+                  <p>The research evidence is preserved as a locked reference set for both downstream workflows.</p>
                 </div>
                 <span class="accordion-status">Verified</span>
               </summary>
@@ -390,6 +586,7 @@
             <article class="step-card">
               <div class="step-label">Step 3</div>
               <h2>Verification</h2>
+              <p>The evidence below supports both lead generation and social content strategy after confirmation.</p>
             </article>
             <div class="verification-shell">{{ research_result.verification_summary }}</div>
             {% for source in research_result.sources|slice:":6" %}

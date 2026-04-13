@@ -1,7 +1,44 @@
 (function () {
+  const workflowGrid = document.querySelector("[data-workflow-grid]");
+  const flowChoiceButtons = Array.from(
+    document.querySelectorAll("[data-flow-choice]")
+  );
+  const workflowPanels = Array.from(
+    document.querySelectorAll("[data-workflow-panel]")
+  );
   const loadingShell = document.querySelector("[data-loading-shell]");
   const loadingTitle = document.querySelector("[data-loading-title]");
   const loadingTips = Array.from(document.querySelectorAll("[data-loading-tip]"));
+
+  if (workflowGrid && flowChoiceButtons.length && workflowPanels.length) {
+    let selectedFlow = "";
+
+    flowChoiceButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const flow = button.getAttribute("data-flow-choice") || "";
+        setSelectedFlow(flow);
+      });
+    });
+
+    setSelectedFlow(workflowGrid.getAttribute("data-default-flow") || "");
+
+    function setSelectedFlow(flow) {
+      selectedFlow = flow;
+      flowChoiceButtons.forEach(function (button) {
+        const isActive = button.getAttribute("data-flow-choice") === selectedFlow;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+      workflowPanels.forEach(function (panel) {
+        const isActive = panel.getAttribute("data-workflow-panel") === selectedFlow;
+        panel.hidden = !isActive;
+      });
+      workflowGrid.classList.toggle(
+        "workflow-grid-single",
+        Boolean(selectedFlow)
+      );
+    }
+  }
 
   if (!loadingShell || !loadingTitle) {
     return;

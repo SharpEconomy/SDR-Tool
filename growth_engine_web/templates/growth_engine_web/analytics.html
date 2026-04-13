@@ -33,8 +33,8 @@
     <div class="hero-kicker">Admin-only operations surface</div>
     <h1>Workspace analytics</h1>
     <p>
-      Track confirmed profile volume, operator activity, discovery mix, and the latest
-      Firestore-backed profile and run records from one screen.
+      Track confirmed profile volume, operator activity, discovery mix, and both
+      Firestore-backed workflow branches from one screen.
     </p>
   </section>
 
@@ -84,6 +84,32 @@
     <article class="analytics-panel">
       <div class="analytics-panel-head">
         <div>
+          <div class="step-label">Workflows</div>
+          <h2>Workflow mix</h2>
+        </div>
+      </div>
+      {% if analytics.workflow_breakdown %}
+        <div class="analytics-bar-stack">
+          {% for item in analytics.workflow_breakdown %}
+            <div class="analytics-bar-row">
+              <div class="analytics-bar-label">{{ item.label }}</div>
+              <div class="analytics-bar-track">
+                <div class="analytics-bar-fill" style="width: {{ item.width }}%"></div>
+              </div>
+              <strong class="analytics-bar-count">{{ item.count }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="request-summary">No workflow records are available yet.</p>
+      {% endif %}
+    </article>
+  </section>
+
+  <section class="analytics-grid">
+    <article class="analytics-panel">
+      <div class="analytics-panel-head">
+        <div>
           <div class="step-label">Profiles</div>
           <h2>Industry mix</h2>
         </div>
@@ -102,6 +128,30 @@
         </div>
       {% else %}
         <p class="request-summary">No industry data is available yet.</p>
+      {% endif %}
+    </article>
+
+    <article class="analytics-panel">
+      <div class="analytics-panel-head">
+        <div>
+          <div class="step-label">Social workflow</div>
+          <h2>Channel mix</h2>
+        </div>
+      </div>
+      {% if analytics.social_channel_breakdown %}
+        <div class="analytics-bar-stack">
+          {% for item in analytics.social_channel_breakdown %}
+            <div class="analytics-bar-row">
+              <div class="analytics-bar-label">{{ item.label }}</div>
+              <div class="analytics-bar-track">
+                <div class="analytics-bar-fill analytics-bar-fill-alt" style="width: {{ item.width }}%"></div>
+              </div>
+              <strong class="analytics-bar-count">{{ item.count }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="request-summary">No social-channel data is available yet.</p>
       {% endif %}
     </article>
   </section>
@@ -146,8 +196,8 @@
     <article class="analytics-panel">
       <div class="analytics-panel-head">
         <div>
-          <div class="step-label">Latest decision runs</div>
-          <h2>Run ledger</h2>
+          <div class="step-label">Latest workflow runs</div>
+          <h2>Workflow ledger</h2>
         </div>
       </div>
       {% if analytics.recent_runs %}
@@ -157,29 +207,29 @@
               <div class="analytics-list-head">
                 <div>
                   <h3>{{ item.business_name }}</h3>
-                  <p>{{ item.discovery_modes|default:"No discovery modes" }}</p>
+                  <p>{{ item.workflow_type }}{% if item.discovery_modes %} | {{ item.discovery_modes }}{% endif %}</p>
                 </div>
                 <span class="analytics-pill">{{ item.created_at }}</span>
               </div>
               <div class="analytics-detail-grid">
                 <div>
-                  <span>Prioritized</span>
-                  <strong>{{ item.opportunity_count }}</strong>
+                  <span>{{ item.primary_label }}</span>
+                  <strong>{{ item.primary_value }}</strong>
                 </div>
                 <div>
-                  <span>Skipped</span>
-                  <strong>{{ item.skipped_count }}</strong>
+                  <span>{{ item.secondary_label }}</span>
+                  <strong>{{ item.secondary_value }}</strong>
                 </div>
                 <div class="analytics-detail-wide">
-                  <span>Workbook</span>
-                  <strong>{{ item.export_name }}</strong>
+                  <span>{{ item.artifact_label }}</span>
+                  <strong>{{ item.artifact_name }}</strong>
                 </div>
               </div>
             </article>
           {% endfor %}
         </div>
       {% else %}
-        <p class="request-summary">No decision-run audit records are available yet.</p>
+        <p class="request-summary">No workflow records are available yet.</p>
       {% endif %}
     </article>
   </section>

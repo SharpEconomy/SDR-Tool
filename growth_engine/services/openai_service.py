@@ -59,6 +59,22 @@ SYSTEM_PROMPTS = {
         "Use arrays for list fields. If evidence is weak, use conservative defaults "
         "instead of inventing specifics."
     ),
+    "social_strategy": (
+        "You create a human-posted social media strategy for a business. "
+        "Use only the supplied profile, website/search evidence, and request notes. "
+        "Return JSON only with keys: objective, audience_summary, brand_voice, "
+        "content_pillars, proof_points, calls_to_action, engagement_guidelines. "
+        "Use concise strings and arrays. Ground proof_points in the supplied evidence."
+    ),
+    "social_content_bundle": (
+        "You generate channel-ready social content for a human team to post manually. "
+        "Use the supplied business profile, evidence, strategy, and requested channels. "
+        "Return JSON only with keys: email_subject, channels. "
+        "channels must be an array of objects with keys: channel, post_copy, "
+        "reply_ideas, image_prompt, short_video_script, hashtags. "
+        "Keep each channel tailored to its format, avoid inventing facts, and make "
+        "visual/video outputs creative briefs or scripts rather than automation steps."
+    ),
 }
 
 
@@ -122,6 +138,20 @@ class OpenAIService:
             prompt_name="profile_verification",
             payload=payload,
             max_output_tokens=1400,
+        )
+
+    def create_social_strategy(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request_json(
+            prompt_name="social_strategy",
+            payload=payload,
+            max_output_tokens=1200,
+        )
+
+    def generate_social_content_bundle(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request_json(
+            prompt_name="social_content_bundle",
+            payload=payload,
+            max_output_tokens=2600,
         )
 
     def _request_json(

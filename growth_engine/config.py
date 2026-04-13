@@ -83,6 +83,13 @@ class Settings:
     firestore_collection: str
     firestore_profile_collection: str
     firestore_database: str
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
+    smtp_from_email: str
+    smtp_use_tls: bool
+    smtp_use_ssl: bool
     google_cloud_project: str
     google_cloud_service_account_json_b64: str
     google_sign_in_enabled: bool
@@ -135,6 +142,13 @@ class Settings:
                 env.get("FIRESTORE_PROFILE_COLLECTION", "growth_engine_profiles")
             ).strip(),
             firestore_database=str(env.get("FIRESTORE_DATABASE", "(default)")).strip(),
+            smtp_host=str(env.get("SMTP_HOST", "")).strip(),
+            smtp_port=_as_int(env.get("SMTP_PORT"), 587),
+            smtp_username=str(env.get("SMTP_USERNAME", "")).strip(),
+            smtp_password=str(env.get("SMTP_PASSWORD", "")).strip(),
+            smtp_from_email=str(env.get("SMTP_FROM_EMAIL", "")).strip(),
+            smtp_use_tls=_as_bool(env.get("SMTP_USE_TLS"), True),
+            smtp_use_ssl=_as_bool(env.get("SMTP_USE_SSL"), False),
             google_cloud_project=str(env.get("GOOGLE_CLOUD_PROJECT", "")).strip(),
             google_cloud_service_account_json_b64=str(
                 env.get("GOOGLE_CLOUD_SERVICE_ACCOUNT_JSON_B64", "")

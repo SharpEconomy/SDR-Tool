@@ -16,6 +16,11 @@ from growth_engine_web.session_state import (
     PROFILE_DRAFT_KEY,
     PROFILE_RESEARCH_RESULT_KEY,
     PROFILE_SAVE_URI_KEY,
+    SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY,
+    SOCIAL_REQUEST_CHANNELS_KEY,
+    SOCIAL_REQUEST_EMAIL_KEY,
+    SOCIAL_REQUEST_NOTES_KEY,
+    SOCIAL_RESULTS_KEY,
 )
 from growth_engine_web.views import APP_BOOT_ID
 from tests.helpers import (
@@ -91,6 +96,7 @@ def test_edit_section_updates_session_draft() -> None:
     }
     session[PROFILE_SAVE_URI_KEY] = "firestore://demo/profile"
     session[LEAD_RESULTS_KEY] = {"export_name": "demo.xlsx"}
+    session[SOCIAL_RESULTS_KEY] = {"strategy": {"objective": "Awareness"}}
     session.save()
 
     response = client.post(
@@ -111,6 +117,7 @@ def test_edit_section_updates_session_draft() -> None:
     )
     assert client.session[PROFILE_SAVE_URI_KEY] is None
     assert LEAD_RESULTS_KEY not in client.session
+    assert SOCIAL_RESULTS_KEY not in client.session
 
 
 def test_save_profile_writes_firestore_uri_to_session(settings, monkeypatch) -> None:
@@ -139,6 +146,8 @@ def test_request_data_persists_follow_up_request(monkeypatch) -> None:
     session[PROFILE_RESEARCH_RESULT_KEY] = build_research_result_payload()
     session[PROFILE_SAVE_URI_KEY] = "firestore://demo/profile"
     session.save()
+
+    captured_record = {}
 
     class _Engine:
         def __init__(self, settings) -> None:
@@ -174,9 +183,14 @@ def test_request_data_persists_follow_up_request(monkeypatch) -> None:
                 ],
                 export_name="demo.xlsx",
                 export_bytes=b"excel-bytes",
+                audit_record=SimpleNamespace(metadata={}),
             )
 
     monkeypatch.setattr("growth_engine_web.views.DecisionEngine", _Engine)
+    monkeypatch.setattr(
+        "growth_engine_web.views._persist_workflow_record",
+        lambda record: captured_record.setdefault("record", record),
+    )
     response = client.post(
         "/request-data/",
         {
@@ -188,6 +202,10 @@ def test_request_data_persists_follow_up_request(monkeypatch) -> None:
     assert response.status_code == 302
     assert client.session[POST_SAVE_REQUESTED_DATA_KEY] == ["customers", "partners"]
     assert client.session[LEAD_RESULTS_KEY]["export_name"] == "demo.xlsx"
+    assert captured_record["record"].metadata["requested_data"] == [
+        "customers",
+        "partners",
+    ]
 
 
 def test_request_data_clears_previous_leads_before_new_generation(monkeypatch) -> None:
@@ -506,6 +524,32 @@ def test_home_renders_locked_accordions_after_save_and_lead_generation() -> None
         "export_name": "demo.xlsx",
         "export_payload_b64": "ZXhjZWwtcGF5bG9hZA==",
     }
+    session[SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY] = "Build awareness"
+    session[SOCIAL_REQUEST_CHANNELS_KEY] = ["linkedin", "twitter_x"]
+    session[SOCIAL_REQUEST_NOTES_KEY] = "Use product proof"
+    session[SOCIAL_REQUEST_EMAIL_KEY] = "user@example.com"
+    session[SOCIAL_RESULTS_KEY] = {
+        "strategy": {
+            "objective": "Build awareness",
+            "audience_summary": "Retail buyers",
+            "brand_voice": "Practical",
+            "content_pillars": ["Analytics"],
+        },
+        "channel_content": [
+            {
+                "channel": "linkedin",
+                "post_copy": "Demo social post",
+                "reply_ideas": ["Reply one"],
+                "image_prompt": "Create a product-led visual",
+                "short_video_script": "Hook, proof, CTA",
+                "hashtags": ["#Analytics"],
+            }
+        ],
+        "delivery_email": "user@example.com",
+        "email_subject": "Demo package",
+        "email_status": "sent",
+        "email_error": "",
+    }
     session["growth_engine_boot_id"] = APP_BOOT_ID
     session.save()
 
@@ -520,6 +564,8 @@ def test_home_renders_locked_accordions_after_save_and_lead_generation() -> None
     assert "Requested" in content
     assert "locked for review" in content
     assert "Prioritized leads" in content
+    assert "Strategy and content package" in content
+    assert "Humans handle posting" in content
     assert "Rank 1" in content
     assert "<table" not in content
 
@@ -566,15 +612,21 @@ def test_analytics_dashboard_renders_for_allowlisted_admin(monkeypatch) -> None:
             recent_runs=[
                 {
                     "business_name": "Demo Co",
+                    "workflow_type": "Lead Generation",
                     "created_at": "2026-04-13 10:30 UTC",
                     "discovery_modes": "Customers",
-                    "opportunity_count": "4",
-                    "skipped_count": "2",
-                    "export_name": "demo.xlsx",
+                    "primary_label": "Prioritized",
+                    "primary_value": "4",
+                    "secondary_label": "Skipped",
+                    "secondary_value": "2",
+                    "artifact_label": "Workbook",
+                    "artifact_name": "demo.xlsx",
                 }
             ],
             discovery_breakdown=[{"label": "Customers", "count": 8, "width": 100}],
             industry_breakdown=[{"label": "Software", "count": 5, "width": 100}],
+            workflow_breakdown=[{"label": "Lead Generation", "count": 3, "width": 100}],
+            social_channel_breakdown=[{"label": "Linkedin", "count": 2, "width": 100}],
             availability_notes=["Audit analytics are available."],
         ),
     )
@@ -586,7 +638,7 @@ def test_analytics_dashboard_renders_for_allowlisted_admin(monkeypatch) -> None:
     assert "Workspace analytics" in content
     assert "Confirmed profiles" in content
     assert "Demo Co" in content
-    assert "Run ledger" in content
+    assert "Workflow ledger" in content
     assert "Admin User" in content
     assert "Log out" in content
 
@@ -606,6 +658,8 @@ def test_analytics_dashboard_skips_admin_verification_when_google_sign_in_is_dis
             recent_runs=[],
             discovery_breakdown=[],
             industry_breakdown=[],
+            workflow_breakdown=[],
+            social_channel_breakdown=[],
             availability_notes=[],
         ),
     )
@@ -710,6 +764,88 @@ def test_save_profile_does_not_require_auth_when_google_sign_in_is_disabled(
 
     assert response.status_code == 302
     assert client.session[PROFILE_SAVE_URI_KEY].startswith("firestore://demo/")
+
+
+def test_generate_social_content_persists_package(monkeypatch) -> None:
+    client = localhost_client()
+    session = client.session
+    session[PROFILE_DRAFT_KEY] = build_draft_payload(discovery_modes=["customers"])
+    session[PROFILE_RESEARCH_RESULT_KEY] = build_research_result_payload()
+    session[PROFILE_SAVE_URI_KEY] = "firestore://demo/profile"
+    session[AUTH_USER_KEY] = {"email": "user@example.com"}
+    session.save()
+
+    captured_record = {}
+
+    monkeypatch.setattr(
+        "growth_engine_web.views.SocialContentService.generate",
+        lambda self, *, draft, research_result, request: SimpleNamespace(
+            strategy=SimpleNamespace(
+                objective="Build awareness",
+                audience_summary="Retail buyers",
+                brand_voice="Practical",
+                content_pillars=["Analytics"],
+                proof_points=["Verified website"],
+                calls_to_action=["Book a demo"],
+                engagement_guidelines=["Reply manually"],
+            ),
+            channel_content=[
+                SimpleNamespace(
+                    channel="linkedin",
+                    post_copy="Demo post",
+                    reply_ideas=["Reply one"],
+                    image_prompt="Image brief",
+                    short_video_script="Video brief",
+                    hashtags=["#Analytics"],
+                )
+            ],
+            delivery_email="user@example.com",
+            email_subject="Demo package",
+            email_status="sent",
+            email_error=None,
+            audit_record=SimpleNamespace(metadata={"channels": ["linkedin"]}),
+        ),
+    )
+    monkeypatch.setattr(
+        "growth_engine_web.views._persist_workflow_record",
+        lambda record: captured_record.setdefault("record", record),
+    )
+
+    response = client.post(
+        "/social-content/",
+        {
+            "campaign_goal": "Build awareness",
+            "channels": ["linkedin"],
+            "notes": "Use proof points",
+            "delivery_email": "user@example.com",
+        },
+    )
+
+    assert response.status_code == 302
+    assert client.session[SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY] == "Build awareness"
+    assert client.session[SOCIAL_RESULTS_KEY]["email_subject"] == "Demo package"
+    assert captured_record["record"].metadata["channels"] == ["linkedin"]
+
+
+def test_generate_social_content_requires_saved_profile() -> None:
+    client = localhost_client()
+    session = client.session
+    session[PROFILE_DRAFT_KEY] = build_draft_payload(discovery_modes=["customers"])
+    session[PROFILE_RESEARCH_RESULT_KEY] = build_research_result_payload()
+    session.save()
+
+    response = client.post(
+        "/social-content/",
+        {
+            "campaign_goal": "Build awareness",
+            "channels": ["linkedin"],
+            "notes": "Use proof points",
+            "delivery_email": "user@example.com",
+        },
+    )
+
+    assert response.status_code == 302
+    assert SOCIAL_RESULTS_KEY not in client.session
 
 
 def test_save_profile_redirects_when_research_state_is_missing() -> None:

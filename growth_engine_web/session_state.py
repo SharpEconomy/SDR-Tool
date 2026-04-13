@@ -15,6 +15,11 @@ PROFILE_SAVE_URI_KEY = "growth_engine_profile_save_uri"
 POST_SAVE_REQUESTED_DATA_KEY = "growth_engine_post_save_requested_data"
 POST_SAVE_REQUEST_NOTES_KEY = "growth_engine_post_save_request_notes"
 LEAD_RESULTS_KEY = "growth_engine_lead_results"
+SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY = "growth_engine_social_request_campaign_goal"
+SOCIAL_REQUEST_CHANNELS_KEY = "growth_engine_social_request_channels"
+SOCIAL_REQUEST_NOTES_KEY = "growth_engine_social_request_notes"
+SOCIAL_REQUEST_EMAIL_KEY = "growth_engine_social_request_email"
+SOCIAL_RESULTS_KEY = "growth_engine_social_results"
 
 
 def _serialize_source(source: ResearchSource) -> dict[str, str]:
@@ -83,6 +88,11 @@ def clear_workspace_state(session, *, clear_auth: bool = False) -> None:
         POST_SAVE_REQUESTED_DATA_KEY,
         POST_SAVE_REQUEST_NOTES_KEY,
         LEAD_RESULTS_KEY,
+        SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY,
+        SOCIAL_REQUEST_CHANNELS_KEY,
+        SOCIAL_REQUEST_NOTES_KEY,
+        SOCIAL_REQUEST_EMAIL_KEY,
+        SOCIAL_RESULTS_KEY,
     ]
     if clear_auth:
         keys.append(AUTH_USER_KEY)
@@ -135,6 +145,73 @@ def set_post_save_request(
 
 def clear_lead_results(session) -> None:
     session.pop(LEAD_RESULTS_KEY, None)
+    session.modified = True
+
+
+def get_social_request(session) -> dict[str, Any]:
+    return {
+        "campaign_goal": str(session.get(SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY, "") or ""),
+        "channels": list(session.get(SOCIAL_REQUEST_CHANNELS_KEY, []) or []),
+        "notes": str(session.get(SOCIAL_REQUEST_NOTES_KEY, "") or ""),
+        "delivery_email": str(session.get(SOCIAL_REQUEST_EMAIL_KEY, "") or ""),
+    }
+
+
+def set_social_request(
+    session,
+    *,
+    campaign_goal: str,
+    channels: list[str],
+    notes: str,
+    delivery_email: str,
+) -> None:
+    session[SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY] = campaign_goal
+    session[SOCIAL_REQUEST_CHANNELS_KEY] = channels
+    session[SOCIAL_REQUEST_NOTES_KEY] = notes
+    session[SOCIAL_REQUEST_EMAIL_KEY] = delivery_email
+    session.modified = True
+
+
+def clear_social_results(session) -> None:
+    session.pop(SOCIAL_RESULTS_KEY, None)
+    session.modified = True
+
+
+def get_social_results(session) -> dict[str, Any] | None:
+    payload = session.get(SOCIAL_RESULTS_KEY)
+    if not isinstance(payload, dict):
+        return None
+    if not isinstance(payload.get("strategy"), dict):
+        return None
+    if not isinstance(payload.get("channel_content"), list):
+        return None
+    if not isinstance(payload.get("delivery_email"), str):
+        return None
+    if not isinstance(payload.get("email_subject"), str):
+        return None
+    if not isinstance(payload.get("email_status"), str):
+        return None
+    return payload
+
+
+def set_social_results(
+    session,
+    *,
+    strategy: dict[str, object],
+    channel_content: list[dict[str, object]],
+    delivery_email: str,
+    email_subject: str,
+    email_status: str,
+    email_error: str | None,
+) -> None:
+    session[SOCIAL_RESULTS_KEY] = {
+        "strategy": strategy,
+        "channel_content": channel_content,
+        "delivery_email": delivery_email,
+        "email_subject": email_subject,
+        "email_status": email_status,
+        "email_error": email_error or "",
+    }
     session.modified = True
 
 

@@ -26,6 +26,8 @@ class AdminAnalyticsSnapshot:
     recent_runs: list[dict[str, str]]
     discovery_breakdown: list[dict[str, object]]
     industry_breakdown: list[dict[str, object]]
+    workflow_breakdown: list[dict[str, object]]
+    social_channel_breakdown: list[dict[str, object]]
     availability_notes: list[str]
 
     @property
@@ -39,26 +41,19 @@ def build_admin_analytics_snapshot(settings: Settings) -> AdminAnalyticsSnapshot
         settings.firestore_profile_collection,
         limit=120,
     )
-    runs: list[dict[str, Any]] = []
+    runs = _load_collection_documents(
+        settings,
+        settings.firestore_collection,
+        limit=160,
+    )
     availability_notes: list[str] = []
-    if settings.audit_backend == "firestore":
-        runs = _load_collection_documents(
-            settings,
-            settings.firestore_collection,
-            limit=120,
-        )
-    else:
-        availability_notes.append(
-            "Audit analytics are empty because audit persistence is not using "
-            "Firestore."
-        )
 
     if not profiles:
         availability_notes.append("No confirmed profiles were found in Firestore yet.")
 
-    if settings.audit_backend == "firestore" and not runs:
+    if not runs:
         availability_notes.append(
-            "No Firestore audit runs were found yet for the configured collection."
+            "No Firestore workflow records were found yet for the configured collection."
         )
 
     return AdminAnalyticsSnapshot(
@@ -67,6 +62,8 @@ def build_admin_analytics_snapshot(settings: Settings) -> AdminAnalyticsSnapshot
         recent_runs=_recent_runs(runs),
         discovery_breakdown=_discovery_breakdown(profiles),
         industry_breakdown=_industry_breakdown(profiles),
+        workflow_breakdown=_workflow_breakdown(runs),
+        social_channel_breakdown=_social_channel_breakdown(runs),
         availability_notes=availability_notes,
     )
 
@@ -76,7 +73,7 @@ def _build_metrics(
     runs: list[dict[str, Any]],
 ) -> list[AnalyticsMetric]:
     now = datetime.now(UTC)
-    recent_profiles = sum(
+    recent_profiles_count = sum(
         1
         for profile in profiles
         if (parsed := _parse_datetime(profile.get("confirmed_at")))
@@ -87,8 +84,16 @@ def _build_metrics(
         for profile in profiles
         if normalize_whitespace(str(profile.get("confirmed_by") or ""))
     }
-    total_opportunities = sum(_safe_int(run.get("opportunity_count")) for run in runs)
-    average_opportunities = total_opportunities / len(runs) if runs else 0
+    lead_runs = [run for run in runs if _workflow_type(run) == "lead_generation"]
+    social_runs = [run for run in runs if _workflow_type(run) == "social_media_content"]
+    total_opportunities = sum(
+        _safe_int(run.get("opportunity_count")) for run in lead_runs
+    )
+    social_emails_sent = sum(
+        1
+        for run in social_runs
+        if _run_metadata(run).get("email_delivery_status") == "sent"
+    )
     return [
         AnalyticsMetric(
             label="Confirmed profiles",
@@ -97,7 +102,7 @@ def _build_metrics(
         ),
         AnalyticsMetric(
             label="Last 7 days",
-            value=str(recent_profiles),
+            value=str(recent_profiles_count),
             detail="Profiles confirmed in the trailing week.",
         ),
         AnalyticsMetric(
@@ -106,19 +111,24 @@ def _build_metrics(
             detail="Distinct confirmed-by emails across saved profiles.",
         ),
         AnalyticsMetric(
-            label="Decision runs",
-            value=str(len(runs)),
-            detail="Audit records available from the run collection.",
+            label="Lead workflows",
+            value=str(len(lead_runs)),
+            detail="Lead-generation workflow records stored in Firestore.",
         ),
         AnalyticsMetric(
             label="Opportunities surfaced",
             value=str(total_opportunities),
-            detail="Summed prioritized opportunities across saved runs.",
+            detail="Summed prioritized leads across lead workflow runs.",
         ),
         AnalyticsMetric(
-            label="Avg. opportunities",
-            value=f"{average_opportunities:.1f}" if runs else "0.0",
-            detail="Average prioritized opportunities per available run.",
+            label="Social emails sent",
+            value=str(social_emails_sent),
+            detail="Social content packages successfully emailed to operators.",
+        ),
+        AnalyticsMetric(
+            label="Social workflows",
+            value=str(len(social_runs)),
+            detail="Social strategy and content workflow records stored in Firestore.",
         ),
     ]
 
@@ -169,21 +179,53 @@ def _recent_runs(runs: list[dict[str, Any]]) -> list[dict[str, str]]:
     )
     output: list[dict[str, str]] = []
     for item in ranked[:8]:
+        workflow_type = _workflow_type(item)
+        metadata = _run_metadata(item)
         output.append(
             {
                 "business_name": _fallback_text(
                     item.get("business_name"),
                     "Unknown business",
                 ),
+                "workflow_type": _workflow_type_label(workflow_type),
                 "created_at": _format_timestamp(item.get("created_at")),
                 "discovery_modes": ", ".join(
                     _discovery_mode_labels(item.get("discovery_modes"))
                 ),
-                "opportunity_count": str(_safe_int(item.get("opportunity_count"))),
-                "skipped_count": str(_safe_int(item.get("skipped_count"))),
-                "export_name": _fallback_text(
-                    item.get("export_name"),
-                    "No workbook",
+                "primary_label": (
+                    "Prioritized" if workflow_type == "lead_generation" else "Channels"
+                ),
+                "primary_value": (
+                    str(_safe_int(item.get("opportunity_count")))
+                    if workflow_type == "lead_generation"
+                    else str(
+                        _safe_int(metadata.get("channel_count"))
+                        or len(metadata.get("channels", []) or [])
+                    )
+                ),
+                "secondary_label": (
+                    "Skipped" if workflow_type == "lead_generation" else "Email"
+                ),
+                "secondary_value": (
+                    str(_safe_int(item.get("skipped_count")))
+                    if workflow_type == "lead_generation"
+                    else _fallback_text(
+                        metadata.get("email_delivery_status"),
+                        "Unknown",
+                    )
+                    .replace("_", " ")
+                    .title()
+                ),
+                "artifact_label": (
+                    "Workbook" if workflow_type == "lead_generation" else "Delivery"
+                ),
+                "artifact_name": (
+                    _fallback_text(item.get("export_name"), "No workbook")
+                    if workflow_type == "lead_generation"
+                    else _fallback_text(
+                        metadata.get("delivery_email"),
+                        "No delivery target",
+                    )
                 ),
             }
         )
@@ -207,6 +249,25 @@ def _industry_breakdown(profiles: list[dict[str, Any]]) -> list[dict[str, object
         profile = item.get("profile") if isinstance(item.get("profile"), dict) else {}
         label = _fallback_text(profile.get("industry"), "Not specified")
         counts[label] += 1
+    return _counter_rows(counts)
+
+
+def _workflow_breakdown(runs: list[dict[str, Any]]) -> list[dict[str, object]]:
+    counts: Counter[str] = Counter()
+    for item in runs:
+        counts[_workflow_type_label(_workflow_type(item))] += 1
+    return _counter_rows(counts)
+
+
+def _social_channel_breakdown(runs: list[dict[str, Any]]) -> list[dict[str, object]]:
+    counts: Counter[str] = Counter()
+    for item in runs:
+        if _workflow_type(item) != "social_media_content":
+            continue
+        for channel in _run_metadata(item).get("channels", []) or []:
+            label = _workflow_channel_label(str(channel))
+            if label:
+                counts[label] += 1
     return _counter_rows(counts)
 
 
@@ -248,6 +309,28 @@ def _load_collection_documents(
         if isinstance(payload, dict):
             documents.append(payload)
     return documents
+
+
+def _run_metadata(run: dict[str, Any]) -> dict[str, Any]:
+    return run.get("metadata") if isinstance(run.get("metadata"), dict) else {}
+
+
+def _workflow_type(run: dict[str, Any]) -> str:
+    value = normalize_whitespace(str(run.get("workflow_type") or "")).lower()
+    return value or "lead_generation"
+
+
+def _workflow_type_label(value: str) -> str:
+    return (
+        "Social Media Content" if value == "social_media_content" else "Lead Generation"
+    )
+
+
+def _workflow_channel_label(channel: str) -> str:
+    normalized = normalize_whitespace(channel).lower()
+    if not normalized:
+        return ""
+    return "Twitter/X" if normalized == "twitter_x" else normalized.title()
 
 
 def _discovery_mode_labels(raw_modes: object) -> list[str]:

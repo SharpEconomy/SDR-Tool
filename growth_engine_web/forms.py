@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from django import forms
 
-from growth_engine.models import DISCOVERY_MODES
+from growth_engine.models import DISCOVERY_MODES, SOCIAL_CHANNELS
 from growth_engine.profile_flow import (
     FIELD_HELP_TEXT,
     FIELD_LABELS,
@@ -96,3 +96,61 @@ class PostSaveRequestForm(forms.Form):
 
     def clean_notes(self) -> str:
         return normalize_whitespace(self.cleaned_data.get("notes", ""))
+
+
+class SocialContentRequestForm(forms.Form):
+    campaign_goal = forms.CharField(
+        label="Primary social campaign goal",
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Example: build awareness with retail buyers in India.",
+                "autocomplete": "off",
+            }
+        ),
+    )
+    channels = forms.MultipleChoiceField(
+        label="Choose one or more social channels",
+        required=False,
+        choices=[
+            (channel, channel.replace("_", " ").replace("x", "X").title())
+            for channel in SOCIAL_CHANNELS
+        ],
+        widget=forms.CheckboxSelectMultiple,
+    )
+    notes = forms.CharField(
+        label="Anything specific for the content package?",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "rows": 4,
+                "placeholder": "Example: focus on product education and practical reply ideas.",
+            }
+        ),
+    )
+    delivery_email = forms.EmailField(
+        label="Email the package to",
+        required=False,
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "operator@example.com",
+                "autocomplete": "email",
+            }
+        ),
+    )
+
+    def clean_campaign_goal(self) -> str:
+        return normalize_whitespace(self.cleaned_data.get("campaign_goal", ""))
+
+    def clean_channels(self) -> list[str]:
+        allowed = {channel for channel in SOCIAL_CHANNELS}
+        selected = list(self.cleaned_data.get("channels", []) or [])
+        return [channel for channel in selected if channel in allowed] or list(
+            SOCIAL_CHANNELS
+        )
+
+    def clean_notes(self) -> str:
+        return normalize_whitespace(self.cleaned_data.get("notes", ""))
+
+    def clean_delivery_email(self) -> str:
+        return normalize_whitespace(self.cleaned_data.get("delivery_email", "")).lower()

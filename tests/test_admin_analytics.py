@@ -7,8 +7,6 @@ def test_build_admin_analytics_snapshot_aggregates_profiles_and_runs(
     settings,
     monkeypatch,
 ) -> None:
-    settings.audit_backend = "firestore"
-
     def _fake_loader(runtime_settings, collection_name: str, *, limit: int):
         if collection_name == settings.firestore_profile_collection:
             return [
@@ -37,11 +35,25 @@ def test_build_admin_analytics_snapshot_aggregates_profiles_and_runs(
             {
                 "business_name": "Demo Co",
                 "created_at": "2026-04-13T10:30:00+00:00",
+                "workflow_type": "lead_generation",
                 "discovery_modes": ["customers"],
                 "opportunity_count": 4,
                 "skipped_count": 2,
                 "export_name": "demo.xlsx",
-            }
+                "metadata": {"requested_data": ["customers"]},
+            },
+            {
+                "business_name": "Demo Co",
+                "created_at": "2026-04-13T11:00:00+00:00",
+                "workflow_type": "social_media_content",
+                "discovery_modes": ["customers"],
+                "metadata": {
+                    "channels": ["linkedin", "twitter_x"],
+                    "channel_count": 2,
+                    "delivery_email": "user@example.com",
+                    "email_delivery_status": "sent",
+                },
+            },
         ]
 
     monkeypatch.setattr(
@@ -54,8 +66,13 @@ def test_build_admin_analytics_snapshot_aggregates_profiles_and_runs(
     assert snapshot.metrics[0].value == "2"
     assert snapshot.metrics[3].value == "1"
     assert snapshot.metrics[4].value == "4"
+    assert snapshot.metrics[5].value == "1"
+    assert snapshot.metrics[6].value == "1"
     assert snapshot.discovery_breakdown[0]["label"] == "Customers"
     assert snapshot.discovery_breakdown[0]["count"] == 2
     assert snapshot.industry_breakdown[0]["label"] == "Software"
+    assert snapshot.workflow_breakdown[0]["label"] == "Lead Generation"
+    assert snapshot.social_channel_breakdown[0]["label"] == "Linkedin"
     assert snapshot.recent_profiles[0]["business_name"] == "Demo Co"
-    assert snapshot.recent_runs[0]["export_name"] == "demo.xlsx"
+    assert snapshot.recent_runs[0]["workflow_type"] == "Social Media Content"
+    assert snapshot.recent_runs[1]["artifact_name"] == "demo.xlsx"

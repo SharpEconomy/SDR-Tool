@@ -10,8 +10,10 @@ Production-ready Django application for capturing a verified business foundation
 - Builds a complete editable business profile draft with market, ICP, offerings, goals, and guardrails.
 - Presents the gathered evidence and model summary in a review-first confirmation UI.
 - Saves the confirmed profile to Firestore after user approval.
+- Keeps the user journey unchanged through confirmation, then bifurcates into lead generation and social media content workflows.
 - Generates prioritized leads from the confirmed profile and supports Excel download.
-- Exposes an admin-only analytics page for profile volume, run activity, and mix trends.
+- Creates a social strategy plus channel-ready content for LinkedIn, Instagram, Facebook, and Twitter/X, then emails the package for manual posting.
+- Persists profiles and downstream workflow records to Firestore, and exposes an admin-only analytics page for profile volume, workflow activity, and mix trends.
 
 ## Product intent
 
@@ -30,7 +32,8 @@ The current UI is optimized for speed and review quality rather than long-form m
 - `gpt-5.4-mini` makes the final structured call from that evidence set.
 - Every generated field remains editable before confirmation.
 - The confirmed record is written to Firestore for downstream use.
-- After confirmation, the operator can generate prioritized leads and download the workbook.
+- After confirmation, the operator can either generate prioritized leads or create a social content package for manual publishing.
+- Lead and social workflow outputs are saved in Firestore as part of the workspace ledger.
 - Admin allowlisted users can open a Firestore-backed analytics dashboard from the workspace header.
 
 ## Core flows
@@ -40,7 +43,8 @@ The current UI is optimized for speed and review quality rather than long-form m
 3. Review the GPT-cross-verified business profile.
 4. Edit any field that needs correction.
 5. Confirm and save the final record to Firestore.
-6. Generate prioritized leads and download the Excel workbook.
+6. Branch into lead generation or social media content creation from the same confirmed profile.
+7. Download the lead workbook or email the social content package for manual posting.
 
 The UI stays non-technical on purpose. It is designed for operators, founders, growth teams, procurement leads, and business owners who want a simple guided flow.
 
@@ -59,8 +63,10 @@ Main package: `growth_engine`
 - `matching/`: business-facing output assembly.
 - `export/`: Excel workbook generation.
 - `profile_research/`: public-web evidence gathering and model-backed profile verification.
+- `services/social_content.py`: social strategy creation, channel content generation, and Firestore-ready workflow packaging.
+- `services/email_service.py`: SMTP-backed delivery for the generated social package.
 - `storage/`: Firestore audit and profile persistence helpers.
-- `orchestration/`: end-to-end decision engine and pause/resume/stop control.
+- `orchestration/`: end-to-end lead decision engine and pause/resume/stop control.
 - `growth_engine_web/`: Django forms, views, templates, Google OAuth session flow, and session-backed workspace state.
 - `growth_engine_web/`: Django forms, views, templates, admin analytics dashboard, Google OAuth session flow, and session-backed workspace state.
 - `growth_engine_django/`: Django project settings, routing, and WSGI entrypoint.
@@ -75,6 +81,7 @@ Model responsibilities:
 
 - targeting model refinement
 - evidence-backed business profile verification
+- evidence-backed social strategy creation and channel content generation
 - ambiguous entity extraction
 - bounded scoring refinement, matching guidance, and decision explanation
 
@@ -138,6 +145,13 @@ Important settings:
 - `GOOGLE_SEARCH_API_KEY`
 - `GOOGLE_SEARCH_ENGINE_ID`
 - `SMTP_PROBE_ENABLED=false`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USERNAME`
+- `SMTP_PASSWORD`
+- `SMTP_FROM_EMAIL`
+- `SMTP_USE_TLS=true`
+- `SMTP_USE_SSL=false`
 - `AUDIT_BACKEND=firestore`
 - `FIRESTORE_COLLECTION`
 - `FIRESTORE_PROFILE_COLLECTION`
@@ -196,6 +210,7 @@ The app runs locally without any SQL database. Firestore remains the only databa
 - Cloud Functions: `growth_engine/cloud/functions.py` exposes request and Pub/Sub job handlers.
 - Pub/Sub: `growth_engine/cloud/pubsub.py` publishes intake jobs for async orchestration with a built-in topic name.
 - Firestore: store confirmed business profiles in `FIRESTORE_PROFILE_COLLECTION` and audit records in `FIRESTORE_COLLECTION`.
+- Firestore workflow ledger: store lead-generation and social-content workflow records in `FIRESTORE_COLLECTION`.
 
 The Google Cloud integrations are lazy-imported so local runs remain lightweight.
 
@@ -219,7 +234,7 @@ Runtime notes:
 
 - `python manage.py runserver` starts the web app locally.
 - Django session state stores the in-progress profile draft, research result, auth session, lead request state, and generated workbook payload.
-- Firestore remains the only database used for persisted application data.
+- Django session state stores the in-progress workspace, while Firestore remains the system of record for confirmed profiles and downstream workflow records.
 - Google sign-in is optional and only enforced when the Google OAuth settings are populated.
 
 ## Testing
@@ -243,8 +258,9 @@ Test coverage includes:
 - orchestration
 - cloud helpers
 - fetch/search/OpenAI retry behavior
-- Django helper parsing, session serialization, Google OAuth verification hooks, lead generation flow, and workbook download views
+- Django helper parsing, session serialization, Google OAuth verification hooks, bifurcated lead/social workflow views, and workbook download
 - Firestore profile persistence
+- social content generation and SMTP delivery behavior
 - email validation
 
 Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)
@@ -253,6 +269,7 @@ Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)
 
 - Discovery uses public pages and internal search queries, not private platform scraping.
 - Email validation is best-effort and should not be treated as guaranteed deliverability.
+- Social content emails require SMTP settings; if SMTP is missing or unavailable, the package is still generated in the workspace and the delivery failure is surfaced to the user.
 - Decision-maker inference is intentionally cautious and favors transparent guessed patterns over false precision.
 - Export files are generated in memory and returned directly to the caller; there is no bucket-backed export persistence path.
-- Audit records are persisted to Firestore when `AUDIT_BACKEND=firestore`.
+- Workflow records for both lead generation and social content are persisted to Firestore in `FIRESTORE_COLLECTION`.

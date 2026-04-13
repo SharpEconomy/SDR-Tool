@@ -128,7 +128,7 @@ SUMMARY_CARD_CONFIGS: tuple[SummaryCardConfig, ...] = (
     {
         "id": "commercial_setup",
         "title": "Commercial setup",
-        "subtitle": "What the engine will use downstream",
+        "subtitle": "What both workflows will use downstream",
         "fields": (
             "offerings",
             "goals",

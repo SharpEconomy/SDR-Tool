@@ -12,6 +12,13 @@ DISCOVERY_MODES = [
     "service_providers",
 ]
 
+SOCIAL_CHANNELS = [
+    "linkedin",
+    "instagram",
+    "facebook",
+    "twitter_x",
+]
+
 EXPORT_OPPORTUNITY_COLUMNS = [
     "market_side",
     "entity_name",
@@ -336,6 +343,48 @@ class AuditRecord:
     export_name: str
     export_uri: str | None
     log: list[str]
+    workflow_type: str = "lead_generation"
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(slots=True)
+class SocialContentRequest:
+    campaign_goal: str
+    channels: list[str]
+    notes: str
+    delivery_email: str
+
+
+@dataclass(slots=True)
+class SocialStrategy:
+    objective: str
+    audience_summary: str
+    brand_voice: str
+    content_pillars: list[str]
+    proof_points: list[str]
+    calls_to_action: list[str]
+    engagement_guidelines: list[str]
+
+
+@dataclass(slots=True)
+class SocialChannelContent:
+    channel: str
+    post_copy: str
+    reply_ideas: list[str]
+    image_prompt: str
+    short_video_script: str
+    hashtags: list[str]
+
+
+@dataclass(slots=True)
+class SocialWorkflowResult:
+    strategy: SocialStrategy
+    channel_content: list[SocialChannelContent]
+    delivery_email: str
+    email_subject: str
+    email_status: str
+    email_error: str | None
+    audit_record: AuditRecord
 
 
 @dataclass(slots=True)

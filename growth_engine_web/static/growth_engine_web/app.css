@@ -614,6 +614,108 @@ p {
   align-items: start;
 }
 
+.workflow-grid,
+.workflow-column,
+.social-strategy-grid,
+.social-channel-list,
+.social-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.workflow-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.workflow-grid.workflow-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.workflow-column {
+  min-width: 0;
+}
+
+.workflow-intro-card {
+  grid-column: 1 / -1;
+  margin-bottom: 1rem;
+}
+
+.workflow-selector-card {
+  margin-bottom: 1rem;
+}
+
+.flow-choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.flow-choice-button {
+  min-width: 220px;
+}
+
+.flow-choice-button.is-active,
+.flow-choice-button[aria-pressed="true"] {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+  color: #f9f5eb;
+  border-color: transparent;
+}
+
+.social-results-card,
+.social-channel-card {
+  width: 100%;
+}
+
+.social-strategy-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 1rem;
+}
+
+.social-strategy-panel,
+.social-channel-card {
+  border: 1px solid rgba(35, 69, 53, 0.08);
+  border-radius: 20px;
+  background: rgba(249, 245, 235, 0.84);
+  padding: 0.95rem 1rem;
+}
+
+.social-strategy-panel span,
+.social-content-block span {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+}
+
+.social-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+
+.social-content-block {
+  margin-bottom: 0.9rem;
+}
+
+.social-content-block p {
+  margin: 0;
+}
+
+.social-list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.social-list li {
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
 .lead-request-accordion,
 .prioritized-leads-card {
   width: 100%;
@@ -1005,6 +1107,8 @@ code {
   .lead-entry-head,
   .lead-detail-grid,
   .post-save-grid-live,
+  .workflow-grid,
+  .social-strategy-grid,
   .analytics-list-head,
   .analytics-detail-grid,
   .analytics-bar-row {
@@ -1021,5 +1125,13 @@ code {
 
   .loading-card-wide {
     grid-column: auto;
+  }
+
+  .flow-choice-row {
+    flex-direction: column;
+  }
+
+  .flow-choice-button {
+    width: 100%;
   }
 }

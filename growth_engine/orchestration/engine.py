@@ -25,10 +25,7 @@ from growth_engine.observability.logging import get_logger, log_event
 from growth_engine.parsing import HtmlParsingService
 from growth_engine.scoring import ScoringEngine
 from growth_engine.services import OpenAIService, PageFetcher, SearchClient
-from growth_engine.storage import (
-    FirestoreAuditStore,
-    NoOpAuditStore,
-)
+from growth_engine.storage import FirestoreAuditStore, NoOpAuditStore
 from growth_engine.utils import slugify
 from growth_engine.validation import EmailValidatorService
 

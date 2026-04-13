@@ -39,7 +39,7 @@ def test_analytics_template_exists_with_admin_copy() -> None:
 
     assert "Workspace analytics" in template
     assert "Profile ledger" in template
-    assert "Run ledger" in template
+    assert "Workflow ledger" in template
 
 
 def test_templates_mark_processing_forms_for_loading_overlay() -> None:

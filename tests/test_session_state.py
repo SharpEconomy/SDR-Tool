@@ -10,7 +10,13 @@ from growth_engine_web.session_state import (
     PROFILE_DRAFT_KEY,
     PROFILE_RESEARCH_RESULT_KEY,
     PROFILE_SAVE_URI_KEY,
+    SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY,
+    SOCIAL_REQUEST_CHANNELS_KEY,
+    SOCIAL_REQUEST_EMAIL_KEY,
+    SOCIAL_REQUEST_NOTES_KEY,
+    SOCIAL_RESULTS_KEY,
     clear_lead_results,
+    clear_social_results,
     clear_workspace_state,
     deserialize_research_result,
     get_auth_user,
@@ -19,12 +25,16 @@ from growth_engine_web.session_state import (
     get_lead_results,
     get_post_save_request,
     get_research_result,
+    get_social_request,
+    get_social_results,
     serialize_research_result,
     set_auth_user,
     set_draft,
     set_lead_results,
     set_post_save_request,
     set_research_result,
+    set_social_request,
+    set_social_results,
 )
 from tests.helpers import build_intake_draft, build_research_result, localhost_client
 
@@ -110,6 +120,52 @@ def test_clear_lead_results_removes_cached_export() -> None:
     assert LEAD_RESULTS_KEY not in session
 
 
+def test_social_request_and_result_helpers_round_trip() -> None:
+    session = localhost_client().session
+
+    set_social_request(
+        session,
+        campaign_goal="Build awareness",
+        channels=["linkedin", "instagram"],
+        notes="Use proof points",
+        delivery_email="user@example.com",
+    )
+    set_social_results(
+        session,
+        strategy={"objective": "Build awareness"},
+        channel_content=[{"channel": "linkedin", "post_copy": "Demo"}],
+        delivery_email="user@example.com",
+        email_subject="Demo package",
+        email_status="sent",
+        email_error=None,
+    )
+
+    assert get_social_request(session) == {
+        "campaign_goal": "Build awareness",
+        "channels": ["linkedin", "instagram"],
+        "notes": "Use proof points",
+        "delivery_email": "user@example.com",
+    }
+    assert get_social_results(session) == {
+        "strategy": {"objective": "Build awareness"},
+        "channel_content": [{"channel": "linkedin", "post_copy": "Demo"}],
+        "delivery_email": "user@example.com",
+        "email_subject": "Demo package",
+        "email_status": "sent",
+        "email_error": "",
+    }
+
+
+def test_clear_social_results_removes_cached_package() -> None:
+    session = localhost_client().session
+    session[SOCIAL_RESULTS_KEY] = {"strategy": {}}
+    session.save()
+
+    clear_social_results(session)
+
+    assert SOCIAL_RESULTS_KEY not in session
+
+
 def test_clear_workspace_state_preserves_auth_by_default() -> None:
     session = localhost_client().session
     session[AUTH_USER_KEY] = {"email": "user@example.com"}
@@ -120,6 +176,11 @@ def test_clear_workspace_state_preserves_auth_by_default() -> None:
     session[POST_SAVE_REQUESTED_DATA_KEY] = ["customers"]
     session[POST_SAVE_REQUEST_NOTES_KEY] = "Only verified companies"
     session[LEAD_RESULTS_KEY] = {"export_name": "demo.xlsx"}
+    session[SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY] = "Build awareness"
+    session[SOCIAL_REQUEST_CHANNELS_KEY] = ["linkedin"]
+    session[SOCIAL_REQUEST_NOTES_KEY] = "Use proof points"
+    session[SOCIAL_REQUEST_EMAIL_KEY] = "user@example.com"
+    session[SOCIAL_RESULTS_KEY] = {"strategy": {"objective": "Build awareness"}}
     session.save()
 
     clear_workspace_state(session)
@@ -132,6 +193,11 @@ def test_clear_workspace_state_preserves_auth_by_default() -> None:
     assert POST_SAVE_REQUESTED_DATA_KEY not in session
     assert POST_SAVE_REQUEST_NOTES_KEY not in session
     assert LEAD_RESULTS_KEY not in session
+    assert SOCIAL_REQUEST_CAMPAIGN_GOAL_KEY not in session
+    assert SOCIAL_REQUEST_CHANNELS_KEY not in session
+    assert SOCIAL_REQUEST_NOTES_KEY not in session
+    assert SOCIAL_REQUEST_EMAIL_KEY not in session
+    assert SOCIAL_RESULTS_KEY not in session
 
 
 def test_clear_workspace_state_can_clear_auth_too() -> None:

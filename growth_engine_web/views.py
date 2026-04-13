@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime
 from urllib.parse import quote, urljoin
 from uuid import uuid4
@@ -12,7 +12,12 @@ from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from growth_engine.models import DISCOVERY_MODES, BusinessIntake
+from growth_engine.models import (
+    DISCOVERY_MODES,
+    SOCIAL_CHANNELS,
+    BusinessIntake,
+    SocialContentRequest,
+)
 from growth_engine.orchestration import DecisionEngine
 from growth_engine.profile_flow import (
     build_research_document_id,
@@ -24,7 +29,9 @@ from growth_engine.profile_flow import (
     update_draft_from_partial_values,
 )
 from growth_engine.profile_research import BusinessProfileResearcher
+from growth_engine.services.social_content import SocialContentService
 from growth_engine.storage import (
+    FirestoreAuditStore,
     FirestoreProfileStore,
     NoOpAuditStore,
 )
@@ -33,6 +40,7 @@ from growth_engine_web.analytics import build_admin_analytics_snapshot
 from growth_engine_web.forms import (
     PostSaveRequestForm,
     ProfileSectionForm,
+    SocialContentRequestForm,
     SourceResearchForm,
 )
 from growth_engine_web.google_auth import (
@@ -50,6 +58,7 @@ from growth_engine_web.session_state import (
     PROFILE_SAVE_URI_KEY,
     WEBSITE_INPUT_KEY,
     clear_lead_results,
+    clear_social_results,
     clear_workspace_state,
     get_auth_user,
     get_draft,
@@ -57,11 +66,15 @@ from growth_engine_web.session_state import (
     get_lead_results,
     get_post_save_request,
     get_research_result,
+    get_social_request,
+    get_social_results,
     set_auth_user,
     set_draft,
     set_lead_results,
     set_post_save_request,
     set_research_result,
+    set_social_request,
+    set_social_results,
 )
 
 
@@ -113,6 +126,11 @@ def _home_context(
     )
     current_user = get_auth_user(request.session)
     lead_results = get_lead_results(request.session)
+    social_request = get_social_request(request.session)
+    effective_social_channels = list(
+        social_request["channels"] or list(SOCIAL_CHANNELS)
+    )
+    social_results = get_social_results(request.session)
 
     if source_form is None:
         source_form = SourceResearchForm(
@@ -142,10 +160,34 @@ def _home_context(
                 "notes": post_save_request["notes"],
             }
         ),
+        "social_form": SocialContentRequestForm(
+            initial={
+                "campaign_goal": social_request["campaign_goal"],
+                "channels": effective_social_channels,
+                "notes": social_request["notes"],
+                "delivery_email": (
+                    social_request["delivery_email"]
+                    or normalize_whitespace(
+                        str((current_user or {}).get("email") or "")
+                    )
+                ),
+            }
+        ),
         "lead_results": lead_results,
+        "social_results": social_results,
         "requested_data_summary": ", ".join(
             format_discovery_mode_label(mode) for mode in effective_requested_data
         ),
+        "social_channel_options": [
+            (channel, _format_social_channel_label(channel))
+            for channel in SOCIAL_CHANNELS
+        ],
+        "social_channels_selected": effective_social_channels,
+        "social_channels_summary": ", ".join(
+            _format_social_channel_label(channel)
+            for channel in effective_social_channels
+        ),
+        "social_request": social_request,
     }
 
 
@@ -178,6 +220,24 @@ def _draft_to_business_intake(
         supplier_constraints=normalize_whitespace(draft.supplier_constraints or ""),
         user_urls=list(draft.user_urls),
     )
+
+
+def _format_social_channel_label(channel: str) -> str:
+    return "Twitter/X" if channel == "twitter_x" else channel.replace("_", " ").title()
+
+
+def _persist_workflow_record(record) -> None:
+    settings = get_runtime_settings()
+    store = FirestoreAuditStore(settings, settings.firestore_collection)
+    store.save(record)
+
+
+def _to_serializable_payload(value):
+    if is_dataclass(value):
+        return asdict(value)
+    if hasattr(value, "__dict__"):
+        return dict(vars(value))
+    return value
 
 
 @ensure_csrf_cookie
@@ -288,6 +348,7 @@ def edit_section(request: HttpRequest, card_id: str) -> HttpResponse:
             set_draft(request.session, updated_draft)
             request.session[PROFILE_SAVE_URI_KEY] = None
             clear_lead_results(request.session)
+            clear_social_results(request.session)
             research_result = get_research_result(request.session)
             if research_result is not None:
                 research_result.draft = updated_draft
@@ -296,7 +357,7 @@ def edit_section(request: HttpRequest, card_id: str) -> HttpResponse:
                 request,
                 (
                     "Section updated. Review and save the full profile again "
-                    "before generating leads."
+                    "before generating leads or social content."
                 ),
             )
             return redirect("growth_engine_web:home")
@@ -367,6 +428,7 @@ def save_profile(request: HttpRequest) -> HttpResponse:
 
     request.session[PROFILE_SAVE_URI_KEY] = save_uri
     clear_lead_results(request.session)
+    clear_social_results(request.session)
     request.session.modified = True
     return redirect("growth_engine_web:home")
 
@@ -427,6 +489,22 @@ def request_data(request: HttpRequest) -> HttpResponse:
         export_name=result.export_name,
         export_bytes=result.export_bytes,
     )
+    result.audit_record.metadata = {
+        "request_notes": form.cleaned_data["notes"],
+        "requested_data": requested_modes,
+        "opportunity_rows": [item.as_export_row() for item in result.opportunities],
+        "skipped_rows": [item.as_export_row() for item in result.skipped_entities],
+    }
+    try:
+        _persist_workflow_record(result.audit_record)
+    except Exception:
+        messages.warning(
+            request,
+            (
+                "Leads were generated, but the Firestore workflow ledger could not be "
+                "updated."
+            ),
+        )
 
     readable = ", ".join(format_discovery_mode_label(mode) for mode in requested_modes)
     messages.success(
@@ -456,6 +534,121 @@ def download_leads_export(request: HttpRequest) -> HttpResponse:
         f"attachment; filename*=UTF-8''{quote(lead_results['export_name'])}"
     )
     return response
+
+
+@require_POST
+def generate_social_content(request: HttpRequest) -> HttpResponse:
+    form = SocialContentRequestForm(request.POST)
+    if not form.is_valid():
+        messages.error(
+            request, "Choose valid channels and delivery details before continuing."
+        )
+        return redirect("growth_engine_web:home")
+
+    draft = get_draft(request.session)
+    research_result = get_research_result(request.session)
+    if draft is None or research_result is None:
+        messages.error(
+            request, "Confirm a business profile before creating social content."
+        )
+        return redirect("growth_engine_web:home")
+    if not request.session.get(PROFILE_SAVE_URI_KEY):
+        messages.error(
+            request, "Save the confirmed profile before creating social content."
+        )
+        return redirect("growth_engine_web:home")
+
+    delivery_email = normalize_whitespace(form.cleaned_data["delivery_email"])
+    if not delivery_email:
+        current_user = get_auth_user(request.session) or {}
+        delivery_email = normalize_whitespace(str(current_user.get("email") or ""))
+    if not delivery_email:
+        messages.error(
+            request,
+            "Provide a delivery email so the social content package can be sent.",
+        )
+        return redirect("growth_engine_web:home")
+
+    set_social_request(
+        request.session,
+        campaign_goal=form.cleaned_data["campaign_goal"],
+        channels=form.cleaned_data["channels"],
+        notes=form.cleaned_data["notes"],
+        delivery_email=delivery_email,
+    )
+    clear_social_results(request.session)
+
+    service = SocialContentService(get_runtime_settings())
+    social_request = SocialContentRequest(
+        campaign_goal=form.cleaned_data["campaign_goal"],
+        channels=form.cleaned_data["channels"],
+        notes=form.cleaned_data["notes"],
+        delivery_email=delivery_email,
+    )
+
+    try:
+        result = service.generate(
+            draft=draft,
+            research_result=research_result,
+            request=social_request,
+        )
+    except Exception as exc:
+        messages.error(
+            request,
+            normalize_error_message(
+                exc,
+                fallback=(
+                    "Social content could not be created. Please review the request "
+                    "and try again."
+                ),
+            )
+            or (
+                "Social content could not be created. Please review the request and "
+                "try again."
+            ),
+        )
+        return redirect("growth_engine_web:home")
+
+    set_social_results(
+        request.session,
+        strategy=_to_serializable_payload(result.strategy),
+        channel_content=[
+            _to_serializable_payload(item) for item in result.channel_content
+        ],
+        delivery_email=result.delivery_email,
+        email_subject=result.email_subject,
+        email_status=result.email_status,
+        email_error=result.email_error,
+    )
+    try:
+        _persist_workflow_record(result.audit_record)
+    except Exception:
+        messages.warning(
+            request,
+            (
+                "Social content was created, but the Firestore workflow ledger could "
+                "not be updated."
+            ),
+        )
+
+    if result.email_status == "sent":
+        messages.success(
+            request,
+            (
+                f"Created a social strategy and channel content package for "
+                f"{len(result.channel_content)} channels and emailed it to "
+                f"{result.delivery_email}."
+            ),
+        )
+    else:
+        messages.warning(
+            request,
+            (
+                "Created the social content package, but email delivery failed. "
+                "Review the package in the workspace and check SMTP configuration."
+            ),
+        )
+    return redirect("growth_engine_web:home")
 
 
 def _google_redirect_uri(request: HttpRequest) -> str:

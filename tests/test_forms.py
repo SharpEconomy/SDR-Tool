@@ -3,6 +3,7 @@ from __future__ import annotations
 from growth_engine_web.forms import (
     PostSaveRequestForm,
     ProfileSectionForm,
+    SocialContentRequestForm,
     SourceResearchForm,
 )
 
@@ -61,3 +62,20 @@ def test_post_save_request_form_rejects_invalid_modes() -> None:
 
     assert not form.is_valid()
     assert "requested_data" in form.errors
+
+
+def test_social_content_request_form_normalizes_request_fields() -> None:
+    form = SocialContentRequestForm(
+        {
+            "campaign_goal": "  Build awareness with buyers  ",
+            "channels": ["linkedin", "twitter_x"],
+            "notes": "  Keep it practical and product-led  ",
+            "delivery_email": "  USER@EXAMPLE.COM  ",
+        }
+    )
+
+    assert form.is_valid()
+    assert form.cleaned_data["campaign_goal"] == "Build awareness with buyers"
+    assert form.cleaned_data["channels"] == ["linkedin", "twitter_x"]
+    assert form.cleaned_data["notes"] == "Keep it practical and product-led"
+    assert form.cleaned_data["delivery_email"] == "user@example.com"
