@@ -270,3 +270,4 @@ Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)
 - Decision-maker inference is intentionally cautious and favors transparent guessed patterns over false precision.
 - Export files are generated in memory and returned directly to the caller; there is no bucket-backed export persistence path.
 - Workflow records for both lead generation and social content are persisted to Firestore in `FIRESTORE_COLLECTION`.
+
