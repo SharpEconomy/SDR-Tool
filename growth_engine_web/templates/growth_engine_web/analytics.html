@@ -15,9 +15,6 @@
         <strong class="auth-identity">
           {% if admin_verification_required %}Authorized admin session{% else %}Open workspace session{% endif %}
         </strong>
-        {% if not admin_verification_required %}
-          <p class="auth-email">Google sign-in is disabled in this environment.</p>
-        {% endif %}
       {% endif %}
       <a class="secondary-button topbar-link" href="{% url 'growth_engine_web:home' %}">Back to workspace</a>
     </div>
@@ -28,15 +25,6 @@
       </form>
     {% endif %}
   </header>
-
-  <section class="analytics-hero">
-    <div class="hero-kicker">Admin-only operations surface</div>
-    <h1>Workspace analytics</h1>
-    <p>
-      Track confirmed profile volume, operator activity, discovery mix, and both
-      Firestore-backed workflow branches from one screen.
-    </p>
-  </section>
 
   {% if analytics.availability_notes %}
     <section class="message-stack" aria-label="Analytics notes">

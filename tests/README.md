@@ -25,4 +25,4 @@ Coverage summary:
 - `test_cloud.py`: Cloud Run and Pub/Sub-facing integration helpers.
 - `test_profile_research.py`: website-plus-search evidence gathering and GPT-backed profile draft generation.
 - `test_storage_profiles.py`: Firestore profile persistence payload and document routing.
-- `test_social_content.py`: fallback social strategy/content generation and SMTP delivery failure handling.
+- `test_social_content.py`: fallback social strategy/content generation and SendGrid delivery failure handling.

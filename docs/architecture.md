@@ -100,9 +100,8 @@ Checks:
 
 - syntax
 - MX
-- optional SMTP probe
 
-This layer is isolated so tests can mock failure modes like DNS errors or SMTP rejection.
+This layer is isolated so tests can mock failure modes like invalid syntax or DNS resolution errors.
 
 ## Scoring
 

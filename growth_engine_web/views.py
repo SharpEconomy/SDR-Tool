@@ -645,7 +645,7 @@ def generate_social_content(request: HttpRequest) -> HttpResponse:
             request,
             (
                 "Created the social content package, but email delivery failed. "
-                "Review the package in the workspace and check SMTP configuration."
+                "Review the package in the workspace and check SendGrid configuration."
             ),
         )
     return redirect("growth_engine_web:home")

@@ -635,7 +635,7 @@ def test_analytics_dashboard_renders_for_allowlisted_admin(monkeypatch) -> None:
 
     assert response.status_code == 200
     content = response.content.decode("utf-8")
-    assert "Workspace analytics" in content
+    assert "Admin analytics" in content
     assert "Confirmed profiles" in content
     assert "Demo Co" in content
     assert "Workflow ledger" in content

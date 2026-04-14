@@ -19,10 +19,10 @@ def test_validate_rejects_invalid_syntax(settings, monkeypatch) -> None:
 
     result = service.validate("bad-email")
 
-    assert result == ContactValidation(False, False, None, None)
+    assert result == ContactValidation(False, False)
 
 
-def test_validate_skips_mx_and_smtp_when_requested(settings, monkeypatch) -> None:
+def test_validate_skips_mx_lookup_when_requested(settings, monkeypatch) -> None:
     service = EmailValidatorService(settings)
     monkeypatch.setattr(
         email_module,
@@ -38,7 +38,6 @@ def test_validate_skips_mx_and_smtp_when_requested(settings, monkeypatch) -> Non
     result = service.validate(
         "hello@example.com",
         include_mx_lookup=False,
-        include_smtp_probe=False,
     )
 
     assert result.syntax_valid is True

@@ -93,7 +93,7 @@ class MatchingEngine:
             return "not checked"
         validation = contact_path.validation
         state = "accepted" if validation.accepted else "needs review"
-        return f"{state}, score {validation.score}/3"
+        return f"{state}, score {validation.score}/{validation.MAX_SCORE}"
 
     def _fallback_reason(
         self,

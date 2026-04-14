@@ -36,14 +36,14 @@ def test_matching_engine_prefers_refined_reason_and_best_contact(intake) -> None
                 kind="email",
                 value="info@example.com",
                 label="info@example.com",
-                validation=ContactValidation(True, True, None, None),
+                validation=ContactValidation(True, True),
                 source="page_email",
             ),
             ContactPath(
                 kind="decision_maker_email",
                 value="riya.sharma@example.com",
                 label="riya.sharma@example.com (guessed decision-maker)",
-                validation=ContactValidation(True, True, None, None),
+                validation=ContactValidation(True, True),
                 source="pattern_guess",
             ),
         ],
@@ -75,4 +75,4 @@ def test_matching_engine_prefers_refined_reason_and_best_contact(intake) -> None
     assert (
         opportunity.contact_path == "riya.sharma@example.com (guessed decision-maker)"
     )
-    assert opportunity.email_validation == "accepted, score 2/3"
+    assert opportunity.email_validation == "accepted, score 2/2"

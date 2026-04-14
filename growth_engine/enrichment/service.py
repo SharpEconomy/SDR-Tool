@@ -93,10 +93,7 @@ class OpportunityEnricher:
         entity.decision_maker_title = decision_maker.get("title")
         entity.decision_maker_email = decision_maker.get("email")
         if entity.decision_maker_email:
-            validation = self.email_validator.validate(
-                entity.decision_maker_email,
-                include_smtp_probe=False,
-            )
+            validation = self.email_validator.validate(entity.decision_maker_email)
             entity.contact_paths.insert(
                 0,
                 ContactPath(
@@ -197,7 +194,7 @@ class OpportunityEnricher:
     ) -> list[ContactPath]:
         paths: list[ContactPath] = []
         for email in parsed.emails[:3]:
-            validation = self.email_validator.validate(email, include_smtp_probe=False)
+            validation = self.email_validator.validate(email)
             paths.append(
                 ContactPath(
                     kind="email",

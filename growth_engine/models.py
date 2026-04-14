@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, ClassVar
 
 DISCOVERY_MODES = [
     "customers",
@@ -182,26 +182,18 @@ class ParsedDocument:
 
 @dataclass(slots=True)
 class ContactValidation:
+    MAX_SCORE: ClassVar[int] = 2
+
     syntax_valid: bool
     mx_valid: bool
-    smtp_code: int | None
-    smtp_message: str | None
 
     @property
     def score(self) -> int:
-        return (
-            int(self.syntax_valid)
-            + int(self.mx_valid)
-            + int(self.smtp_code is not None and 200 <= self.smtp_code < 300)
-        )
+        return int(self.syntax_valid) + int(self.mx_valid)
 
     @property
     def accepted(self) -> bool:
-        return (
-            self.syntax_valid
-            and self.mx_valid
-            and (self.smtp_code is None or 200 <= self.smtp_code < 300)
-        )
+        return self.syntax_valid and self.mx_valid
 
 
 @dataclass(slots=True)

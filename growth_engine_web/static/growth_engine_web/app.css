@@ -134,34 +134,12 @@ body.loading-active {
   padding: 2rem 2.2rem;
 }
 
-.analytics-hero,
 .analytics-panel,
 .analytics-metric-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-}
-
-.analytics-hero {
-  position: relative;
-  overflow: hidden;
-  padding: 2rem 2.2rem;
-  margin-bottom: 1rem;
-  background:
-    radial-gradient(circle at top right, rgba(194, 219, 205, 0.9), transparent 26%),
-    linear-gradient(135deg, rgba(255, 252, 246, 0.96), rgba(241, 236, 224, 0.94));
-}
-
-.analytics-hero::after {
-  content: "";
-  position: absolute;
-  inset: auto -6% -24% auto;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(45, 107, 80, 0.18), transparent 72%);
-  pointer-events: none;
 }
 
 .analytics-metric-grid,

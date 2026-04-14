@@ -58,13 +58,13 @@ Main package: `growth_engine`
 - `discovery/`: adapters for user URLs, public web, directories, company sites, and procurement listings.
 - `parsing/`: deterministic HTML parsing.
 - `enrichment/`: entity resolution, contact-path discovery, decision-maker hints, and exclusions.
-- `validation/`: email syntax, MX, and optional SMTP validation.
+- `validation/`: email syntax and MX validation.
 - `scoring/`: deterministic scoring plus bounded LLM refinement.
 - `matching/`: business-facing output assembly.
 - `export/`: Excel workbook generation.
 - `profile_research/`: public-web evidence gathering and model-backed profile verification.
 - `services/social_content.py`: social strategy creation, channel content generation, and Firestore-ready workflow packaging.
-- `services/email_service.py`: SMTP-backed delivery for the generated social package.
+- `services/email_service.py`: SendGrid-backed delivery for the generated social package.
 - `storage/`: Firestore audit and profile persistence helpers.
 - `orchestration/`: end-to-end lead decision engine and pause/resume/stop control.
 - `growth_engine_web/`: Django forms, views, templates, Google OAuth session flow, and session-backed workspace state.
@@ -123,6 +123,7 @@ Script behavior:
 - when the script runs, it stops other project-related terminal and server processes for this repo
 - it clears `__pycache__` folders and `.pyc` files before starting Django
 - it installs dependencies automatically if required runtime/test/lint modules are missing
+- it runs `isort` and `black` for the Python project files before lint, tests, and startup
 - it runs lint checks before startup
 - it runs the test suite before startup
 - it runs build/compile verification before startup
@@ -144,14 +145,10 @@ Important settings:
 - `REQUEST_RETRY_BACKOFF_SECONDS`
 - `GOOGLE_SEARCH_API_KEY`
 - `GOOGLE_SEARCH_ENGINE_ID`
-- `SMTP_PROBE_ENABLED=false`
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USERNAME`
-- `SMTP_PASSWORD`
-- `SMTP_FROM_EMAIL`
-- `SMTP_USE_TLS=true`
-- `SMTP_USE_SSL=false`
+- `SENDGRID_API_KEY`
+- `SENDGRID_FROM_EMAIL`
+- `SENDGRID_FROM_NAME`
+- `SENDGRID_TIMEOUT_SECONDS=10`
 - `AUDIT_BACKEND=firestore`
 - `FIRESTORE_COLLECTION`
 - `FIRESTORE_PROFILE_COLLECTION`
@@ -260,7 +257,7 @@ Test coverage includes:
 - fetch/search/OpenAI retry behavior
 - Django helper parsing, session serialization, Google OAuth verification hooks, bifurcated lead/social workflow views, and workbook download
 - Firestore profile persistence
-- social content generation and SMTP delivery behavior
+- social content generation and SendGrid delivery behavior
 - email validation
 
 Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)
@@ -269,7 +266,7 @@ Test guide: [tests/README.md](/c:/Users/MCN/Dev/SDR-Tool/tests/README.md)
 
 - Discovery uses public pages and internal search queries, not private platform scraping.
 - Email validation is best-effort and should not be treated as guaranteed deliverability.
-- Social content emails require SMTP settings; if SMTP is missing or unavailable, the package is still generated in the workspace and the delivery failure is surfaced to the user.
+- Social content emails require SendGrid settings; if SendGrid is missing or unavailable, the package is still generated in the workspace and the delivery failure is surfaced to the user.
 - Decision-maker inference is intentionally cautious and favors transparent guessed patterns over false precision.
 - Export files are generated in memory and returned directly to the caller; there is no bucket-backed export persistence path.
 - Workflow records for both lead generation and social content are persisted to Firestore in `FIRESTORE_COLLECTION`.

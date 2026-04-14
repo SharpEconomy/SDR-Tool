@@ -9,10 +9,10 @@ from growth_engine.parsing import HtmlParsingService
 
 
 class _FakeEmailValidator:
-    def validate(self, email, include_smtp_probe=False, include_mx_lookup=True):
+    def validate(self, email, include_mx_lookup=True):
         from growth_engine.models import ContactValidation
 
-        return ContactValidation(True, True, None, None)
+        return ContactValidation(True, True)
 
 
 class _FakeSearchClient:

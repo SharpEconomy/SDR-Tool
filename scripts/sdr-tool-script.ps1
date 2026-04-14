@@ -54,7 +54,7 @@ function Install-ProjectDependencies {
 }
 
 function Ensure-ProjectDependencies {
-    $requiredModules = @("django", "flake8", "pytest")
+    $requiredModules = @("black", "django", "flake8", "isort", "pytest")
     $missingModules = @(
         $requiredModules | Where-Object { -not (Test-PythonModule -ModuleName $_) }
     )
@@ -244,6 +244,28 @@ function Invoke-BuildChecks {
     }
 }
 
+function Invoke-CodeFormat {
+    Write-Host "Running import sorting..." -ForegroundColor Cyan
+    Invoke-PythonModule -ModuleName "isort" -Arguments @(
+        "growth_engine",
+        "growth_engine_django",
+        "growth_engine_web",
+        "tests",
+        "app.py",
+        "manage.py"
+    )
+
+    Write-Host "Running code formatting..." -ForegroundColor Cyan
+    Invoke-PythonModule -ModuleName "black" -Arguments @(
+        "growth_engine",
+        "growth_engine_django",
+        "growth_engine_web",
+        "tests",
+        "app.py",
+        "manage.py"
+    )
+}
+
 function Open-BrowserAsync {
     param(
         [Parameter(Mandatory = $true)]
@@ -265,9 +287,10 @@ try {
         throw "Could not find manage.py in $RepoRoot."
     }
 
+    Ensure-ProjectDependencies
     Stop-ProjectSessions -Port $Port
     Clear-PythonCaches
-    Ensure-ProjectDependencies
+    Invoke-CodeFormat
     Invoke-LintChecks
     Invoke-TestSuite
     Invoke-BuildChecks
