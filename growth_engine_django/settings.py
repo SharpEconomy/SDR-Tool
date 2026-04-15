@@ -13,9 +13,16 @@ def _as_bool(value: str | None, default: bool) -> bool:
 
 
 def _as_list(value: str | None, default: list[str]) -> list[str]:
+    items: list[str] = list(default)
     if not value:
-        return list(default)
-    return [item.strip() for item in value.split(",") if item.strip()]
+        return items
+
+    for item in value.split(","):
+        normalized = item.strip()
+        if normalized and normalized not in items:
+            items.append(normalized)
+
+    return items
 
 
 SECRET_KEY = os.getenv(
@@ -25,7 +32,7 @@ SECRET_KEY = os.getenv(
 DEBUG = _as_bool(os.getenv("DJANGO_DEBUG"), True)
 ALLOWED_HOSTS = _as_list(
     os.getenv("DJANGO_ALLOWED_HOSTS"),
-    ["localhost", "testserver"],
+    ["localhost", "testserver", "sdr.buildwithai.ai"],
 )
 
 INSTALLED_APPS = [

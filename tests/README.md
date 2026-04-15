@@ -24,5 +24,6 @@ Coverage summary:
 - `test_services.py`: fetch/search/OpenAI retry and fallback behavior.
 - `test_cloud.py`: Cloud Run and Pub/Sub-facing integration helpers.
 - `test_profile_research.py`: website-plus-search evidence gathering and GPT-backed profile draft generation.
+- `test_django_settings.py`: Django host allowlisting behavior and merged host parsing.
 - `test_storage_profiles.py`: Firestore profile persistence payload and document routing.
 - `test_social_content.py`: fallback social strategy/content generation and SendGrid delivery failure handling.

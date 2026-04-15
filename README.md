@@ -163,6 +163,9 @@ Optional Google sign-in:
 - `GOOGLE_OAUTH_CLIENT_SECRET`
 - `GOOGLE_OAUTH_REDIRECT_URI=https://<host>/auth/google/callback/`
 - `ADMIN_EMAILS=admin@example.com,ops@example.com`
+- `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,sdr.buildwithai.ai`
+
+Host validation is merge-based, so the application keeps the local hosts above and any extra hosts from `DJANGO_ALLOWED_HOSTS` instead of replacing them outright.
 
 Google sign-in behavior:
 
