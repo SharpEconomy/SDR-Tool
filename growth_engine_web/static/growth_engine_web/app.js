@@ -6,9 +6,14 @@
   const workflowPanels = Array.from(
     document.querySelectorAll("[data-workflow-panel]")
   );
+  const workflowAction = document.querySelector("[data-workflow-action]");
   const loadingShell = document.querySelector("[data-loading-shell]");
   const loadingTitle = document.querySelector("[data-loading-title]");
   const loadingTips = Array.from(document.querySelectorAll("[data-loading-tip]"));
+  const workflowActionLabels = {
+    lead: "Generate leads",
+    social: "Create social content",
+  };
 
   if (workflowGrid && flowChoiceButtons.length && workflowPanels.length) {
     let selectedFlow = "";
@@ -33,6 +38,11 @@
         const isActive = panel.getAttribute("data-workflow-panel") === selectedFlow;
         panel.hidden = !isActive;
       });
+      if (workflowAction) {
+        const actionLabel = workflowActionLabels[selectedFlow] || "";
+        workflowAction.textContent = actionLabel;
+        workflowAction.hidden = !actionLabel;
+      }
       workflowGrid.classList.toggle(
         "workflow-grid-single",
         Boolean(selectedFlow)

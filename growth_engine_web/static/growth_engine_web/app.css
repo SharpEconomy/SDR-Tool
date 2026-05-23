@@ -614,24 +614,47 @@ p {
   min-width: 0;
 }
 
-.workflow-intro-card {
-  grid-column: 1 / -1;
+.workflow-selector-card {
   margin-bottom: 1rem;
 }
 
-.workflow-selector-card {
-  margin-bottom: 1rem;
+.workflow-selection-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .flow-choice-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 0;
+  flex: 1 1 auto;
 }
 
 .flow-choice-button {
   min-width: 220px;
+}
+
+.workflow-selected-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  padding: 0.9rem 1.15rem;
+  border-radius: 999px;
+  border: 1px solid rgba(35, 69, 53, 0.12);
+  background: rgba(249, 245, 235, 0.9);
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.workflow-selected-action[hidden] {
+  display: none;
 }
 
 .flow-choice-button.is-active,

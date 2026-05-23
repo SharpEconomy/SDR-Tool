@@ -15,6 +15,8 @@ def test_home_template_uses_server_side_google_login_link() -> None:
     assert "Prioritized leads" in template
     assert "state-accordion" in template
     assert "lead-list" in template
+    assert "data-workflow-action" in template
+    assert "workflow-intro-card" not in template
     assert "lead-table" not in template
     assert "growth_engine_web:analytics" in template
 

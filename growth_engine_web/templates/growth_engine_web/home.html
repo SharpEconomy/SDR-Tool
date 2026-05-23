@@ -240,23 +240,26 @@
               <div class="step-label">Choose flow</div>
               <h2>Select the next workflow</h2>
               <p>Pick one path to continue. The selected workflow expands to the full width of the workspace.</p>
-              <div class="flow-choice-row" role="group" aria-label="Workflow selection">
-                <button
-                  type="button"
-                  class="secondary-button flow-choice-button"
-                  data-flow-choice="lead"
-                  aria-pressed="false"
-                >
-                  Lead generation
-                </button>
-                <button
-                  type="button"
-                  class="secondary-button flow-choice-button"
-                  data-flow-choice="social"
-                  aria-pressed="false"
-                >
-                  Social media content
-                </button>
+              <div class="workflow-selection-row">
+                <div class="flow-choice-row" role="group" aria-label="Workflow selection">
+                  <button
+                    type="button"
+                    class="secondary-button flow-choice-button"
+                    data-flow-choice="lead"
+                    aria-pressed="false"
+                  >
+                    Lead generation
+                  </button>
+                  <button
+                    type="button"
+                    class="secondary-button flow-choice-button"
+                    data-flow-choice="social"
+                    aria-pressed="false"
+                  >
+                    Social media content
+                  </button>
+                </div>
+                <div class="workflow-selected-action" data-workflow-action hidden aria-live="polite"></div>
               </div>
             </article>
 
@@ -266,11 +269,6 @@
               data-default-flow="{% if lead_results and not social_results %}lead{% elif social_results and not lead_results %}social{% endif %}"
             >
               <div class="workflow-column" data-workflow-panel="lead" hidden>
-                <article class="step-card workflow-intro-card">
-                  <div class="step-label">Workflow 1</div>
-                  <h2>Lead generation</h2>
-                  <p>Use the confirmed profile to generate prioritized leads and download the Excel workbook.</p>
-                </article>
                 {% if lead_results %}
                   <details class="state-accordion lead-request-accordion">
                     <summary class="accordion-toggle">
@@ -396,11 +394,6 @@
               </div>
 
               <div class="workflow-column" data-workflow-panel="social" hidden>
-                <article class="step-card workflow-intro-card">
-                  <div class="step-label">Workflow 2</div>
-                  <h2>Social media content creation</h2>
-                  <p>Build a strategy from the confirmed business goals, generate channel-ready content, and email the package for manual posting.</p>
-                </article>
                 {% if social_results %}
                   <details class="state-accordion lead-request-accordion">
                     <summary class="accordion-toggle">
