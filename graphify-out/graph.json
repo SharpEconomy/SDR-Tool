@@ -9,7 +9,7 @@
       "source_file": "app.py",
       "source_location": "L1",
       "id": "app_py",
-      "community": 28,
+      "community": 26,
       "norm_label": "app.py"
     },
     {
@@ -18,7 +18,7 @@
       "source_file": "manage.py",
       "source_location": "L1",
       "id": "manage_py",
-      "community": 27,
+      "community": 25,
       "norm_label": "manage.py"
     },
     {
@@ -27,7 +27,7 @@
       "source_file": "manage.py",
       "source_location": "L8",
       "id": "sdr_manage_main",
-      "community": 27,
+      "community": 25,
       "norm_label": "main()"
     },
     {
@@ -36,7 +36,7 @@
       "source_file": ".claude/settings.json",
       "source_location": "L1",
       "id": "claude_settings_json",
-      "community": 18,
+      "community": 17,
       "norm_label": "settings.json"
     },
     {
@@ -45,7 +45,7 @@
       "source_file": ".claude/settings.json",
       "source_location": "L2",
       "id": "claude_settings_hooks",
-      "community": 18,
+      "community": 17,
       "norm_label": "hooks"
     },
     {
@@ -54,7 +54,7 @@
       "source_file": ".claude/settings.json",
       "source_location": "L3",
       "id": "claude_settings_hooks_pretooluse",
-      "community": 18,
+      "community": 17,
       "norm_label": "pretooluse"
     },
     {
@@ -63,7 +63,7 @@
       "source_file": ".codex/hooks.json",
       "source_location": "L1",
       "id": "codex_hooks_json",
-      "community": 19,
+      "community": 18,
       "norm_label": "hooks.json"
     },
     {
@@ -72,7 +72,7 @@
       "source_file": ".codex/hooks.json",
       "source_location": "L2",
       "id": "codex_hooks_hooks",
-      "community": 19,
+      "community": 18,
       "norm_label": "hooks"
     },
     {
@@ -81,7 +81,7 @@
       "source_file": ".codex/hooks.json",
       "source_location": "L3",
       "id": "codex_hooks_hooks_pretooluse",
-      "community": 19,
+      "community": 18,
       "norm_label": "pretooluse"
     },
     {
@@ -90,7 +90,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L1",
       "id": "growth_engine_config_py",
-      "community": 15,
+      "community": 14,
       "norm_label": "config.py"
     },
     {
@@ -99,7 +99,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L10",
       "id": "growth_engine_config_as_bool",
-      "community": 15,
+      "community": 14,
       "norm_label": "_as_bool()"
     },
     {
@@ -108,7 +108,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L16",
       "id": "growth_engine_config_as_int",
-      "community": 15,
+      "community": 14,
       "norm_label": "_as_int()"
     },
     {
@@ -117,7 +117,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L25",
       "id": "growth_engine_config_as_list",
-      "community": 15,
+      "community": 14,
       "norm_label": "_as_list()"
     },
     {
@@ -126,7 +126,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L31",
       "id": "growth_engine_config_first_present",
-      "community": 15,
+      "community": 14,
       "norm_label": "_first_present()"
     },
     {
@@ -135,7 +135,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L42",
       "id": "growth_engine_config_load_env_values",
-      "community": 15,
+      "community": 14,
       "norm_label": "_load_env_values()"
     },
     {
@@ -144,7 +144,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L61",
       "id": "growth_engine_config_settings",
-      "community": 3,
+      "community": 1,
       "norm_label": "settings"
     },
     {
@@ -153,7 +153,7 @@
       "source_file": "growth_engine/config.py",
       "source_location": "L99",
       "id": "growth_engine_config_load",
-      "community": 15,
+      "community": 14,
       "norm_label": "load()"
     },
     {
@@ -162,7 +162,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L1",
       "id": "growth_engine_models_py",
-      "community": 7,
+      "community": 6,
       "norm_label": "models.py"
     },
     {
@@ -180,7 +180,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L66",
       "id": "growth_engine_models_intakedraft",
-      "community": 2,
+      "community": 7,
       "norm_label": "intakedraft"
     },
     {
@@ -189,7 +189,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L89",
       "id": "growth_engine_models_intakequestion",
-      "community": 2,
+      "community": 7,
       "norm_label": "intakequestion"
     },
     {
@@ -198,7 +198,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L96",
       "id": "growth_engine_models_researchsource",
-      "community": 6,
+      "community": 8,
       "norm_label": "researchsource"
     },
     {
@@ -216,7 +216,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L111",
       "id": "growth_engine_models_targetingmodel",
-      "community": 1,
+      "community": 2,
       "norm_label": "targetingmodel"
     },
     {
@@ -225,7 +225,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L122",
       "id": "growth_engine_models_businessprofile",
-      "community": 1,
+      "community": 2,
       "norm_label": "businessprofile"
     },
     {
@@ -234,7 +234,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L147",
       "id": "growth_engine_models_searchresult",
-      "community": 6,
+      "community": 4,
       "norm_label": "searchresult"
     },
     {
@@ -243,7 +243,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L155",
       "id": "growth_engine_models_discoverydocument",
-      "community": 4,
+      "community": 6,
       "norm_label": "discoverydocument"
     },
     {
@@ -252,7 +252,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L168",
       "id": "growth_engine_models_parseddocument",
-      "community": 1,
+      "community": 6,
       "norm_label": "parseddocument"
     },
     {
@@ -261,7 +261,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L184",
       "id": "growth_engine_models_contactvalidation",
-      "community": 1,
+      "community": 6,
       "norm_label": "contactvalidation"
     },
     {
@@ -270,7 +270,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L191",
       "id": "growth_engine_models_score",
-      "community": 7,
+      "community": 6,
       "norm_label": "score()"
     },
     {
@@ -279,7 +279,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L195",
       "id": "growth_engine_models_accepted",
-      "community": 7,
+      "community": 6,
       "norm_label": "accepted()"
     },
     {
@@ -288,7 +288,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L200",
       "id": "growth_engine_models_contactpath",
-      "community": 1,
+      "community": 6,
       "norm_label": "contactpath"
     },
     {
@@ -297,7 +297,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L209",
       "id": "growth_engine_models_enrichedentity",
-      "community": 1,
+      "community": 2,
       "norm_label": "enrichedentity"
     },
     {
@@ -306,7 +306,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L253",
       "id": "growth_engine_models_opportunity",
-      "community": 3,
+      "community": 1,
       "norm_label": "opportunity"
     },
     {
@@ -315,7 +315,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L279",
       "id": "growth_engine_models_opportunity_as_export_row",
-      "community": 3,
+      "community": 1,
       "norm_label": ".as_export_row()"
     },
     {
@@ -324,7 +324,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L308",
       "id": "growth_engine_models_skippedentity",
-      "community": 3,
+      "community": 1,
       "norm_label": "skippedentity"
     },
     {
@@ -333,7 +333,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L328",
       "id": "growth_engine_models_auditrecord",
-      "community": 3,
+      "community": 1,
       "norm_label": "auditrecord"
     },
     {
@@ -342,7 +342,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L343",
       "id": "growth_engine_models_socialcontentrequest",
-      "community": 0,
+      "community": 3,
       "norm_label": "socialcontentrequest"
     },
     {
@@ -351,7 +351,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L351",
       "id": "growth_engine_models_socialstrategy",
-      "community": 7,
+      "community": 5,
       "norm_label": "socialstrategy"
     },
     {
@@ -360,7 +360,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L362",
       "id": "growth_engine_models_socialchannelcontent",
-      "community": 7,
+      "community": 5,
       "norm_label": "socialchannelcontent"
     },
     {
@@ -369,7 +369,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L372",
       "id": "growth_engine_models_socialworkflowresult",
-      "community": 7,
+      "community": 5,
       "norm_label": "socialworkflowresult"
     },
     {
@@ -378,7 +378,7 @@
       "source_file": "growth_engine/models.py",
       "source_location": "L383",
       "id": "growth_engine_models_decisionrunresult",
-      "community": 3,
+      "community": 1,
       "norm_label": "decisionrunresult"
     },
     {
@@ -387,7 +387,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L1",
       "id": "growth_engine_profile_flow_py",
-      "community": 2,
+      "community": 5,
       "norm_label": "profile_flow.py"
     },
     {
@@ -396,7 +396,7 @@
       "source_file": "",
       "source_location": "",
       "id": "typeddict",
-      "community": 2,
+      "community": 5,
       "norm_label": "typeddict"
     },
     {
@@ -405,7 +405,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L95",
       "id": "growth_engine_profile_flow_summaryrow",
-      "community": 2,
+      "community": 5,
       "norm_label": "summaryrow"
     },
     {
@@ -414,7 +414,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L103",
       "id": "growth_engine_profile_flow_summarycard",
-      "community": 2,
+      "community": 5,
       "norm_label": "summarycard"
     },
     {
@@ -432,7 +432,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L154",
       "id": "growth_engine_profile_flow_build_summary_cards",
-      "community": 0,
+      "community": 5,
       "norm_label": "build_summary_cards()"
     },
     {
@@ -441,7 +441,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L168",
       "id": "growth_engine_profile_flow_build_summary_rows",
-      "community": 2,
+      "community": 5,
       "norm_label": "build_summary_rows()"
     },
     {
@@ -450,7 +450,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L208",
       "id": "growth_engine_profile_flow_friendly_value",
-      "community": 2,
+      "community": 5,
       "norm_label": "friendly_value()"
     },
     {
@@ -459,7 +459,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L213",
       "id": "growth_engine_profile_flow_should_hide_summary_field",
-      "community": 2,
+      "community": 5,
       "norm_label": "should_hide_summary_field()"
     },
     {
@@ -486,7 +486,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L232",
       "id": "growth_engine_profile_flow_serialize_list_field",
-      "community": 2,
+      "community": 5,
       "norm_label": "serialize_list_field()"
     },
     {
@@ -495,7 +495,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L242",
       "id": "growth_engine_profile_flow_parse_list_input",
-      "community": 2,
+      "community": 5,
       "norm_label": "parse_list_input()"
     },
     {
@@ -504,7 +504,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L252",
       "id": "growth_engine_profile_flow_parse_multiline_urls",
-      "community": 2,
+      "community": 5,
       "norm_label": "parse_multiline_urls()"
     },
     {
@@ -513,7 +513,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L262",
       "id": "growth_engine_profile_flow_coerce_field_value",
-      "community": 2,
+      "community": 5,
       "norm_label": "coerce_field_value()"
     },
     {
@@ -522,7 +522,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L270",
       "id": "growth_engine_profile_flow_update_draft_from_partial_values",
-      "community": 2,
+      "community": 0,
       "norm_label": "update_draft_from_partial_values()"
     },
     {
@@ -531,7 +531,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L280",
       "id": "growth_engine_profile_flow_draft_from_values",
-      "community": 2,
+      "community": 5,
       "norm_label": "draft_from_values()"
     },
     {
@@ -540,7 +540,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L314",
       "id": "growth_engine_profile_flow_form_initial_for_fields",
-      "community": 2,
+      "community": 5,
       "norm_label": "form_initial_for_fields()"
     },
     {
@@ -558,7 +558,7 @@
       "source_file": "growth_engine/profile_flow.py",
       "source_location": "L332",
       "id": "growth_engine_profile_flow_clean_requested_modes",
-      "community": 2,
+      "community": 5,
       "norm_label": "clean_requested_modes()"
     },
     {
@@ -576,7 +576,7 @@
       "source_file": "growth_engine/utils.py",
       "source_location": "L7",
       "id": "growth_engine_utils_normalize_whitespace",
-      "community": 2,
+      "community": 5,
       "norm_label": "normalize_whitespace()"
     },
     {
@@ -594,7 +594,7 @@
       "source_file": "growth_engine/utils.py",
       "source_location": "L24",
       "id": "growth_engine_utils_clamp",
-      "community": 8,
+      "community": 2,
       "norm_label": "clamp()"
     },
     {
@@ -603,7 +603,7 @@
       "source_file": "growth_engine/utils.py",
       "source_location": "L28",
       "id": "growth_engine_utils_extract_domain",
-      "community": 1,
+      "community": 2,
       "norm_label": "extract_domain()"
     },
     {
@@ -621,7 +621,7 @@
       "source_file": "growth_engine/utils.py",
       "source_location": "L59",
       "id": "growth_engine_utils_slugify",
-      "community": 2,
+      "community": 5,
       "norm_label": "slugify()"
     },
     {
@@ -630,7 +630,7 @@
       "source_file": "growth_engine/utils.py",
       "source_location": "L64",
       "id": "growth_engine_utils_safe_first",
-      "community": 6,
+      "community": 8,
       "norm_label": "safe_first()"
     },
     {
@@ -648,7 +648,7 @@
       "source_file": "growth_engine/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_init_py",
-      "community": 25,
+      "community": 23,
       "norm_label": "__init__.py"
     },
     {
@@ -657,7 +657,7 @@
       "source_file": "growth_engine/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_init_rationale_1",
-      "community": 25,
+      "community": 23,
       "norm_label": "production-ready business growth decision engine."
     },
     {
@@ -666,7 +666,7 @@
       "source_file": "growth_engine/cloud/functions.py",
       "source_location": "L1",
       "id": "growth_engine_cloud_functions_py",
-      "community": 11,
+      "community": 10,
       "norm_label": "functions.py"
     },
     {
@@ -675,7 +675,7 @@
       "source_file": "growth_engine/cloud/functions.py",
       "source_location": "L12",
       "id": "cloud_functions_intake_from_payload",
-      "community": 11,
+      "community": 10,
       "norm_label": "intake_from_payload()"
     },
     {
@@ -684,7 +684,7 @@
       "source_file": "growth_engine/cloud/functions.py",
       "source_location": "L36",
       "id": "cloud_functions_summarize_result",
-      "community": 11,
+      "community": 10,
       "norm_label": "summarize_result()"
     },
     {
@@ -693,7 +693,7 @@
       "source_file": "growth_engine/cloud/functions.py",
       "source_location": "L56",
       "id": "cloud_functions_run_decision_job",
-      "community": 11,
+      "community": 10,
       "norm_label": "run_decision_job()"
     },
     {
@@ -702,7 +702,7 @@
       "source_file": "growth_engine/cloud/functions.py",
       "source_location": "L65",
       "id": "cloud_functions_pubsub_decision_handler",
-      "community": 11,
+      "community": 10,
       "norm_label": "pubsub_decision_handler()"
     },
     {
@@ -711,7 +711,7 @@
       "source_file": "growth_engine/cloud/pubsub.py",
       "source_location": "L1",
       "id": "growth_engine_cloud_pubsub_py",
-      "community": 11,
+      "community": 10,
       "norm_label": "pubsub.py"
     },
     {
@@ -720,7 +720,7 @@
       "source_file": "growth_engine/cloud/pubsub.py",
       "source_location": "L13",
       "id": "cloud_pubsub_pubsuborchestrator",
-      "community": 11,
+      "community": 10,
       "norm_label": "pubsuborchestrator"
     },
     {
@@ -729,7 +729,7 @@
       "source_file": "growth_engine/cloud/pubsub.py",
       "source_location": "L14",
       "id": "cloud_pubsub_pubsuborchestrator_init",
-      "community": 11,
+      "community": 10,
       "norm_label": ".__init__()"
     },
     {
@@ -738,7 +738,7 @@
       "source_file": "growth_engine/cloud/pubsub.py",
       "source_location": "L17",
       "id": "cloud_pubsub_pubsuborchestrator_publish_intake",
-      "community": 11,
+      "community": 10,
       "norm_label": ".publish_intake()"
     },
     {
@@ -747,7 +747,7 @@
       "source_file": "growth_engine/cloud/run_api.py",
       "source_location": "L1",
       "id": "growth_engine_cloud_run_api_py",
-      "community": 11,
+      "community": 10,
       "norm_label": "run_api.py"
     },
     {
@@ -756,7 +756,7 @@
       "source_file": "growth_engine/cloud/run_api.py",
       "source_location": "L9",
       "id": "cloud_run_api_fallbackcloudrunapp",
-      "community": 11,
+      "community": 10,
       "norm_label": "_fallbackcloudrunapp"
     },
     {
@@ -765,7 +765,7 @@
       "source_file": "growth_engine/cloud/run_api.py",
       "source_location": "L10",
       "id": "cloud_run_api_fallbackcloudrunapp_init",
-      "community": 11,
+      "community": 10,
       "norm_label": ".__init__()"
     },
     {
@@ -774,7 +774,7 @@
       "source_file": "growth_engine/cloud/run_api.py",
       "source_location": "L14",
       "id": "cloud_run_api_fallbackcloudrunapp_call",
-      "community": 11,
+      "community": 10,
       "norm_label": ".__call__()"
     },
     {
@@ -783,7 +783,7 @@
       "source_file": "growth_engine/cloud/run_api.py",
       "source_location": "L34",
       "id": "cloud_run_api_fallbackcloudrunapp_respond",
-      "community": 11,
+      "community": 10,
       "norm_label": "._respond()"
     },
     {
@@ -792,7 +792,7 @@
       "source_file": "growth_engine/cloud/run_api.py",
       "source_location": "L46",
       "id": "cloud_run_api_create_app",
-      "community": 11,
+      "community": 10,
       "norm_label": "create_app()"
     },
     {
@@ -801,7 +801,7 @@
       "source_file": "growth_engine/cloud/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_cloud_init_py",
-      "community": 23,
+      "community": 21,
       "norm_label": "__init__.py"
     },
     {
@@ -810,7 +810,7 @@
       "source_file": "growth_engine/cloud/__init__.py",
       "source_location": "L1",
       "id": "cloud_init_rationale_1",
-      "community": 23,
+      "community": 21,
       "norm_label": "google cloud integration helpers for the growth engine."
     },
     {
@@ -819,7 +819,7 @@
       "source_file": "growth_engine/discovery/adapters.py",
       "source_location": "L1",
       "id": "growth_engine_discovery_adapters_py",
-      "community": 4,
+      "community": 2,
       "norm_label": "adapters.py"
     },
     {
@@ -873,7 +873,7 @@
       "source_file": "growth_engine/discovery/adapters.py",
       "source_location": "L171",
       "id": "discovery_adapters_public_web_queries",
-      "community": 4,
+      "community": 2,
       "norm_label": "_public_web_queries()"
     },
     {
@@ -882,7 +882,7 @@
       "source_file": "growth_engine/discovery/adapters.py",
       "source_location": "L182",
       "id": "discovery_adapters_directory_queries",
-      "community": 4,
+      "community": 2,
       "norm_label": "_directory_queries()"
     },
     {
@@ -891,7 +891,7 @@
       "source_file": "growth_engine/discovery/adapters.py",
       "source_location": "L193",
       "id": "discovery_adapters_company_site_queries",
-      "community": 4,
+      "community": 2,
       "norm_label": "_company_site_queries()"
     },
     {
@@ -900,7 +900,7 @@
       "source_file": "growth_engine/discovery/adapters.py",
       "source_location": "L204",
       "id": "discovery_adapters_procurement_queries",
-      "community": 4,
+      "community": 2,
       "norm_label": "_procurement_queries()"
     },
     {
@@ -909,7 +909,7 @@
       "source_file": "growth_engine/discovery/base.py",
       "source_location": "L1",
       "id": "growth_engine_discovery_base_py",
-      "community": 4,
+      "community": 2,
       "norm_label": "base.py"
     },
     {
@@ -918,7 +918,7 @@
       "source_file": "growth_engine/discovery/base.py",
       "source_location": "L9",
       "id": "discovery_base_discoveryadapter",
-      "community": 4,
+      "community": 2,
       "norm_label": "discoveryadapter"
     },
     {
@@ -927,7 +927,7 @@
       "source_file": "",
       "source_location": "",
       "id": "abc",
-      "community": 3,
+      "community": 1,
       "norm_label": "abc"
     },
     {
@@ -936,7 +936,7 @@
       "source_file": "growth_engine/discovery/base.py",
       "source_location": "L14",
       "id": "discovery_base_discover",
-      "community": 4,
+      "community": 2,
       "norm_label": "discover()"
     },
     {
@@ -945,7 +945,7 @@
       "source_file": "growth_engine/discovery/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_discovery_init_py",
-      "community": 4,
+      "community": 2,
       "norm_label": "__init__.py"
     },
     {
@@ -954,7 +954,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L1",
       "id": "growth_engine_enrichment_service_py",
-      "community": 1,
+      "community": 2,
       "norm_label": "service.py"
     },
     {
@@ -963,7 +963,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L43",
       "id": "enrichment_service_opportunityenricher",
-      "community": 1,
+      "community": 6,
       "norm_label": "opportunityenricher"
     },
     {
@@ -972,7 +972,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L44",
       "id": "enrichment_service_opportunityenricher_init",
-      "community": 1,
+      "community": 6,
       "norm_label": ".__init__()"
     },
     {
@@ -981,7 +981,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L54",
       "id": "enrichment_service_opportunityenricher_enrich",
-      "community": 1,
+      "community": 6,
       "norm_label": ".enrich()"
     },
     {
@@ -990,7 +990,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L120",
       "id": "enrichment_service_opportunityenricher_refine_with_model",
-      "community": 1,
+      "community": 6,
       "norm_label": "._refine_with_model()"
     },
     {
@@ -999,7 +999,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L190",
       "id": "enrichment_service_opportunityenricher_build_contact_paths",
-      "community": 1,
+      "community": 6,
       "norm_label": "._build_contact_paths()"
     },
     {
@@ -1008,7 +1008,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L232",
       "id": "enrichment_service_opportunityenricher_find_decision_maker",
-      "community": 1,
+      "community": 6,
       "norm_label": "._find_decision_maker()"
     },
     {
@@ -1017,7 +1017,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L255",
       "id": "enrichment_service_opportunityenricher_parse_linkedin_result",
-      "community": 1,
+      "community": 6,
       "norm_label": "._parse_linkedin_result()"
     },
     {
@@ -1026,7 +1026,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L265",
       "id": "enrichment_service_opportunityenricher_guess_email",
-      "community": 1,
+      "community": 6,
       "norm_label": "._guess_email()"
     },
     {
@@ -1035,7 +1035,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L273",
       "id": "enrichment_service_opportunityenricher_pick_category",
-      "community": 1,
+      "community": 6,
       "norm_label": "._pick_category()"
     },
     {
@@ -1044,7 +1044,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L285",
       "id": "enrichment_service_opportunityenricher_infer_location",
-      "community": 1,
+      "community": 6,
       "norm_label": "._infer_location()"
     },
     {
@@ -1053,7 +1053,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L293",
       "id": "enrichment_service_opportunityenricher_infer_company_size",
-      "community": 1,
+      "community": 6,
       "norm_label": "._infer_company_size()"
     },
     {
@@ -1062,7 +1062,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L300",
       "id": "enrichment_service_opportunityenricher_infer_budget_signal",
-      "community": 1,
+      "community": 6,
       "norm_label": "._infer_budget_signal()"
     },
     {
@@ -1071,7 +1071,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L307",
       "id": "enrichment_service_opportunityenricher_timing_signals",
-      "community": 1,
+      "community": 6,
       "norm_label": "._timing_signals()"
     },
     {
@@ -1080,7 +1080,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L315",
       "id": "enrichment_service_opportunityenricher_trust_signals",
-      "community": 1,
+      "community": 6,
       "norm_label": "._trust_signals()"
     },
     {
@@ -1089,7 +1089,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L327",
       "id": "enrichment_service_opportunityenricher_accessibility_signals",
-      "community": 1,
+      "community": 6,
       "norm_label": "._accessibility_signals()"
     },
     {
@@ -1098,7 +1098,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L337",
       "id": "enrichment_service_opportunityenricher_matched_keywords",
-      "community": 1,
+      "community": 6,
       "norm_label": "._matched_keywords()"
     },
     {
@@ -1107,7 +1107,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L350",
       "id": "enrichment_service_opportunityenricher_apply_exclusions",
-      "community": 1,
+      "community": 6,
       "norm_label": "._apply_exclusions()"
     },
     {
@@ -1116,7 +1116,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L374",
       "id": "enrichment_service_opportunityenricher_constraint_failure",
-      "community": 1,
+      "community": 6,
       "norm_label": "._constraint_failure()"
     },
     {
@@ -1125,7 +1125,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L398",
       "id": "enrichment_service_opportunityenricher_relevant_constraints",
-      "community": 1,
+      "community": 6,
       "norm_label": "._relevant_constraints()"
     },
     {
@@ -1134,7 +1134,7 @@
       "source_file": "growth_engine/enrichment/service.py",
       "source_location": "L411",
       "id": "enrichment_service_opportunityenricher_safe_list",
-      "community": 1,
+      "community": 6,
       "norm_label": "._safe_list()"
     },
     {
@@ -1143,7 +1143,7 @@
       "source_file": "growth_engine/enrichment/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_enrichment_init_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "__init__.py"
     },
     {
@@ -1152,7 +1152,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L1",
       "id": "growth_engine_export_service_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "service.py"
     },
     {
@@ -1161,7 +1161,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L19",
       "id": "export_service_exportservice",
-      "community": 3,
+      "community": 1,
       "norm_label": "exportservice"
     },
     {
@@ -1170,7 +1170,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L20",
       "id": "export_service_exportservice_build_workbook",
-      "community": 3,
+      "community": 1,
       "norm_label": ".build_workbook()"
     },
     {
@@ -1179,7 +1179,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L30",
       "id": "export_service_exportservice_build_workbook_from_rows",
-      "community": 3,
+      "community": 1,
       "norm_label": ".build_workbook_from_rows()"
     },
     {
@@ -1188,7 +1188,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L56",
       "id": "export_service_exportservice_normalize_opportunity_row",
-      "community": 3,
+      "community": 1,
       "norm_label": "._normalize_opportunity_row()"
     },
     {
@@ -1197,7 +1197,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L72",
       "id": "export_service_exportservice_format_opportunity_sheet",
-      "community": 3,
+      "community": 1,
       "norm_label": "._format_opportunity_sheet()"
     },
     {
@@ -1206,7 +1206,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L104",
       "id": "export_service_exportservice_combined_summary",
-      "community": 3,
+      "community": 1,
       "norm_label": "._combined_summary()"
     },
     {
@@ -1215,7 +1215,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L111",
       "id": "export_service_exportservice_entity_link",
-      "community": 3,
+      "community": 1,
       "norm_label": "._entity_link()"
     },
     {
@@ -1224,7 +1224,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L117",
       "id": "export_service_exportservice_linkedin_link",
-      "community": 3,
+      "community": 1,
       "norm_label": "._linkedin_link()"
     },
     {
@@ -1233,7 +1233,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L125",
       "id": "export_service_exportservice_normalized_url",
-      "community": 3,
+      "community": 1,
       "norm_label": "._normalized_url()"
     },
     {
@@ -1242,7 +1242,7 @@
       "source_file": "growth_engine/export/service.py",
       "source_location": "L133",
       "id": "export_service_exportservice_text",
-      "community": 3,
+      "community": 1,
       "norm_label": "._text()"
     },
     {
@@ -1251,7 +1251,7 @@
       "source_file": "growth_engine/export/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_export_init_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "__init__.py"
     },
     {
@@ -1269,7 +1269,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L206",
       "id": "intake_interview_intakeinterviewer",
-      "community": 2,
+      "community": 7,
       "norm_label": "intakeinterviewer"
     },
     {
@@ -1278,7 +1278,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L207",
       "id": "intake_interview_intakeinterviewer_init",
-      "community": 2,
+      "community": 7,
       "norm_label": ".__init__()"
     },
     {
@@ -1287,7 +1287,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L210",
       "id": "intake_interview_intakeinterviewer_opening_question",
-      "community": 2,
+      "community": 7,
       "norm_label": ".opening_question()"
     },
     {
@@ -1296,7 +1296,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L217",
       "id": "intake_interview_intakeinterviewer_apply_answer",
-      "community": 2,
+      "community": 7,
       "norm_label": ".apply_answer()"
     },
     {
@@ -1305,7 +1305,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L251",
       "id": "intake_interview_intakeinterviewer_next_question",
-      "community": 2,
+      "community": 7,
       "norm_label": ".next_question()"
     },
     {
@@ -1314,7 +1314,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L277",
       "id": "intake_interview_intakeinterviewer_missing_fields",
-      "community": 2,
+      "community": 7,
       "norm_label": ".missing_fields()"
     },
     {
@@ -1323,7 +1323,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L288",
       "id": "intake_interview_intakeinterviewer_completion_ratio",
-      "community": 2,
+      "community": 7,
       "norm_label": ".completion_ratio()"
     },
     {
@@ -1332,7 +1332,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L321",
       "id": "intake_interview_intakeinterviewer_merge_update",
-      "community": 2,
+      "community": 7,
       "norm_label": "._merge_update()"
     },
     {
@@ -1341,7 +1341,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L346",
       "id": "intake_interview_intakeinterviewer_fallback_extract",
-      "community": 2,
+      "community": 7,
       "norm_label": "._fallback_extract()"
     },
     {
@@ -1350,7 +1350,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L422",
       "id": "intake_interview_intakeinterviewer_detected_fields",
-      "community": 2,
+      "community": 7,
       "norm_label": "._detected_fields()"
     },
     {
@@ -1359,7 +1359,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L438",
       "id": "intake_interview_intakeinterviewer_build_planned_question",
-      "community": 2,
+      "community": 7,
       "norm_label": "._build_planned_question()"
     },
     {
@@ -1368,7 +1368,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L453",
       "id": "intake_interview_intakeinterviewer_answered_question_count",
-      "community": 2,
+      "community": 7,
       "norm_label": "._answered_question_count()"
     },
     {
@@ -1377,7 +1377,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L456",
       "id": "intake_interview_intakeinterviewer_extract_structured_answers",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_structured_answers()"
     },
     {
@@ -1386,7 +1386,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L487",
       "id": "intake_interview_intakeinterviewer_coerce_structured_value",
-      "community": 2,
+      "community": 7,
       "norm_label": "._coerce_structured_value()"
     },
     {
@@ -1395,7 +1395,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L510",
       "id": "intake_interview_intakeinterviewer_extract_business_name",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_business_name()"
     },
     {
@@ -1404,7 +1404,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L528",
       "id": "intake_interview_intakeinterviewer_extract_location",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_location()"
     },
     {
@@ -1413,7 +1413,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L539",
       "id": "intake_interview_intakeinterviewer_extract_industry",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_industry()"
     },
     {
@@ -1422,7 +1422,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L553",
       "id": "intake_interview_intakeinterviewer_extract_website",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_website()"
     },
     {
@@ -1431,7 +1431,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L562",
       "id": "intake_interview_intakeinterviewer_extract_discovery_modes",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_discovery_modes()"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L569",
       "id": "intake_interview_intakeinterviewer_extract_budget",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_budget()"
     },
     {
@@ -1449,7 +1449,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L575",
       "id": "intake_interview_intakeinterviewer_extract_urls",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_urls()"
     },
     {
@@ -1458,7 +1458,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L586",
       "id": "intake_interview_intakeinterviewer_extract_list",
-      "community": 2,
+      "community": 7,
       "norm_label": "._extract_list()"
     },
     {
@@ -1467,7 +1467,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L600",
       "id": "intake_interview_intakeinterviewer_list_value",
-      "community": 2,
+      "community": 7,
       "norm_label": "._list_value()"
     },
     {
@@ -1476,7 +1476,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L607",
       "id": "intake_interview_intakeinterviewer_draft_payload",
-      "community": 2,
+      "community": 7,
       "norm_label": "._draft_payload()"
     },
     {
@@ -1485,7 +1485,7 @@
       "source_file": "growth_engine/intake/interview.py",
       "source_location": "L615",
       "id": "intake_interview_intakeinterviewer_copy_draft",
-      "community": 2,
+      "community": 7,
       "norm_label": "._copy_draft()"
     },
     {
@@ -1503,7 +1503,7 @@
       "source_file": "growth_engine/intake/service.py",
       "source_location": "L22",
       "id": "intake_service_businessprofilebuilder_init",
-      "community": 1,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_file": "growth_engine/intake/service.py",
       "source_location": "L25",
       "id": "intake_service_businessprofilebuilder_build",
-      "community": 1,
+      "community": 2,
       "norm_label": ".build()"
     },
     {
@@ -1521,7 +1521,7 @@
       "source_file": "growth_engine/intake/service.py",
       "source_location": "L86",
       "id": "intake_service_businessprofilebuilder_refine_with_model",
-      "community": 1,
+      "community": 2,
       "norm_label": "._refine_with_model()"
     },
     {
@@ -1530,7 +1530,7 @@
       "source_file": "growth_engine/intake/service.py",
       "source_location": "L124",
       "id": "intake_service_businessprofilebuilder_default_buying_signals",
-      "community": 1,
+      "community": 2,
       "norm_label": "._default_buying_signals()"
     },
     {
@@ -1629,7 +1629,7 @@
       "source_file": "growth_engine/observability/logging.py",
       "source_location": "L1",
       "id": "growth_engine_observability_logging_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "logging.py"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_file": "growth_engine/observability/logging.py",
       "source_location": "L8",
       "id": "observability_logging_get_logger",
-      "community": 3,
+      "community": 1,
       "norm_label": "get_logger()"
     },
     {
@@ -1647,7 +1647,7 @@
       "source_file": "growth_engine/observability/logging.py",
       "source_location": "L20",
       "id": "observability_logging_log_event",
-      "community": 3,
+      "community": 1,
       "norm_label": "log_event()"
     },
     {
@@ -1656,7 +1656,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L1",
       "id": "growth_engine_orchestration_engine_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "engine.py"
     },
     {
@@ -1665,7 +1665,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L33",
       "id": "orchestration_engine_pipelinecontrol",
-      "community": 3,
+      "community": 1,
       "norm_label": "pipelinecontrol"
     },
     {
@@ -1674,7 +1674,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L34",
       "id": "orchestration_engine_pipelinecontrol_init",
-      "community": 3,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -1683,7 +1683,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L39",
       "id": "orchestration_engine_pipelinecontrol_pause",
-      "community": 3,
+      "community": 1,
       "norm_label": ".pause()"
     },
     {
@@ -1692,7 +1692,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L43",
       "id": "orchestration_engine_pipelinecontrol_resume",
-      "community": 3,
+      "community": 1,
       "norm_label": ".resume()"
     },
     {
@@ -1701,7 +1701,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L46",
       "id": "orchestration_engine_pipelinecontrol_stop",
-      "community": 3,
+      "community": 1,
       "norm_label": ".stop()"
     },
     {
@@ -1710,7 +1710,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L50",
       "id": "orchestration_engine_pipelinecontrol_should_stop",
-      "community": 3,
+      "community": 1,
       "norm_label": ".should_stop()"
     },
     {
@@ -1719,7 +1719,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L53",
       "id": "orchestration_engine_pipelinecontrol_wait_if_paused",
-      "community": 3,
+      "community": 1,
       "norm_label": ".wait_if_paused()"
     },
     {
@@ -1728,7 +1728,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L61",
       "id": "orchestration_engine_decisionengine",
-      "community": 3,
+      "community": 1,
       "norm_label": "decisionengine"
     },
     {
@@ -1737,7 +1737,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L64",
       "id": "orchestration_engine_decisionengine_post_init",
-      "community": 3,
+      "community": 1,
       "norm_label": ".__post_init__()"
     },
     {
@@ -1746,7 +1746,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L83",
       "id": "orchestration_engine_decisionengine_run",
-      "community": 3,
+      "community": 1,
       "norm_label": ".run()"
     },
     {
@@ -1755,7 +1755,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L132",
       "id": "orchestration_engine_decisionengine_discover",
-      "community": 3,
+      "community": 1,
       "norm_label": "._discover()"
     },
     {
@@ -1764,7 +1764,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L184",
       "id": "orchestration_engine_decisionengine_enrich_documents",
-      "community": 3,
+      "community": 1,
       "norm_label": "._enrich_documents()"
     },
     {
@@ -1773,7 +1773,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L238",
       "id": "orchestration_engine_decisionengine_parse_and_enrich",
-      "community": 3,
+      "community": 1,
       "norm_label": "._parse_and_enrich()"
     },
     {
@@ -1782,7 +1782,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L249",
       "id": "orchestration_engine_decisionengine_score_and_match",
-      "community": 3,
+      "community": 1,
       "norm_label": "._score_and_match()"
     },
     {
@@ -1791,7 +1791,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L304",
       "id": "orchestration_engine_decisionengine_build_audit_store",
-      "community": 3,
+      "community": 1,
       "norm_label": "._build_audit_store()"
     },
     {
@@ -1800,7 +1800,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L312",
       "id": "orchestration_engine_decisionengine_checkpoint",
-      "community": 3,
+      "community": 1,
       "norm_label": "._checkpoint()"
     },
     {
@@ -1809,7 +1809,7 @@
       "source_file": "growth_engine/orchestration/engine.py",
       "source_location": "L317",
       "id": "orchestration_engine_decisionengine_emit",
-      "community": 3,
+      "community": 1,
       "norm_label": "._emit()"
     },
     {
@@ -1818,7 +1818,7 @@
       "source_file": "growth_engine/orchestration/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_orchestration_init_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "__init__.py"
     },
     {
@@ -1827,7 +1827,7 @@
       "source_file": "growth_engine/parsing/html.py",
       "source_location": "L1",
       "id": "growth_engine_parsing_html_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "html.py"
     },
     {
@@ -1836,7 +1836,7 @@
       "source_file": "growth_engine/parsing/html.py",
       "source_location": "L34",
       "id": "parsing_html_htmlparsingservice",
-      "community": 1,
+      "community": 6,
       "norm_label": "htmlparsingservice"
     },
     {
@@ -1845,7 +1845,7 @@
       "source_file": "growth_engine/parsing/html.py",
       "source_location": "L35",
       "id": "parsing_html_htmlparsingservice_parse",
-      "community": 1,
+      "community": 6,
       "norm_label": ".parse()"
     },
     {
@@ -1854,7 +1854,7 @@
       "source_file": "growth_engine/parsing/html.py",
       "source_location": "L82",
       "id": "parsing_html_htmlparsingservice_likely_entity_name",
-      "community": 1,
+      "community": 6,
       "norm_label": "._likely_entity_name()"
     },
     {
@@ -1863,7 +1863,7 @@
       "source_file": "growth_engine/parsing/html.py",
       "source_location": "L98",
       "id": "parsing_html_htmlparsingservice_likely_location",
-      "community": 1,
+      "community": 6,
       "norm_label": "._likely_location()"
     },
     {
@@ -1872,7 +1872,7 @@
       "source_file": "growth_engine/parsing/html.py",
       "source_location": "L105",
       "id": "parsing_html_htmlparsingservice_categories",
-      "community": 1,
+      "community": 6,
       "norm_label": "._categories()"
     },
     {
@@ -1881,7 +1881,7 @@
       "source_file": "growth_engine/parsing/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_parsing_init_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "__init__.py"
     },
     {
@@ -1890,7 +1890,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L1",
       "id": "growth_engine_profile_research_service_py",
-      "community": 6,
+      "community": 8,
       "norm_label": "service.py"
     },
     {
@@ -1899,7 +1899,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L26",
       "id": "profile_research_service_businessprofileresearcher",
-      "community": 6,
+      "community": 8,
       "norm_label": "businessprofileresearcher"
     },
     {
@@ -1917,7 +1917,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L45",
       "id": "profile_research_service_businessprofileresearcher_research",
-      "community": 6,
+      "community": 8,
       "norm_label": ".research()"
     },
     {
@@ -1926,7 +1926,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L131",
       "id": "profile_research_service_businessprofileresearcher_collect_sources_parallel",
-      "community": 6,
+      "community": 8,
       "norm_label": "._collect_sources_parallel()"
     },
     {
@@ -1935,7 +1935,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L185",
       "id": "profile_research_service_businessprofileresearcher_filter_search_sources",
-      "community": 6,
+      "community": 8,
       "norm_label": "._filter_search_sources()"
     },
     {
@@ -1944,7 +1944,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L218",
       "id": "profile_research_service_businessprofileresearcher_search_sources",
-      "community": 6,
+      "community": 8,
       "norm_label": "._search_sources()"
     },
     {
@@ -1953,7 +1953,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L252",
       "id": "profile_research_service_businessprofileresearcher_is_relevant_search_result",
-      "community": 6,
+      "community": 8,
       "norm_label": "._is_relevant_search_result()"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L295",
       "id": "profile_research_service_businessprofileresearcher_model_profile",
-      "community": 6,
+      "community": 8,
       "norm_label": "._model_profile()"
     },
     {
@@ -1971,7 +1971,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L303",
       "id": "profile_research_service_businessprofileresearcher_model_profile_parallel",
-      "community": 6,
+      "community": 8,
       "norm_label": "._model_profile_parallel()"
     },
     {
@@ -1980,7 +1980,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L319",
       "id": "profile_research_service_businessprofileresearcher_build_draft",
-      "community": 6,
+      "community": 8,
       "norm_label": "._build_draft()"
     },
     {
@@ -1989,7 +1989,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L387",
       "id": "profile_research_service_businessprofileresearcher_fallback_summary",
-      "community": 6,
+      "community": 8,
       "norm_label": "._fallback_summary()"
     },
     {
@@ -1998,7 +1998,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L400",
       "id": "profile_research_service_dedupe_sources",
-      "community": 6,
+      "community": 8,
       "norm_label": "dedupe_sources()"
     },
     {
@@ -2007,7 +2007,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L412",
       "id": "profile_research_service_clean_text",
-      "community": 6,
+      "community": 8,
       "norm_label": "clean_text()"
     },
     {
@@ -2016,7 +2016,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L416",
       "id": "profile_research_service_clean_list",
-      "community": 6,
+      "community": 8,
       "norm_label": "clean_list()"
     },
     {
@@ -2025,7 +2025,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L426",
       "id": "profile_research_service_first_source_snippet",
-      "community": 6,
+      "community": 8,
       "norm_label": "first_source_snippet()"
     },
     {
@@ -2034,7 +2034,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L436",
       "id": "profile_research_service_infer_industry",
-      "community": 6,
+      "community": 8,
       "norm_label": "infer_industry()"
     },
     {
@@ -2043,7 +2043,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L457",
       "id": "profile_research_service_fallback_keywords",
-      "community": 6,
+      "community": 8,
       "norm_label": "fallback_keywords()"
     },
     {
@@ -2052,7 +2052,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L468",
       "id": "profile_research_service_build_default_icp",
-      "community": 6,
+      "community": 8,
       "norm_label": "build_default_icp()"
     },
     {
@@ -2061,7 +2061,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L476",
       "id": "profile_research_service_build_default_need",
-      "community": 6,
+      "community": 8,
       "norm_label": "build_default_need()"
     },
     {
@@ -2070,7 +2070,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L488",
       "id": "profile_research_service_process_workers",
-      "community": 6,
+      "community": 8,
       "norm_label": "_process_workers()"
     },
     {
@@ -2079,7 +2079,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L493",
       "id": "profile_research_service_parallel_executor",
-      "community": 6,
+      "community": 8,
       "norm_label": "_parallel_executor()"
     },
     {
@@ -2088,7 +2088,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L501",
       "id": "profile_research_service_website_source_worker",
-      "community": 6,
+      "community": 8,
       "norm_label": "_website_source_worker()"
     },
     {
@@ -2106,7 +2106,7 @@
       "source_file": "growth_engine/profile_research/service.py",
       "source_location": "L555",
       "id": "profile_research_service_verify_profile_worker",
-      "community": 6,
+      "community": 8,
       "norm_label": "_verify_profile_worker()"
     },
     {
@@ -2115,7 +2115,7 @@
       "source_file": "growth_engine/profile_research/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_profile_research_init_py",
-      "community": 6,
+      "community": 8,
       "norm_label": "__init__.py"
     },
     {
@@ -2124,7 +2124,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L1",
       "id": "growth_engine_scoring_service_py",
-      "community": 8,
+      "community": 2,
       "norm_label": "service.py"
     },
     {
@@ -2133,7 +2133,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L26",
       "id": "scoring_service_scoringengine",
-      "community": 8,
+      "community": 2,
       "norm_label": "scoringengine"
     },
     {
@@ -2142,7 +2142,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L27",
       "id": "scoring_service_scoringengine_init",
-      "community": 8,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -2151,7 +2151,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L30",
       "id": "scoring_service_scoringengine_score",
-      "community": 8,
+      "community": 2,
       "norm_label": ".score()"
     },
     {
@@ -2160,7 +2160,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L95",
       "id": "scoring_service_scoringengine_refine_top_scores",
-      "community": 8,
+      "community": 2,
       "norm_label": ".refine_top_scores()"
     },
     {
@@ -2169,7 +2169,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L182",
       "id": "scoring_service_scoringengine_fit_score",
-      "community": 8,
+      "community": 2,
       "norm_label": "._fit_score()"
     },
     {
@@ -2178,7 +2178,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L205",
       "id": "scoring_service_scoringengine_relevance_score",
-      "community": 8,
+      "community": 2,
       "norm_label": "._relevance_score()"
     },
     {
@@ -2187,7 +2187,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L213",
       "id": "scoring_service_scoringengine_geography_score",
-      "community": 8,
+      "community": 2,
       "norm_label": "._geography_score()"
     },
     {
@@ -2196,7 +2196,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L225",
       "id": "scoring_service_scoringengine_budget_score",
-      "community": 8,
+      "community": 2,
       "norm_label": "._budget_score()"
     },
     {
@@ -2205,7 +2205,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L236",
       "id": "scoring_service_scoringengine_intent_score",
-      "community": 8,
+      "community": 2,
       "norm_label": "._intent_score()"
     },
     {
@@ -2214,7 +2214,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L244",
       "id": "scoring_service_scoringengine_expected_value_score",
-      "community": 8,
+      "community": 2,
       "norm_label": "._expected_value_score()"
     },
     {
@@ -2223,7 +2223,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L257",
       "id": "scoring_service_scoringengine_profile_context_terms",
-      "community": 8,
+      "community": 2,
       "norm_label": "._profile_context_terms()"
     },
     {
@@ -2232,7 +2232,7 @@
       "source_file": "growth_engine/scoring/service.py",
       "source_location": "L270",
       "id": "scoring_service_overlap",
-      "community": 8,
+      "community": 2,
       "norm_label": "_overlap()"
     },
     {
@@ -2241,7 +2241,7 @@
       "source_file": "growth_engine/scoring/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_scoring_init_py",
-      "community": 8,
+      "community": 2,
       "norm_label": "__init__.py"
     },
     {
@@ -2250,7 +2250,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L1",
       "id": "growth_engine_services_email_service_py",
-      "community": 7,
+      "community": 3,
       "norm_label": "email_service.py"
     },
     {
@@ -2259,7 +2259,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L10",
       "id": "services_email_service_emaildeliveryunavailableerror",
-      "community": 7,
+      "community": 3,
       "norm_label": "emaildeliveryunavailableerror"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_file": "",
       "source_location": "",
       "id": "runtimeerror",
-      "community": 7,
+      "community": 3,
       "norm_label": "runtimeerror"
     },
     {
@@ -2277,7 +2277,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L14",
       "id": "services_email_service_emaildeliveryservice",
-      "community": 7,
+      "community": 3,
       "norm_label": "emaildeliveryservice"
     },
     {
@@ -2286,7 +2286,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L17",
       "id": "services_email_service_emaildeliveryservice_init",
-      "community": 7,
+      "community": 3,
       "norm_label": ".__init__()"
     },
     {
@@ -2295,7 +2295,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L20",
       "id": "services_email_service_emaildeliveryservice_is_configured",
-      "community": 7,
+      "community": 3,
       "norm_label": ".is_configured()"
     },
     {
@@ -2304,7 +2304,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L25",
       "id": "services_email_service_emaildeliveryservice_send_email",
-      "community": 7,
+      "community": 3,
       "norm_label": ".send_email()"
     },
     {
@@ -2313,7 +2313,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L60",
       "id": "services_email_service_emaildeliveryservice_sender_payload",
-      "community": 7,
+      "community": 3,
       "norm_label": "._sender_payload()"
     },
     {
@@ -2322,7 +2322,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L66",
       "id": "services_email_service_emaildeliveryservice_build_error_message",
-      "community": 7,
+      "community": 3,
       "norm_label": "._build_error_message()"
     },
     {
@@ -2331,7 +2331,7 @@
       "source_file": "growth_engine/services/email_service.py",
       "source_location": "L11",
       "id": "services_email_service_rationale_11",
-      "community": 7,
+      "community": 3,
       "norm_label": "raised when sendgrid delivery cannot be completed."
     },
     {
@@ -2412,7 +2412,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L81",
       "id": "services_openai_service_modelunavailableerror",
-      "community": 8,
+      "community": 2,
       "norm_label": "modelunavailableerror"
     },
     {
@@ -2421,7 +2421,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L85",
       "id": "services_openai_service_openaiservice",
-      "community": 8,
+      "community": 2,
       "norm_label": "openaiservice"
     },
     {
@@ -2430,7 +2430,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L86",
       "id": "services_openai_service_openaiservice_init",
-      "community": 8,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -2439,7 +2439,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L94",
       "id": "services_openai_service_openaiservice_is_available",
-      "community": 8,
+      "community": 2,
       "norm_label": ".is_available()"
     },
     {
@@ -2448,7 +2448,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L101",
       "id": "services_openai_service_openaiservice_infer_targeting_model",
-      "community": 8,
+      "community": 2,
       "norm_label": ".infer_targeting_model()"
     },
     {
@@ -2457,7 +2457,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L108",
       "id": "services_openai_service_openaiservice_extract_entity",
-      "community": 8,
+      "community": 2,
       "norm_label": ".extract_entity()"
     },
     {
@@ -2466,7 +2466,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L115",
       "id": "services_openai_service_openaiservice_refine_scores",
-      "community": 8,
+      "community": 2,
       "norm_label": ".refine_scores()"
     },
     {
@@ -2475,7 +2475,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L122",
       "id": "services_openai_service_openaiservice_extract_intake_update",
-      "community": 8,
+      "community": 2,
       "norm_label": ".extract_intake_update()"
     },
     {
@@ -2484,7 +2484,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L129",
       "id": "services_openai_service_openaiservice_generate_intake_question",
-      "community": 8,
+      "community": 2,
       "norm_label": ".generate_intake_question()"
     },
     {
@@ -2493,7 +2493,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L136",
       "id": "services_openai_service_openaiservice_verify_business_profile",
-      "community": 8,
+      "community": 2,
       "norm_label": ".verify_business_profile()"
     },
     {
@@ -2502,7 +2502,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L143",
       "id": "services_openai_service_openaiservice_create_social_strategy",
-      "community": 7,
+      "community": 5,
       "norm_label": ".create_social_strategy()"
     },
     {
@@ -2511,7 +2511,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L150",
       "id": "services_openai_service_openaiservice_generate_social_content_bundle",
-      "community": 8,
+      "community": 2,
       "norm_label": ".generate_social_content_bundle()"
     },
     {
@@ -2520,7 +2520,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L157",
       "id": "services_openai_service_openaiservice_request_json",
-      "community": 8,
+      "community": 2,
       "norm_label": "._request_json()"
     },
     {
@@ -2529,7 +2529,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L218",
       "id": "services_openai_service_openaiservice_extract_output_text",
-      "community": 8,
+      "community": 2,
       "norm_label": "._extract_output_text()"
     },
     {
@@ -2538,7 +2538,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L230",
       "id": "services_openai_service_openaiservice_extract_json",
-      "community": 8,
+      "community": 2,
       "norm_label": "._extract_json()"
     },
     {
@@ -2547,7 +2547,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L238",
       "id": "services_openai_service_bounded_adjustment",
-      "community": 8,
+      "community": 2,
       "norm_label": "bounded_adjustment()"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_file": "growth_engine/services/openai_service.py",
       "source_location": "L82",
       "id": "services_openai_service_rationale_82",
-      "community": 8,
+      "community": 2,
       "norm_label": "raised when the model layer cannot be used."
     },
     {
@@ -2646,7 +2646,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L1",
       "id": "growth_engine_services_social_content_py",
-      "community": 7,
+      "community": 5,
       "norm_label": "social_content.py"
     },
     {
@@ -2655,7 +2655,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L30",
       "id": "services_social_content_socialcontentservice",
-      "community": 7,
+      "community": 5,
       "norm_label": "socialcontentservice"
     },
     {
@@ -2664,7 +2664,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L31",
       "id": "services_social_content_socialcontentservice_init",
-      "community": 7,
+      "community": 3,
       "norm_label": ".__init__()"
     },
     {
@@ -2673,7 +2673,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L44",
       "id": "services_social_content_socialcontentservice_generate",
-      "community": 7,
+      "community": 5,
       "norm_label": ".generate()"
     },
     {
@@ -2682,7 +2682,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L115",
       "id": "services_social_content_socialcontentservice_build_evidence",
-      "community": 7,
+      "community": 5,
       "norm_label": "._build_evidence()"
     },
     {
@@ -2691,7 +2691,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L145",
       "id": "services_social_content_socialcontentservice_supplemental_search_results",
-      "community": 7,
+      "community": 5,
       "norm_label": "._supplemental_search_results()"
     },
     {
@@ -2700,7 +2700,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L197",
       "id": "services_social_content_socialcontentservice_generate_content",
-      "community": 7,
+      "community": 5,
       "norm_label": "._generate_content()"
     },
     {
@@ -2709,7 +2709,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L268",
       "id": "services_social_content_socialcontentservice_normalize_strategy",
-      "community": 7,
+      "community": 5,
       "norm_label": "._normalize_strategy()"
     },
     {
@@ -2718,7 +2718,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L302",
       "id": "services_social_content_socialcontentservice_fallback_channel_content",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_channel_content()"
     },
     {
@@ -2727,7 +2727,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L308",
       "id": "services_social_content_socialcontentservice_fallback_channel_item",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_channel_item()"
     },
     {
@@ -2736,7 +2736,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L318",
       "id": "services_social_content_socialcontentservice_fallback_post_copy",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_post_copy()"
     },
     {
@@ -2745,7 +2745,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L333",
       "id": "services_social_content_socialcontentservice_fallback_replies",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_replies()"
     },
     {
@@ -2754,7 +2754,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L343",
       "id": "services_social_content_socialcontentservice_fallback_image_prompt",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_image_prompt()"
     },
     {
@@ -2763,7 +2763,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L350",
       "id": "services_social_content_socialcontentservice_fallback_video_script",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_video_script()"
     },
     {
@@ -2772,7 +2772,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L361",
       "id": "services_social_content_socialcontentservice_fallback_hashtags",
-      "community": 7,
+      "community": 5,
       "norm_label": "._fallback_hashtags()"
     },
     {
@@ -2781,7 +2781,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L372",
       "id": "services_social_content_socialcontentservice_render_email_body",
-      "community": 7,
+      "community": 5,
       "norm_label": "._render_email_body()"
     },
     {
@@ -2790,7 +2790,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L409",
       "id": "services_social_content_normalize_channels",
-      "community": 7,
+      "community": 5,
       "norm_label": "_normalize_channels()"
     },
     {
@@ -2799,7 +2799,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L419",
       "id": "services_social_content_clean_text",
-      "community": 7,
+      "community": 5,
       "norm_label": "clean_text()"
     },
     {
@@ -2808,7 +2808,7 @@
       "source_file": "growth_engine/services/social_content.py",
       "source_location": "L423",
       "id": "services_social_content_clean_list",
-      "community": 7,
+      "community": 5,
       "norm_label": "clean_list()"
     },
     {
@@ -2826,7 +2826,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L1",
       "id": "growth_engine_storage_artifacts_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "artifacts.py"
     },
     {
@@ -2835,7 +2835,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L13",
       "id": "storage_artifacts_import_google_cloud_module",
-      "community": 3,
+      "community": 1,
       "norm_label": "_import_google_cloud_module()"
     },
     {
@@ -2844,7 +2844,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L29",
       "id": "storage_artifacts_auditstore",
-      "community": 3,
+      "community": 1,
       "norm_label": "auditstore"
     },
     {
@@ -2853,7 +2853,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L31",
       "id": "storage_artifacts_save",
-      "community": 3,
+      "community": 1,
       "norm_label": "save()"
     },
     {
@@ -2862,7 +2862,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L35",
       "id": "storage_artifacts_profilestore",
-      "community": 3,
+      "community": 1,
       "norm_label": "profilestore"
     },
     {
@@ -2871,7 +2871,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L41",
       "id": "storage_artifacts_noopauditstore",
-      "community": 3,
+      "community": 1,
       "norm_label": "noopauditstore"
     },
     {
@@ -2880,7 +2880,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L46",
       "id": "storage_artifacts_noopprofilestore",
-      "community": 3,
+      "community": 1,
       "norm_label": "noopprofilestore"
     },
     {
@@ -2889,7 +2889,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L51",
       "id": "storage_artifacts_firestoreauditstore",
-      "community": 3,
+      "community": 1,
       "norm_label": "firestoreauditstore"
     },
     {
@@ -2898,7 +2898,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L52",
       "id": "storage_artifacts_firestoreauditstore_init",
-      "community": 3,
+      "community": 1,
       "norm_label": ".__init__()"
     },
     {
@@ -2907,7 +2907,7 @@
       "source_file": "growth_engine/storage/artifacts.py",
       "source_location": "L77",
       "id": "storage_artifacts_firestoreprofilestore",
-      "community": 3,
+      "community": 1,
       "norm_label": "firestoreprofilestore"
     },
     {
@@ -2916,7 +2916,7 @@
       "source_file": "growth_engine/storage/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_storage_init_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "__init__.py"
     },
     {
@@ -2925,7 +2925,7 @@
       "source_file": "growth_engine/validation/email_validation.py",
       "source_location": "L1",
       "id": "growth_engine_validation_email_validation_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "email_validation.py"
     },
     {
@@ -2934,7 +2934,7 @@
       "source_file": "growth_engine/validation/email_validation.py",
       "source_location": "L10",
       "id": "validation_email_validation_emailvalidatorservice",
-      "community": 1,
+      "community": 6,
       "norm_label": "emailvalidatorservice"
     },
     {
@@ -2943,7 +2943,7 @@
       "source_file": "growth_engine/validation/email_validation.py",
       "source_location": "L11",
       "id": "validation_email_validation_emailvalidatorservice_init",
-      "community": 1,
+      "community": 6,
       "norm_label": ".__init__()"
     },
     {
@@ -2952,7 +2952,7 @@
       "source_file": "growth_engine/validation/email_validation.py",
       "source_location": "L14",
       "id": "validation_email_validation_emailvalidatorservice_validate",
-      "community": 1,
+      "community": 6,
       "norm_label": ".validate()"
     },
     {
@@ -2961,7 +2961,7 @@
       "source_file": "growth_engine/validation/email_validation.py",
       "source_location": "L34",
       "id": "validation_email_validation_emailvalidatorservice_resolve_mx",
-      "community": 1,
+      "community": 6,
       "norm_label": "._resolve_mx()"
     },
     {
@@ -2970,7 +2970,7 @@
       "source_file": "growth_engine/validation/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_validation_init_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "__init__.py"
     },
     {
@@ -2979,7 +2979,7 @@
       "source_file": "growth_engine_django/settings.py",
       "source_location": "L1",
       "id": "growth_engine_django_settings_py",
-      "community": 20,
+      "community": 19,
       "norm_label": "settings.py"
     },
     {
@@ -2988,7 +2988,7 @@
       "source_file": "growth_engine_django/settings.py",
       "source_location": "L9",
       "id": "growth_engine_django_settings_as_bool",
-      "community": 20,
+      "community": 19,
       "norm_label": "_as_bool()"
     },
     {
@@ -2997,7 +2997,7 @@
       "source_file": "growth_engine_django/settings.py",
       "source_location": "L15",
       "id": "growth_engine_django_settings_as_list",
-      "community": 20,
+      "community": 19,
       "norm_label": "_as_list()"
     },
     {
@@ -3006,7 +3006,7 @@
       "source_file": "growth_engine_django/urls.py",
       "source_location": "L1",
       "id": "growth_engine_django_urls_py",
-      "community": 29,
+      "community": 27,
       "norm_label": "urls.py"
     },
     {
@@ -3015,7 +3015,7 @@
       "source_file": "growth_engine_django/wsgi.py",
       "source_location": "L1",
       "id": "growth_engine_django_wsgi_py",
-      "community": 30,
+      "community": 28,
       "norm_label": "wsgi.py"
     },
     {
@@ -3024,7 +3024,7 @@
       "source_file": "growth_engine_django/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_django_init_py",
-      "community": 24,
+      "community": 22,
       "norm_label": "__init__.py"
     },
     {
@@ -3033,7 +3033,7 @@
       "source_file": "growth_engine_django/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_django_init_rationale_1",
-      "community": 24,
+      "community": 22,
       "norm_label": "django project package for the growth opportunity decision engine."
     },
     {
@@ -3060,7 +3060,7 @@
       "source_file": "growth_engine_web/analytics.py",
       "source_location": "L23",
       "id": "growth_engine_web_analytics_adminanalyticssnapshot",
-      "community": 5,
+      "community": 3,
       "norm_label": "adminanalyticssnapshot"
     },
     {
@@ -3249,7 +3249,7 @@
       "source_file": "growth_engine_web/apps.py",
       "source_location": "L1",
       "id": "growth_engine_web_apps_py",
-      "community": 21,
+      "community": 16,
       "norm_label": "apps.py"
     },
     {
@@ -3258,7 +3258,7 @@
       "source_file": "growth_engine_web/apps.py",
       "source_location": "L6",
       "id": "growth_engine_web_apps_growthenginewebconfig",
-      "community": 21,
+      "community": 16,
       "norm_label": "growthenginewebconfig"
     },
     {
@@ -3267,7 +3267,7 @@
       "source_file": "",
       "source_location": "",
       "id": "appconfig",
-      "community": 21,
+      "community": 16,
       "norm_label": "appconfig"
     },
     {
@@ -3294,7 +3294,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L1",
       "id": "growth_engine_web_forms_py",
-      "community": 2,
+      "community": 5,
       "norm_label": "forms.py"
     },
     {
@@ -3303,7 +3303,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L18",
       "id": "growth_engine_web_forms_sourceresearchform",
-      "community": 0,
+      "community": 5,
       "norm_label": "sourceresearchform"
     },
     {
@@ -3312,7 +3312,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L41",
       "id": "growth_engine_web_forms_sourceresearchform_clean_business_name",
-      "community": 0,
+      "community": 5,
       "norm_label": ".clean_business_name()"
     },
     {
@@ -3321,7 +3321,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L44",
       "id": "growth_engine_web_forms_sourceresearchform_clean_website",
-      "community": 0,
+      "community": 5,
       "norm_label": ".clean_website()"
     },
     {
@@ -3330,7 +3330,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L48",
       "id": "growth_engine_web_forms_profilesectionform",
-      "community": 0,
+      "community": 5,
       "norm_label": "profilesectionform"
     },
     {
@@ -3339,7 +3339,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L49",
       "id": "growth_engine_web_forms_profilesectionform_init",
-      "community": 0,
+      "community": 5,
       "norm_label": ".__init__()"
     },
     {
@@ -3348,7 +3348,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L67",
       "id": "growth_engine_web_forms_profilesectionform_cleaned_partial_values",
-      "community": 0,
+      "community": 5,
       "norm_label": ".cleaned_partial_values()"
     },
     {
@@ -3357,7 +3357,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L74",
       "id": "growth_engine_web_forms_postsaverequestform",
-      "community": 0,
+      "community": 5,
       "norm_label": "postsaverequestform"
     },
     {
@@ -3366,7 +3366,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L92",
       "id": "growth_engine_web_forms_postsaverequestform_clean_requested_data",
-      "community": 0,
+      "community": 5,
       "norm_label": ".clean_requested_data()"
     },
     {
@@ -3375,7 +3375,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L97",
       "id": "growth_engine_web_forms_postsaverequestform_clean_notes",
-      "community": 0,
+      "community": 5,
       "norm_label": ".clean_notes()"
     },
     {
@@ -3384,7 +3384,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L142",
       "id": "growth_engine_web_forms_socialcontentrequestform_clean_campaign_goal",
-      "community": 0,
+      "community": 3,
       "norm_label": ".clean_campaign_goal()"
     },
     {
@@ -3393,7 +3393,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L145",
       "id": "growth_engine_web_forms_socialcontentrequestform_clean_channels",
-      "community": 0,
+      "community": 3,
       "norm_label": ".clean_channels()"
     },
     {
@@ -3402,7 +3402,7 @@
       "source_file": "growth_engine_web/forms.py",
       "source_location": "L155",
       "id": "growth_engine_web_forms_socialcontentrequestform_clean_delivery_email",
-      "community": 0,
+      "community": 3,
       "norm_label": ".clean_delivery_email()"
     },
     {
@@ -3411,7 +3411,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L1",
       "id": "growth_engine_web_google_auth_py",
-      "community": 10,
+      "community": 0,
       "norm_label": "google_auth.py"
     },
     {
@@ -3420,7 +3420,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L21",
       "id": "growth_engine_web_google_auth_googleauthenticationerror",
-      "community": 10,
+      "community": 0,
       "norm_label": "googleauthenticationerror"
     },
     {
@@ -3429,7 +3429,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L25",
       "id": "growth_engine_web_google_auth_format_google_provider_error",
-      "community": 10,
+      "community": 0,
       "norm_label": "_format_google_provider_error()"
     },
     {
@@ -3438,7 +3438,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L46",
       "id": "growth_engine_web_google_auth_google_auth_is_configured",
-      "community": 10,
+      "community": 0,
       "norm_label": "google_auth_is_configured()"
     },
     {
@@ -3456,7 +3456,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L59",
       "id": "growth_engine_web_google_auth_build_google_oauth_authorization_url",
-      "community": 10,
+      "community": 0,
       "norm_label": "build_google_oauth_authorization_url()"
     },
     {
@@ -3465,7 +3465,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L90",
       "id": "growth_engine_web_google_auth_exchange_google_code",
-      "community": 10,
+      "community": 0,
       "norm_label": "exchange_google_code()"
     },
     {
@@ -3474,7 +3474,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L145",
       "id": "growth_engine_web_google_auth_verify_google_id_token",
-      "community": 10,
+      "community": 0,
       "norm_label": "verify_google_id_token()"
     },
     {
@@ -3483,7 +3483,7 @@
       "source_file": "growth_engine_web/google_auth.py",
       "source_location": "L22",
       "id": "growth_engine_web_google_auth_rationale_22",
-      "community": 10,
+      "community": 0,
       "norm_label": "raised when google oauth sign-in fails."
     },
     {
@@ -3492,7 +3492,7 @@
       "source_file": "growth_engine_web/runtime.py",
       "source_location": "L1",
       "id": "growth_engine_web_runtime_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "runtime.py"
     },
     {
@@ -3699,7 +3699,7 @@
       "source_file": "growth_engine_web/urls.py",
       "source_location": "L1",
       "id": "growth_engine_web_urls_py",
-      "community": 31,
+      "community": 29,
       "norm_label": "urls.py"
     },
     {
@@ -3811,6 +3811,15 @@
       "norm_label": "research_profile()"
     },
     {
+      "label": "edit_section()",
+      "file_type": "code",
+      "source_file": "growth_engine_web/views.py",
+      "source_location": "L332",
+      "id": "growth_engine_web_views_edit_section",
+      "community": 0,
+      "norm_label": "edit_section()"
+    },
+    {
       "label": "save_profile()",
       "file_type": "code",
       "source_file": "growth_engine_web/views.py",
@@ -3888,7 +3897,7 @@
       "source_file": "growth_engine_web/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_web_init_py",
-      "community": 26,
+      "community": 24,
       "norm_label": "__init__.py"
     },
     {
@@ -3897,7 +3906,7 @@
       "source_file": "growth_engine_web/__init__.py",
       "source_location": "L1",
       "id": "growth_engine_web_init_rationale_1",
-      "community": 26,
+      "community": 24,
       "norm_label": "django web app for the growth opportunity decision engine."
     },
     {
@@ -3906,7 +3915,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L1",
       "id": "growth_engine_web_static_growth_engine_web_app_js",
-      "community": 14,
+      "community": 13,
       "norm_label": "app.js"
     },
     {
@@ -3915,7 +3924,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L2",
       "id": "growth_engine_web_app_workflowgrid",
-      "community": 14,
+      "community": 13,
       "norm_label": "workflowgrid"
     },
     {
@@ -3924,7 +3933,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L3",
       "id": "growth_engine_web_app_flowchoicebuttons",
-      "community": 14,
+      "community": 13,
       "norm_label": "flowchoicebuttons"
     },
     {
@@ -3933,7 +3942,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L6",
       "id": "growth_engine_web_app_workflowpanels",
-      "community": 14,
+      "community": 13,
       "norm_label": "workflowpanels"
     },
     {
@@ -3942,7 +3951,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L9",
       "id": "growth_engine_web_app_workflowaction",
-      "community": 14,
+      "community": 13,
       "norm_label": "workflowaction"
     },
     {
@@ -3951,7 +3960,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L10",
       "id": "growth_engine_web_app_loadingshell",
-      "community": 14,
+      "community": 13,
       "norm_label": "loadingshell"
     },
     {
@@ -3960,7 +3969,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L11",
       "id": "growth_engine_web_app_loadingtitle",
-      "community": 14,
+      "community": 13,
       "norm_label": "loadingtitle"
     },
     {
@@ -3969,7 +3978,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L12",
       "id": "growth_engine_web_app_loadingtips",
-      "community": 14,
+      "community": 13,
       "norm_label": "loadingtips"
     },
     {
@@ -3978,7 +3987,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L13",
       "id": "growth_engine_web_app_workflowactionlabels",
-      "community": 14,
+      "community": 13,
       "norm_label": "workflowactionlabels"
     },
     {
@@ -3987,7 +3996,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L30",
       "id": "growth_engine_web_app_setselectedflow",
-      "community": 14,
+      "community": 13,
       "norm_label": "setselectedflow()"
     },
     {
@@ -3996,7 +4005,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L79",
       "id": "growth_engine_web_app_showloading",
-      "community": 14,
+      "community": 13,
       "norm_label": "showloading()"
     },
     {
@@ -4005,7 +4014,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L92",
       "id": "growth_engine_web_app_starttiprotation",
-      "community": 14,
+      "community": 13,
       "norm_label": "starttiprotation()"
     },
     {
@@ -4014,7 +4023,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L108",
       "id": "growth_engine_web_app_setactivetip",
-      "community": 14,
+      "community": 13,
       "norm_label": "setactivetip()"
     },
     {
@@ -4023,7 +4032,7 @@
       "source_file": "growth_engine_web/static/growth_engine_web/app.js",
       "source_location": "L114",
       "id": "growth_engine_web_app_disableform",
-      "community": 14,
+      "community": 13,
       "norm_label": "disableform()"
     },
     {
@@ -4032,7 +4041,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L1",
       "id": "scripts_sdr_tool_script_ps1",
-      "community": 13,
+      "community": 11,
       "norm_label": "sdr-tool-script.ps1"
     },
     {
@@ -4041,7 +4050,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L18",
       "id": "scripts_sdr_tool_script_test_pythonmodule",
-      "community": 13,
+      "community": 11,
       "norm_label": "test-pythonmodule()"
     },
     {
@@ -4050,7 +4059,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L28",
       "id": "scripts_sdr_tool_script_invoke_pythonmodule",
-      "community": 13,
+      "community": 11,
       "norm_label": "invoke-pythonmodule()"
     },
     {
@@ -4059,7 +4068,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L43",
       "id": "scripts_sdr_tool_script_install_projectdependencies",
-      "community": 13,
+      "community": 11,
       "norm_label": "install-projectdependencies()"
     },
     {
@@ -4068,7 +4077,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L56",
       "id": "scripts_sdr_tool_script_ensure_projectdependencies",
-      "community": 13,
+      "community": 11,
       "norm_label": "ensure-projectdependencies()"
     },
     {
@@ -4077,7 +4086,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L71",
       "id": "scripts_sdr_tool_script_get_listeningprocessid",
-      "community": 13,
+      "community": 11,
       "norm_label": "get-listeningprocessid()"
     },
     {
@@ -4086,7 +4095,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L86",
       "id": "scripts_sdr_tool_script_get_protectedprocessids",
-      "community": 13,
+      "community": 11,
       "norm_label": "get-protectedprocessids()"
     },
     {
@@ -4095,7 +4104,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L102",
       "id": "scripts_sdr_tool_script_add_projectshellancestors",
-      "community": 13,
+      "community": 11,
       "norm_label": "add-projectshellancestors()"
     },
     {
@@ -4104,7 +4113,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L146",
       "id": "scripts_sdr_tool_script_get_projectsessionprocessids",
-      "community": 13,
+      "community": 11,
       "norm_label": "get-projectsessionprocessids()"
     },
     {
@@ -4113,7 +4122,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L186",
       "id": "scripts_sdr_tool_script_stop_projectsessions",
-      "community": 13,
+      "community": 11,
       "norm_label": "stop-projectsessions()"
     },
     {
@@ -4122,7 +4131,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L211",
       "id": "scripts_sdr_tool_script_clear_pythoncaches",
-      "community": 13,
+      "community": 11,
       "norm_label": "clear-pythoncaches()"
     },
     {
@@ -4131,7 +4140,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L220",
       "id": "scripts_sdr_tool_script_invoke_lintchecks",
-      "community": 13,
+      "community": 11,
       "norm_label": "invoke-lintchecks()"
     },
     {
@@ -4140,7 +4149,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L234",
       "id": "scripts_sdr_tool_script_invoke_testsuite",
-      "community": 13,
+      "community": 11,
       "norm_label": "invoke-testsuite()"
     },
     {
@@ -4149,7 +4158,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L239",
       "id": "scripts_sdr_tool_script_invoke_buildchecks",
-      "community": 13,
+      "community": 11,
       "norm_label": "invoke-buildchecks()"
     },
     {
@@ -4158,7 +4167,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L247",
       "id": "scripts_sdr_tool_script_invoke_codeformat",
-      "community": 13,
+      "community": 11,
       "norm_label": "invoke-codeformat()"
     },
     {
@@ -4167,7 +4176,7 @@
       "source_file": "scripts/sdr-tool-script.ps1",
       "source_location": "L269",
       "id": "scripts_sdr_tool_script_open_browserasync",
-      "community": 13,
+      "community": 11,
       "norm_label": "open-browserasync()"
     },
     {
@@ -4176,7 +4185,7 @@
       "source_file": "tests/conftest.py",
       "source_location": "L1",
       "id": "tests_conftest_py",
-      "community": 6,
+      "community": 4,
       "norm_label": "conftest.py"
     },
     {
@@ -4185,7 +4194,7 @@
       "source_file": "tests/conftest.py",
       "source_location": "L17",
       "id": "tests_conftest_settings",
-      "community": 6,
+      "community": 4,
       "norm_label": "settings()"
     },
     {
@@ -4194,7 +4203,7 @@
       "source_file": "tests/conftest.py",
       "source_location": "L58",
       "id": "tests_conftest_intake",
-      "community": 6,
+      "community": 4,
       "norm_label": "intake()"
     },
     {
@@ -4203,7 +4212,7 @@
       "source_file": "tests/conftest.py",
       "source_location": "L83",
       "id": "tests_conftest_linkedin_search_result",
-      "community": 6,
+      "community": 4,
       "norm_label": "linkedin_search_result()"
     },
     {
@@ -4212,7 +4221,7 @@
       "source_file": "tests/conftest.py",
       "source_location": "L95",
       "id": "tests_conftest_patch_runtime_settings",
-      "community": 6,
+      "community": 4,
       "norm_label": "patch_runtime_settings()"
     },
     {
@@ -4221,7 +4230,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L1",
       "id": "tests_helpers_py",
-      "community": 5,
+      "community": 3,
       "norm_label": "helpers.py"
     },
     {
@@ -4230,7 +4239,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L11",
       "id": "tests_helpers_localhost_client",
-      "community": 5,
+      "community": 3,
       "norm_label": "localhost_client()"
     },
     {
@@ -4239,7 +4248,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L15",
       "id": "tests_helpers_enable_google_auth",
-      "community": 5,
+      "community": 3,
       "norm_label": "enable_google_auth()"
     },
     {
@@ -4248,7 +4257,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L21",
       "id": "tests_helpers_build_intake_draft",
-      "community": 5,
+      "community": 3,
       "norm_label": "build_intake_draft()"
     },
     {
@@ -4257,7 +4266,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L47",
       "id": "tests_helpers_build_draft_payload",
-      "community": 5,
+      "community": 3,
       "norm_label": "build_draft_payload()"
     },
     {
@@ -4266,7 +4275,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L51",
       "id": "tests_helpers_build_research_source",
-      "community": 5,
+      "community": 3,
       "norm_label": "build_research_source()"
     },
     {
@@ -4275,7 +4284,7 @@
       "source_file": "tests/helpers.py",
       "source_location": "L62",
       "id": "tests_helpers_build_research_result",
-      "community": 5,
+      "community": 3,
       "norm_label": "build_research_result()"
     },
     {
@@ -4302,7 +4311,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L1",
       "id": "tests_test_auth_templates_py",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_auth_templates.py"
     },
     {
@@ -4311,7 +4320,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L6",
       "id": "tests_test_auth_templates_test_home_template_uses_server_side_google_login_link",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_home_template_uses_server_side_google_login_link()"
     },
     {
@@ -4320,7 +4329,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L24",
       "id": "tests_test_auth_templates_test_base_template_no_longer_loads_firebase_sdk",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_base_template_no_longer_loads_firebase_sdk()"
     },
     {
@@ -4329,7 +4338,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L37",
       "id": "tests_test_auth_templates_test_analytics_template_exists_with_admin_copy",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_analytics_template_exists_with_admin_copy()"
     },
     {
@@ -4338,7 +4347,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L49",
       "id": "tests_test_auth_templates_test_templates_mark_processing_forms_for_loading_overlay",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_templates_mark_processing_forms_for_loading_overlay()"
     },
     {
@@ -4347,7 +4356,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L62",
       "id": "tests_test_auth_templates_test_loading_shell_respects_hidden_attribute_in_css",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_loading_shell_respects_hidden_attribute_in_css()"
     },
     {
@@ -4356,7 +4365,7 @@
       "source_file": "tests/test_auth_templates.py",
       "source_location": "L72",
       "id": "tests_test_auth_templates_test_loading_script_preserves_hidden_csrf_inputs",
-      "community": 16,
+      "community": 15,
       "norm_label": "test_loading_script_preserves_hidden_csrf_inputs()"
     },
     {
@@ -4365,7 +4374,7 @@
       "source_file": "tests/test_cloud.py",
       "source_location": "L1",
       "id": "tests_test_cloud_py",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_cloud.py"
     },
     {
@@ -4374,7 +4383,7 @@
       "source_file": "tests/test_cloud.py",
       "source_location": "L15",
       "id": "tests_test_cloud_test_run_decision_job_returns_summary",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_run_decision_job_returns_summary()"
     },
     {
@@ -4383,7 +4392,7 @@
       "source_file": "tests/test_cloud.py",
       "source_location": "L49",
       "id": "tests_test_cloud_test_pubsub_decision_handler_decodes_payload",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_pubsub_decision_handler_decodes_payload()"
     },
     {
@@ -4392,7 +4401,7 @@
       "source_file": "tests/test_cloud.py",
       "source_location": "L68",
       "id": "tests_test_cloud_test_pubsub_orchestrator_publishes",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_pubsub_orchestrator_publishes()"
     },
     {
@@ -4401,7 +4410,7 @@
       "source_file": "tests/test_cloud.py",
       "source_location": "L110",
       "id": "tests_test_cloud_test_google_credentials_support_base64_service_account",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_google_credentials_support_base64_service_account()"
     },
     {
@@ -4410,7 +4419,7 @@
       "source_file": "tests/test_cloud.py",
       "source_location": "L150",
       "id": "tests_test_cloud_test_google_credentials_require_base64_service_account",
-      "community": 11,
+      "community": 10,
       "norm_label": "test_google_credentials_require_base64_service_account()"
     },
     {
@@ -4500,7 +4509,7 @@
       "source_file": "tests/test_django_settings.py",
       "source_location": "L1",
       "id": "tests_test_django_settings_py",
-      "community": 22,
+      "community": 20,
       "norm_label": "test_django_settings.py"
     },
     {
@@ -4509,7 +4518,7 @@
       "source_file": "tests/test_django_settings.py",
       "source_location": "L6",
       "id": "tests_test_django_settings_test_allowed_hosts_include_the_live_domain_by_default",
-      "community": 22,
+      "community": 20,
       "norm_label": "test_allowed_hosts_include_the_live_domain_by_default()"
     },
     {
@@ -4518,7 +4527,7 @@
       "source_file": "tests/test_django_settings.py",
       "source_location": "L12",
       "id": "tests_test_django_settings_test_as_list_merges_environment_hosts_without_dropping_defaults",
-      "community": 22,
+      "community": 20,
       "norm_label": "test_as_list_merges_environment_hosts_without_dropping_defaults()"
     },
     {
@@ -4527,7 +4536,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L1",
       "id": "tests_test_django_views_py",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_django_views.py"
     },
     {
@@ -4536,7 +4545,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L36",
       "id": "tests_test_django_views_test_research_profile_stores_research_result_in_session",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_research_profile_stores_research_result_in_session()"
     },
     {
@@ -4545,7 +4554,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L74",
       "id": "tests_test_django_views_test_edit_section_updates_session_draft",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_edit_section_updates_session_draft()"
     },
     {
@@ -4554,7 +4563,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L123",
       "id": "tests_test_django_views_test_save_profile_writes_firestore_uri_to_session",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_save_profile_writes_firestore_uri_to_session()"
     },
     {
@@ -4563,7 +4572,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L142",
       "id": "tests_test_django_views_test_request_data_persists_follow_up_request",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_request_data_persists_follow_up_request()"
     },
     {
@@ -4572,7 +4581,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L211",
       "id": "tests_test_django_views_test_request_data_clears_previous_leads_before_new_generation",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_request_data_clears_previous_leads_before_new_generation()"
     },
     {
@@ -4581,7 +4590,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L239",
       "id": "tests_test_django_views_test_request_data_requires_saved_profile",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_request_data_requires_saved_profile()"
     },
     {
@@ -4590,7 +4599,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L255",
       "id": "tests_test_django_views_test_download_leads_export_returns_workbook",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_download_leads_export_returns_workbook()"
     },
     {
@@ -4599,7 +4608,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L277",
       "id": "tests_test_django_views_test_google_login_redirects_to_google_and_stores_state",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_login_redirects_to_google_and_stores_state()"
     },
     {
@@ -4608,7 +4617,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L301",
       "id": "tests_test_django_views_test_google_login_uses_configured_app_base_url_for_callback",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_login_uses_configured_app_base_url_for_callback()"
     },
     {
@@ -4617,7 +4626,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L322",
       "id": "tests_test_django_views_test_google_login_prefers_explicit_redirect_uri_from_settings",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_login_prefers_explicit_redirect_uri_from_settings()"
     },
     {
@@ -4626,7 +4635,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L346",
       "id": "tests_test_django_views_test_google_login_redirects_home_when_auth_not_configured",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_login_redirects_home_when_auth_not_configured()"
     },
     {
@@ -4635,7 +4644,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L355",
       "id": "tests_test_django_views_test_google_callback_stores_session_user",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_callback_stores_session_user()"
     },
     {
@@ -4644,7 +4653,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L385",
       "id": "tests_test_django_views_test_google_callback_rejects_state_mismatch",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_callback_rejects_state_mismatch()"
     },
     {
@@ -4653,7 +4662,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L401",
       "id": "tests_test_django_views_test_google_callback_handles_provider_error",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_google_callback_handles_provider_error()"
     },
     {
@@ -4662,7 +4671,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L424",
       "id": "tests_test_django_views_test_home_renders_sign_in_gate_when_auth_required",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_home_renders_sign_in_gate_when_auth_required()"
     },
     {
@@ -4671,7 +4680,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L436",
       "id": "tests_test_django_views_test_home_shows_admin_analytics_link_for_admin_user",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_home_shows_admin_analytics_link_for_admin_user()"
     },
     {
@@ -4680,7 +4689,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L449",
       "id": "tests_test_django_views_test_home_shows_signed_in_user_and_logout_for_session_user",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_home_shows_signed_in_user_and_logout_for_session_user()"
     },
     {
@@ -4689,7 +4698,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L468",
       "id": "tests_test_django_views_test_home_shows_open_analytics_when_google_sign_in_is_disabled",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_home_shows_open_analytics_when_google_sign_in_is_disabled()"
     },
     {
@@ -4698,7 +4707,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L484",
       "id": "tests_test_django_views_test_home_clears_stale_workspace_on_new_boot",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_home_clears_stale_workspace_on_new_boot()"
     },
     {
@@ -4707,7 +4716,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L498",
       "id": "tests_test_django_views_test_home_renders_locked_accordions_after_save_and_lead_generation",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_home_renders_locked_accordions_after_save_and_lead_generation()"
     },
     {
@@ -4716,7 +4725,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L573",
       "id": "tests_test_django_views_test_analytics_dashboard_requires_admin_access",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_analytics_dashboard_requires_admin_access()"
     },
     {
@@ -4725,7 +4734,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L582",
       "id": "tests_test_django_views_test_analytics_dashboard_renders_for_allowlisted_admin",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_analytics_dashboard_renders_for_allowlisted_admin()"
     },
     {
@@ -4734,7 +4743,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L646",
       "id": "tests_test_django_views_test_analytics_dashboard_skips_admin_verification_when_google_sign_in_is_disabled",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_analytics_dashboard_skips_admin_verification_when_google_sign_in_is_disabled()"
     },
     {
@@ -4743,7 +4752,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L676",
       "id": "tests_test_django_views_test_research_profile_requires_auth_when_google_auth_is_enabled",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_research_profile_requires_auth_when_google_auth_is_enabled()"
     },
     {
@@ -4752,7 +4761,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L699",
       "id": "tests_test_django_views_test_research_profile_does_not_require_auth_when_google_sign_in_is_disabled",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_research_profile_does_not_require_auth_when_google_sign_in_is_disabled()"
     },
     {
@@ -4761,7 +4770,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L723",
       "id": "tests_test_django_views_test_save_profile_requires_auth_when_google_auth_is_enabled",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_save_profile_requires_auth_when_google_auth_is_enabled()"
     },
     {
@@ -4770,7 +4779,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L741",
       "id": "tests_test_django_views_test_save_profile_does_not_require_auth_when_google_sign_in_is_disabled",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_save_profile_does_not_require_auth_when_google_sign_in_is_disabled()"
     },
     {
@@ -4779,7 +4788,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L769",
       "id": "tests_test_django_views_test_generate_social_content_persists_package",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_generate_social_content_persists_package()"
     },
     {
@@ -4788,7 +4797,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L830",
       "id": "tests_test_django_views_test_generate_social_content_requires_saved_profile",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_generate_social_content_requires_saved_profile()"
     },
     {
@@ -4797,7 +4806,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L851",
       "id": "tests_test_django_views_test_save_profile_redirects_when_research_state_is_missing",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_save_profile_redirects_when_research_state_is_missing()"
     },
     {
@@ -4806,7 +4815,7 @@
       "source_file": "tests/test_django_views.py",
       "source_location": "L860",
       "id": "tests_test_django_views_test_logout_clears_workspace_and_auth_state",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_logout_clears_workspace_and_auth_state()"
     },
     {
@@ -4815,7 +4824,7 @@
       "source_file": "tests/test_engine.py",
       "source_location": "L1",
       "id": "tests_test_engine_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_engine.py"
     },
     {
@@ -4824,7 +4833,7 @@
       "source_file": "tests/test_engine.py",
       "source_location": "L15",
       "id": "tests_test_engine_test_decision_engine_end_to_end",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_decision_engine_end_to_end()"
     },
     {
@@ -4833,7 +4842,7 @@
       "source_file": "tests/test_engine.py",
       "source_location": "L100",
       "id": "tests_test_engine_test_pipeline_control_pause_resume_stop",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_pipeline_control_pause_resume_stop()"
     },
     {
@@ -4842,7 +4851,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L1",
       "id": "tests_test_enrichment_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "test_enrichment.py"
     },
     {
@@ -4851,7 +4860,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L11",
       "id": "tests_test_enrichment_fakeemailvalidator",
-      "community": 1,
+      "community": 6,
       "norm_label": "_fakeemailvalidator"
     },
     {
@@ -4860,7 +4869,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L12",
       "id": "tests_test_enrichment_fakeemailvalidator_validate",
-      "community": 1,
+      "community": 6,
       "norm_label": ".validate()"
     },
     {
@@ -4869,7 +4878,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L18",
       "id": "tests_test_enrichment_fakesearchclient",
-      "community": 1,
+      "community": 6,
       "norm_label": "_fakesearchclient"
     },
     {
@@ -4878,7 +4887,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L19",
       "id": "tests_test_enrichment_fakesearchclient_init",
-      "community": 1,
+      "community": 6,
       "norm_label": ".__init__()"
     },
     {
@@ -4887,7 +4896,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L22",
       "id": "tests_test_enrichment_fakesearchclient_search",
-      "community": 1,
+      "community": 6,
       "norm_label": ".search()"
     },
     {
@@ -4896,7 +4905,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L26",
       "id": "tests_test_enrichment_test_enricher_builds_contact_paths_and_decision_maker",
-      "community": 1,
+      "community": 6,
       "norm_label": "test_enricher_builds_contact_paths_and_decision_maker()"
     },
     {
@@ -4905,7 +4914,7 @@
       "source_file": "tests/test_enrichment.py",
       "source_location": "L66",
       "id": "tests_test_enrichment_test_enricher_respects_exclusion_keywords",
-      "community": 1,
+      "community": 6,
       "norm_label": "test_enricher_respects_exclusion_keywords()"
     },
     {
@@ -4914,7 +4923,7 @@
       "source_file": "tests/test_export.py",
       "source_location": "L1",
       "id": "tests_test_export_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_export.py"
     },
     {
@@ -4923,7 +4932,7 @@
       "source_file": "tests/test_export.py",
       "source_location": "L17",
       "id": "tests_test_export_test_export_service_builds_two_sheet_workbook",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_export_service_builds_two_sheet_workbook()"
     },
     {
@@ -4932,7 +4941,7 @@
       "source_file": "tests/test_export.py",
       "source_location": "L71",
       "id": "tests_test_export_test_export_service_builds_workbook_from_rows",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_export_service_builds_workbook_from_rows()"
     },
     {
@@ -4941,7 +4950,7 @@
       "source_file": "tests/test_forms.py",
       "source_location": "L1",
       "id": "tests_test_forms_py",
-      "community": 0,
+      "community": 5,
       "norm_label": "test_forms.py"
     },
     {
@@ -4950,7 +4959,7 @@
       "source_file": "tests/test_forms.py",
       "source_location": "L11",
       "id": "tests_test_forms_test_source_research_form_normalizes_whitespace",
-      "community": 0,
+      "community": 5,
       "norm_label": "test_source_research_form_normalizes_whitespace()"
     },
     {
@@ -4959,7 +4968,7 @@
       "source_file": "tests/test_forms.py",
       "source_location": "L24",
       "id": "tests_test_forms_test_profile_section_form_coerces_lists_and_urls",
-      "community": 0,
+      "community": 5,
       "norm_label": "test_profile_section_form_coerces_lists_and_urls()"
     },
     {
@@ -4968,7 +4977,7 @@
       "source_file": "tests/test_forms.py",
       "source_location": "L42",
       "id": "tests_test_forms_test_post_save_request_form_normalizes_modes_and_notes",
-      "community": 0,
+      "community": 5,
       "norm_label": "test_post_save_request_form_normalizes_modes_and_notes()"
     },
     {
@@ -4977,7 +4986,7 @@
       "source_file": "tests/test_forms.py",
       "source_location": "L55",
       "id": "tests_test_forms_test_post_save_request_form_rejects_invalid_modes",
-      "community": 0,
+      "community": 5,
       "norm_label": "test_post_save_request_form_rejects_invalid_modes()"
     },
     {
@@ -4986,7 +4995,7 @@
       "source_file": "tests/test_forms.py",
       "source_location": "L67",
       "id": "tests_test_forms_test_social_content_request_form_normalizes_request_fields",
-      "community": 0,
+      "community": 5,
       "norm_label": "test_social_content_request_form_normalizes_request_fields()"
     },
     {
@@ -4995,7 +5004,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L1",
       "id": "tests_test_google_auth_py",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_google_auth.py"
     },
     {
@@ -5004,7 +5013,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L18",
       "id": "tests_test_google_auth_test_build_google_oauth_authorization_url_contains_required_parameters",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_build_google_oauth_authorization_url_contains_required_parameters()"
     },
     {
@@ -5013,7 +5022,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L36",
       "id": "tests_test_google_auth_test_exchange_google_code_returns_token_payload",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_exchange_google_code_returns_token_payload()"
     },
     {
@@ -5022,7 +5031,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L60",
       "id": "tests_test_google_auth_test_exchange_google_code_wraps_network_errors",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_exchange_google_code_wraps_network_errors()"
     },
     {
@@ -5031,7 +5040,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L80",
       "id": "tests_test_google_auth_test_exchange_google_code_requires_id_token",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_exchange_google_code_requires_id_token()"
     },
     {
@@ -5040,7 +5049,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L105",
       "id": "tests_test_google_auth_test_exchange_google_code_surfaces_provider_error_details",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_exchange_google_code_surfaces_provider_error_details()"
     },
     {
@@ -5049,7 +5058,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L137",
       "id": "tests_test_google_auth_test_verify_google_id_token_returns_normalized_user",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_verify_google_id_token_returns_normalized_user()"
     },
     {
@@ -5058,7 +5067,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L158",
       "id": "tests_test_google_auth_test_verify_google_id_token_requires_configured_client_id",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_verify_google_id_token_requires_configured_client_id()"
     },
     {
@@ -5067,7 +5076,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L167",
       "id": "tests_test_google_auth_test_verify_google_id_token_wraps_provider_errors",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_verify_google_id_token_wraps_provider_errors()"
     },
     {
@@ -5076,7 +5085,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L184",
       "id": "tests_test_google_auth_test_verify_google_id_token_requires_verified_email",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_verify_google_id_token_requires_verified_email()"
     },
     {
@@ -5085,7 +5094,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L205",
       "id": "tests_test_google_auth_test_settings_load_supports_legacy_google_client_env_keys",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_settings_load_supports_legacy_google_client_env_keys()"
     },
     {
@@ -5094,7 +5103,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L220",
       "id": "tests_test_google_auth_test_settings_load_supports_google_oauth_redirect_uri",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_settings_load_supports_google_oauth_redirect_uri()"
     },
     {
@@ -5103,7 +5112,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L238",
       "id": "tests_test_google_auth_test_settings_load_supports_google_sign_in_enabled",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_settings_load_supports_google_sign_in_enabled()"
     },
     {
@@ -5112,7 +5121,7 @@
       "source_file": "tests/test_google_auth.py",
       "source_location": "L249",
       "id": "tests_test_google_auth_test_google_auth_is_configured_respects_disable_flag",
-      "community": 10,
+      "community": 0,
       "norm_label": "test_google_auth_is_configured_respects_disable_flag()"
     },
     {
@@ -5121,7 +5130,7 @@
       "source_file": "tests/test_intake.py",
       "source_location": "L1",
       "id": "tests_test_intake_py",
-      "community": 1,
+      "community": 2,
       "norm_label": "test_intake.py"
     },
     {
@@ -5130,7 +5139,7 @@
       "source_file": "tests/test_intake.py",
       "source_location": "L6",
       "id": "tests_test_intake_fakeopenaiservice",
-      "community": 1,
+      "community": 2,
       "norm_label": "_fakeopenaiservice"
     },
     {
@@ -5139,7 +5148,7 @@
       "source_file": "tests/test_intake.py",
       "source_location": "L7",
       "id": "tests_test_intake_fakeopenaiservice_is_available",
-      "community": 1,
+      "community": 2,
       "norm_label": ".is_available()"
     },
     {
@@ -5148,7 +5157,7 @@
       "source_file": "tests/test_intake.py",
       "source_location": "L10",
       "id": "tests_test_intake_fakeopenaiservice_infer_targeting_model",
-      "community": 1,
+      "community": 2,
       "norm_label": ".infer_targeting_model()"
     },
     {
@@ -5157,7 +5166,7 @@
       "source_file": "tests/test_intake.py",
       "source_location": "L20",
       "id": "tests_test_intake_test_business_profile_builder_normalizes_and_refines",
-      "community": 1,
+      "community": 2,
       "norm_label": "test_business_profile_builder_normalizes_and_refines()"
     },
     {
@@ -5166,7 +5175,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L1",
       "id": "tests_test_interview_py",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_interview.py"
     },
     {
@@ -5175,7 +5184,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L7",
       "id": "tests_test_interview_fakeinterviewmodel",
-      "community": 2,
+      "community": 7,
       "norm_label": "_fakeinterviewmodel"
     },
     {
@@ -5184,7 +5193,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L8",
       "id": "tests_test_interview_fakeinterviewmodel_is_available",
-      "community": 2,
+      "community": 7,
       "norm_label": ".is_available()"
     },
     {
@@ -5193,7 +5202,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L11",
       "id": "tests_test_interview_fakeinterviewmodel_extract_intake_update",
-      "community": 2,
+      "community": 7,
       "norm_label": ".extract_intake_update()"
     },
     {
@@ -5202,7 +5211,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L17",
       "id": "tests_test_interview_fakeinterviewmodel_generate_intake_question",
-      "community": 2,
+      "community": 7,
       "norm_label": ".generate_intake_question()"
     },
     {
@@ -5211,7 +5220,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L25",
       "id": "tests_test_interview_test_interviewer_uses_model_to_fill_missing_business_fields",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_interviewer_uses_model_to_fill_missing_business_fields()"
     },
     {
@@ -5220,7 +5229,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L42",
       "id": "tests_test_interview_test_interviewer_next_question_skips_answered_fields",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_interviewer_next_question_skips_answered_fields()"
     },
     {
@@ -5229,7 +5238,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L65",
       "id": "tests_test_interview_test_opening_question_uses_compact_label_block",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_opening_question_uses_compact_label_block()"
     },
     {
@@ -5238,7 +5247,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L82",
       "id": "tests_test_interview_test_interviewer_replaces_list_fields_on_refinement",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_interviewer_replaces_list_fields_on_refinement()"
     },
     {
@@ -5247,7 +5256,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L96",
       "id": "tests_test_interview_test_interviewer_treats_filters_and_constraints_as_optional",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_interviewer_treats_filters_and_constraints_as_optional()"
     },
     {
@@ -5256,7 +5265,7 @@
       "source_file": "tests/test_interview.py",
       "source_location": "L118",
       "id": "tests_test_interview_test_interviewer_collects_required_details_in_at_most_six_questions",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_interviewer_collects_required_details_in_at_most_six_questions()"
     },
     {
@@ -5265,7 +5274,7 @@
       "source_file": "tests/test_matching.py",
       "source_location": "L1",
       "id": "tests_test_matching_py",
-      "community": 1,
+      "community": 2,
       "norm_label": "test_matching.py"
     },
     {
@@ -5274,7 +5283,7 @@
       "source_file": "tests/test_matching.py",
       "source_location": "L13",
       "id": "tests_test_matching_test_matching_engine_prefers_refined_reason_and_best_contact",
-      "community": 1,
+      "community": 2,
       "norm_label": "test_matching_engine_prefers_refined_reason_and_best_contact()"
     },
     {
@@ -5283,7 +5292,7 @@
       "source_file": "tests/test_parsing.py",
       "source_location": "L1",
       "id": "tests_test_parsing_py",
-      "community": 4,
+      "community": 6,
       "norm_label": "test_parsing.py"
     },
     {
@@ -5292,7 +5301,7 @@
       "source_file": "tests/test_parsing.py",
       "source_location": "L9",
       "id": "tests_test_parsing_test_html_parser_extracts_core_fields",
-      "community": 4,
+      "community": 6,
       "norm_label": "test_html_parser_extracts_core_fields()"
     },
     {
@@ -5301,7 +5310,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L1",
       "id": "tests_test_profile_flow_py",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_profile_flow.py"
     },
     {
@@ -5310,7 +5319,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L9",
       "id": "tests_test_profile_flow_test_parse_list_input_dedupes_items",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_parse_list_input_dedupes_items()"
     },
     {
@@ -5319,7 +5328,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L15",
       "id": "tests_test_profile_flow_test_parse_multiline_urls_normalizes_scheme",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_parse_multiline_urls_normalizes_scheme()"
     },
     {
@@ -5328,7 +5337,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L21",
       "id": "tests_test_profile_flow_test_build_research_document_id_uses_slug_and_timestamp",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_build_research_document_id_uses_slug_and_timestamp()"
     },
     {
@@ -5337,7 +5346,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L27",
       "id": "tests_test_profile_flow_test_normalize_error_message_uses_fallback_for_blank_exception",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_normalize_error_message_uses_fallback_for_blank_exception()"
     },
     {
@@ -5346,7 +5355,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L36",
       "id": "tests_test_profile_flow_test_format_discovery_mode_label_humanizes_underscored_value",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_format_discovery_mode_label_humanizes_underscored_value()"
     },
     {
@@ -5355,7 +5364,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L43",
       "id": "tests_test_profile_flow_test_build_summary_cards_contains_plain_language_sections",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_build_summary_cards_contains_plain_language_sections()"
     },
     {
@@ -5364,7 +5373,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L71",
       "id": "tests_test_profile_flow_test_build_summary_cards_wraps_trusted_urls_inside_card",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_build_summary_cards_wraps_trusted_urls_inside_card()"
     },
     {
@@ -5373,7 +5382,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L96",
       "id": "tests_test_profile_flow_test_update_draft_from_partial_values_updates_only_one_card",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_update_draft_from_partial_values_updates_only_one_card()"
     },
     {
@@ -5382,7 +5391,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L120",
       "id": "tests_test_profile_flow_test_serialize_list_field_returns_human_readable_text",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_serialize_list_field_returns_human_readable_text()"
     },
     {
@@ -5391,7 +5400,7 @@
       "source_file": "tests/test_profile_flow.py",
       "source_location": "L130",
       "id": "tests_test_profile_flow_test_build_summary_cards_hides_none_and_not_specified_fields",
-      "community": 2,
+      "community": 7,
       "norm_label": "test_build_summary_cards_hides_none_and_not_specified_fields()"
     },
     {
@@ -5400,7 +5409,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L1",
       "id": "tests_test_profile_research_py",
-      "community": 6,
+      "community": 4,
       "norm_label": "test_profile_research.py"
     },
     {
@@ -5409,7 +5418,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L7",
       "id": "tests_test_profile_research_fakefetcher",
-      "community": 6,
+      "community": 4,
       "norm_label": "_fakefetcher"
     },
     {
@@ -5418,7 +5427,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L8",
       "id": "tests_test_profile_research_fakefetcher_fetch",
-      "community": 6,
+      "community": 4,
       "norm_label": ".fetch()"
     },
     {
@@ -5427,7 +5436,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L22",
       "id": "tests_test_profile_research_fakesearchclient",
-      "community": 6,
+      "community": 4,
       "norm_label": "_fakesearchclient"
     },
     {
@@ -5436,7 +5445,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L23",
       "id": "tests_test_profile_research_fakesearchclient_search",
-      "community": 6,
+      "community": 4,
       "norm_label": ".search()"
     },
     {
@@ -5445,7 +5454,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L33",
       "id": "tests_test_profile_research_mixedsearchclient",
-      "community": 6,
+      "community": 4,
       "norm_label": "_mixedsearchclient"
     },
     {
@@ -5454,7 +5463,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L49",
       "id": "tests_test_profile_research_fakeopenaiservice",
-      "community": 6,
+      "community": 4,
       "norm_label": "_fakeopenaiservice"
     },
     {
@@ -5463,7 +5472,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L50",
       "id": "tests_test_profile_research_fakeopenaiservice_is_available",
-      "community": 6,
+      "community": 4,
       "norm_label": ".is_available()"
     },
     {
@@ -5472,7 +5481,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L53",
       "id": "tests_test_profile_research_fakeopenaiservice_verify_business_profile",
-      "community": 6,
+      "community": 4,
       "norm_label": ".verify_business_profile()"
     },
     {
@@ -5481,7 +5490,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L76",
       "id": "tests_test_profile_research_test_profile_researcher_builds_verified_draft",
-      "community": 6,
+      "community": 4,
       "norm_label": "test_profile_researcher_builds_verified_draft()"
     },
     {
@@ -5490,7 +5499,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L97",
       "id": "tests_test_profile_research_unavailableopenaiservice",
-      "community": 6,
+      "community": 4,
       "norm_label": "_unavailableopenaiservice"
     },
     {
@@ -5499,7 +5508,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L102",
       "id": "tests_test_profile_research_test_profile_researcher_falls_back_without_model",
-      "community": 6,
+      "community": 4,
       "norm_label": "test_profile_researcher_falls_back_without_model()"
     },
     {
@@ -5508,7 +5517,7 @@
       "source_file": "tests/test_profile_research.py",
       "source_location": "L120",
       "id": "tests_test_profile_research_test_profile_researcher_filters_irrelevant_search_results",
-      "community": 6,
+      "community": 4,
       "norm_label": "test_profile_researcher_filters_irrelevant_search_results()"
     },
     {
@@ -5517,7 +5526,7 @@
       "source_file": "tests/test_scoring.py",
       "source_location": "L1",
       "id": "tests_test_scoring_py",
-      "community": 1,
+      "community": 2,
       "norm_label": "test_scoring.py"
     },
     {
@@ -5526,7 +5535,7 @@
       "source_file": "tests/test_scoring.py",
       "source_location": "L8",
       "id": "tests_test_scoring_fakeopenaiservice",
-      "community": 1,
+      "community": 2,
       "norm_label": "_fakeopenaiservice"
     },
     {
@@ -5535,7 +5544,7 @@
       "source_file": "tests/test_scoring.py",
       "source_location": "L9",
       "id": "tests_test_scoring_fakeopenaiservice_is_available",
-      "community": 1,
+      "community": 2,
       "norm_label": ".is_available()"
     },
     {
@@ -5544,7 +5553,7 @@
       "source_file": "tests/test_scoring.py",
       "source_location": "L12",
       "id": "tests_test_scoring_fakeopenaiservice_refine_scores",
-      "community": 1,
+      "community": 2,
       "norm_label": ".refine_scores()"
     },
     {
@@ -5553,7 +5562,7 @@
       "source_file": "tests/test_scoring.py",
       "source_location": "L25",
       "id": "tests_test_scoring_build_entity",
-      "community": 1,
+      "community": 2,
       "norm_label": "_build_entity()"
     },
     {
@@ -5562,7 +5571,7 @@
       "source_file": "tests/test_scoring.py",
       "source_location": "L48",
       "id": "tests_test_scoring_test_scoring_engine_scores_and_refines",
-      "community": 1,
+      "community": 2,
       "norm_label": "test_scoring_engine_scores_and_refines()"
     },
     {
@@ -5733,7 +5742,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L1",
       "id": "tests_test_social_content_py",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_social_content.py"
     },
     {
@@ -5742,7 +5751,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L15",
       "id": "tests_test_social_content_searchclient",
-      "community": 5,
+      "community": 3,
       "norm_label": "_searchclient"
     },
     {
@@ -5751,7 +5760,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L16",
       "id": "tests_test_social_content_searchclient_search",
-      "community": 5,
+      "community": 3,
       "norm_label": ".search()"
     },
     {
@@ -5760,7 +5769,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L20",
       "id": "tests_test_social_content_openaiservice",
-      "community": 5,
+      "community": 3,
       "norm_label": "_openaiservice"
     },
     {
@@ -5769,7 +5778,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L21",
       "id": "tests_test_social_content_openaiservice_is_available",
-      "community": 5,
+      "community": 3,
       "norm_label": ".is_available()"
     },
     {
@@ -5778,7 +5787,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L25",
       "id": "tests_test_social_content_build_social_service",
-      "community": 5,
+      "community": 3,
       "norm_label": "_build_social_service()"
     },
     {
@@ -5787,7 +5796,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L34",
       "id": "tests_test_social_content_build_request",
-      "community": 5,
+      "community": 3,
       "norm_label": "_build_request()"
     },
     {
@@ -5796,7 +5805,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L43",
       "id": "tests_test_social_content_configure_sendgrid",
-      "community": 5,
+      "community": 3,
       "norm_label": "_configure_sendgrid()"
     },
     {
@@ -5805,7 +5814,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L50",
       "id": "tests_test_social_content_test_social_content_service_generates_fallback_package",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_social_content_service_generates_fallback_package()"
     },
     {
@@ -5814,7 +5823,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L76",
       "id": "tests_test_social_content_test_social_content_service_marks_email_failure",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_social_content_service_marks_email_failure()"
     },
     {
@@ -5823,7 +5832,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L94",
       "id": "tests_test_social_content_test_email_delivery_service_requires_configuration",
-      "community": 7,
+      "community": 3,
       "norm_label": "test_email_delivery_service_requires_configuration()"
     },
     {
@@ -5832,7 +5841,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L107",
       "id": "tests_test_social_content_test_email_delivery_service_sends_via_sendgrid",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_email_delivery_service_sends_via_sendgrid()"
     },
     {
@@ -5841,7 +5850,7 @@
       "source_file": "tests/test_social_content.py",
       "source_location": "L139",
       "id": "tests_test_social_content_test_email_delivery_service_surfaces_sendgrid_error",
-      "community": 5,
+      "community": 3,
       "norm_label": "test_email_delivery_service_surfaces_sendgrid_error()"
     },
     {
@@ -5850,7 +5859,7 @@
       "source_file": "tests/test_storage_profiles.py",
       "source_location": "L1",
       "id": "tests_test_storage_profiles_py",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_storage_profiles.py"
     },
     {
@@ -5859,7 +5868,7 @@
       "source_file": "tests/test_storage_profiles.py",
       "source_location": "L13",
       "id": "tests_test_storage_profiles_test_firestore_profile_store_saves_payload",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_firestore_profile_store_saves_payload()"
     },
     {
@@ -5868,7 +5877,7 @@
       "source_file": "tests/test_storage_profiles.py",
       "source_location": "L63",
       "id": "tests_test_storage_profiles_test_import_google_cloud_module_raises_helpful_message",
-      "community": 3,
+      "community": 1,
       "norm_label": "test_import_google_cloud_module_raises_helpful_message()"
     },
     {
@@ -5877,7 +5886,7 @@
       "source_file": "tests/test_validation.py",
       "source_location": "L1",
       "id": "tests_test_validation_py",
-      "community": 1,
+      "community": 6,
       "norm_label": "test_validation.py"
     },
     {
@@ -5886,7 +5895,7 @@
       "source_file": "tests/test_validation.py",
       "source_location": "L12",
       "id": "tests_test_validation_test_validate_rejects_invalid_syntax",
-      "community": 1,
+      "community": 6,
       "norm_label": "test_validate_rejects_invalid_syntax()"
     },
     {
@@ -5895,7 +5904,7 @@
       "source_file": "tests/test_validation.py",
       "source_location": "L25",
       "id": "tests_test_validation_test_validate_skips_mx_lookup_when_requested",
-      "community": 1,
+      "community": 6,
       "norm_label": "test_validate_skips_mx_lookup_when_requested()"
     },
     {
@@ -5907,12 +5916,12 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "readme_growth_opportunity_decision_engine",
+      "id": "readme_growth_engine",
       "community": 12,
       "norm_label": "growth opportunity decision engine"
     },
     {
-      "label": "growth_engine",
+      "label": "growth_engine_web",
       "file_type": "concept",
       "source_file": "README.md",
       "source_location": null,
@@ -5920,35 +5929,9 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "readme_growth_engine",
+      "id": "readme_growth_engine_web",
       "community": 12,
-      "norm_label": "growth_engine"
-    },
-    {
-      "label": "gpt-5.4-mini",
-      "file_type": "concept",
-      "source_file": "README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "readme_gpt_5_4_mini",
-      "community": 12,
-      "norm_label": "gpt-5.4-mini"
-    },
-    {
-      "label": "Firestore",
-      "file_type": "concept",
-      "source_file": "README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "readme_firestore",
-      "community": 12,
-      "norm_label": "firestore"
+      "norm_label": "growth_engine_web"
     },
     {
       "label": "growth_engine_django",
@@ -5965,45 +5948,6 @@
     },
     {
       "label": "growth_engine/services/openai_service.py",
-      "file_type": "code",
-      "source_file": "README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "readme_openai_service",
-      "community": 12,
-      "norm_label": "growth_engine/services/openai_service.py"
-    },
-    {
-      "label": "services/social_content.py",
-      "file_type": "code",
-      "source_file": "README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "readme_social_content",
-      "community": 12,
-      "norm_label": "services/social_content.py"
-    },
-    {
-      "label": "services/email_service.py",
-      "file_type": "code",
-      "source_file": "README.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "readme_email_service",
-      "community": 12,
-      "norm_label": "services/email_service.py"
-    },
-    {
-      "label": "graphify-out",
       "file_type": "concept",
       "source_file": "README.md",
       "source_location": null,
@@ -6011,308 +5955,139 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "readme_graphify_out",
+      "id": "readme_growth_engine_services_openai_service",
       "community": 12,
-      "norm_label": "graphify-out"
+      "norm_label": "growth_engine/services/openai_service.py"
     },
     {
-      "label": "growth_engine/intake/service.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
+      "label": "growth_engine/services/social_content.py",
+      "file_type": "concept",
+      "source_file": "README.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "architecture_intake",
+      "id": "readme_growth_engine_services_social_content",
       "community": 12,
-      "norm_label": "growth_engine/intake/service.py"
+      "norm_label": "growth_engine/services/social_content.py"
     },
     {
-      "label": "growth_engine/intake/interview.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
+      "label": "growth_engine/services/email_service.py",
+      "file_type": "concept",
+      "source_file": "README.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "architecture_interview",
+      "id": "readme_growth_engine_services_email_service",
       "community": 12,
-      "norm_label": "growth_engine/intake/interview.py"
+      "norm_label": "growth_engine/services/email_service.py"
     },
     {
-      "label": "growth_engine/discovery/adapters.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
+      "label": "growth_engine/storage",
+      "file_type": "concept",
+      "source_file": "README.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "architecture_discovery_adapters",
-      "community": 32,
-      "norm_label": "growth_engine/discovery/adapters.py"
-    },
-    {
-      "label": "growth_engine/parsing/html.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_parsing_html",
-      "community": 33,
-      "norm_label": "growth_engine/parsing/html.py"
-    },
-    {
-      "label": "growth_engine/enrichment/service.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_enrichment_service",
-      "community": 34,
-      "norm_label": "growth_engine/enrichment/service.py"
-    },
-    {
-      "label": "growth_engine/validation/email_validation.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_validation_email_validation",
-      "community": 35,
-      "norm_label": "growth_engine/validation/email_validation.py"
-    },
-    {
-      "label": "growth_engine/scoring/service.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_scoring_service",
-      "community": 36,
-      "norm_label": "growth_engine/scoring/service.py"
-    },
-    {
-      "label": "growth_engine/matching/service.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_matching_service",
-      "community": 37,
-      "norm_label": "growth_engine/matching/service.py"
-    },
-    {
-      "label": "growth_engine/export/service.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_export_service",
-      "community": 38,
-      "norm_label": "growth_engine/export/service.py"
-    },
-    {
-      "label": "growth_engine/storage/artifacts.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_storage_artifacts",
+      "id": "readme_growth_engine_storage",
       "community": 12,
-      "norm_label": "growth_engine/storage/artifacts.py"
+      "norm_label": "growth_engine/storage"
+    },
+    {
+      "label": "growth_engine/profile_research",
+      "file_type": "concept",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_growth_engine_profile_research",
+      "community": 12,
+      "norm_label": "growth_engine/profile_research"
+    },
+    {
+      "label": "growth_engine/orchestration",
+      "file_type": "concept",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_growth_engine_orchestration",
+      "community": 12,
+      "norm_label": "growth_engine/orchestration"
     },
     {
       "label": "growth_engine_web/views.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
+      "file_type": "concept",
+      "source_file": "README.md",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "architecture_views",
+      "id": "readme_growth_engine_web_views",
       "community": 12,
       "norm_label": "growth_engine_web/views.py"
     },
     {
-      "label": "growth_engine/cloud/run_api.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_run_api",
-      "community": 12,
-      "norm_label": "growth_engine/cloud/run_api.py"
-    },
-    {
-      "label": "growth_engine/cloud/functions.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_functions",
-      "community": 12,
-      "norm_label": "growth_engine/cloud/functions.py"
-    },
-    {
-      "label": "growth_engine/cloud/pubsub.py",
-      "file_type": "code",
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "architecture_pubsub",
-      "community": 12,
-      "norm_label": "growth_engine/cloud/pubsub.py"
-    },
-    {
-      "label": "Mumbai food brand looking for distributors",
-      "file_type": "document",
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "use_cases_mumbai_food_brand",
-      "community": 17,
-      "norm_label": "mumbai food brand looking for distributors"
-    },
-    {
-      "label": "Bengaluru SaaS startup looking for implementation partners",
-      "file_type": "document",
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "use_cases_bengaluru_saas_startup",
-      "community": 17,
-      "norm_label": "bengaluru saas startup looking for implementation partners"
-    },
-    {
-      "label": "Jaipur manufacturer screening supplier options",
-      "file_type": "document",
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "use_cases_jaipur_manufacturer",
-      "community": 17,
-      "norm_label": "jaipur manufacturer screening supplier options"
-    },
-    {
-      "label": "Chennai healthcare services company tracking procurement opportunities",
-      "file_type": "document",
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "use_cases_chennai_healthcare_services_company",
-      "community": 17,
-      "norm_label": "chennai healthcare services company tracking procurement opportunities"
-    },
-    {
-      "label": "Pune D2C brand needing growth vendors",
-      "file_type": "document",
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "use_cases_pune_d2c_brand",
-      "community": 17,
-      "norm_label": "pune d2c brand needing growth vendors"
-    },
-    {
-      "label": "analytics.html",
-      "file_type": "code",
-      "source_file": "growth_engine_web/templates/growth_engine_web/analytics.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "analytics_html",
-      "community": 0,
-      "norm_label": "analytics.html"
-    },
-    {
-      "label": "base.html",
-      "file_type": "code",
-      "source_file": "growth_engine_web/templates/growth_engine_web/base.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "base_html",
-      "community": 0,
-      "norm_label": "base.html"
-    },
-    {
-      "label": "edit_section.html",
-      "file_type": "code",
-      "source_file": "growth_engine_web/templates/growth_engine_web/edit_section.html",
-      "source_location": null,
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "edit_section_html",
-      "community": 0,
-      "norm_label": "edit_section.html"
-    },
-    {
-      "label": "home.html",
-      "file_type": "code",
+      "label": "Home Template",
+      "file_type": "image",
       "source_file": "growth_engine_web/templates/growth_engine_web/home.html",
       "source_location": null,
       "source_url": null,
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "home_html",
-      "community": 0,
-      "norm_label": "home.html"
+      "id": "readme_growth_engine_web_templates_home",
+      "community": 12,
+      "norm_label": "home template"
+    },
+    {
+      "label": "Analytics Template",
+      "file_type": "image",
+      "source_file": "growth_engine_web/templates/growth_engine_web/analytics.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_growth_engine_web_templates_analytics",
+      "community": 12,
+      "norm_label": "analytics template"
+    },
+    {
+      "label": "Architecture",
+      "file_type": "document",
+      "source_file": "docs/architecture.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_docs_architecture",
+      "community": 12,
+      "norm_label": "architecture"
+    },
+    {
+      "label": "Use Cases",
+      "file_type": "document",
+      "source_file": "docs/use-cases.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "id": "readme_docs_use_cases",
+      "community": 12,
+      "norm_label": "use cases"
     },
     {
       "label": "Test Suite",
@@ -6323,7 +6098,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "id": "tests_readme",
+      "id": "readme_tests_readme",
       "community": 12,
       "norm_label": "test suite"
     }
@@ -10112,7 +9887,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L334",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_profile_flow_get_summary_card_config"
     },
     {
@@ -10508,7 +10283,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L344",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_profile_flow_update_draft_from_partial_values"
     },
     {
@@ -10552,7 +10327,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L368",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_profile_flow_form_initial_for_fields"
     },
     {
@@ -19884,7 +19659,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L342",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_forms_profilesectionform"
     },
     {
@@ -21162,7 +20937,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L333",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_session_state_get_draft"
     },
     {
@@ -21250,7 +21025,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L348",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_session_state_set_draft"
     },
     {
@@ -21305,7 +21080,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L352",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_session_state_get_research_result"
     },
     {
@@ -21382,7 +21157,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L355",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_session_state_set_research_result"
     },
     {
@@ -21514,7 +21289,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L350",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_session_state_clear_lead_results"
     },
     {
@@ -21635,7 +21410,7 @@
       "source_file": "growth_engine_web/views.py",
       "source_location": "L351",
       "weight": 1.0,
-      "source": "edit_section_html",
+      "source": "growth_engine_web_views_edit_section",
       "target": "growth_engine_web_session_state_clear_social_results"
     },
     {
@@ -21953,7 +21728,7 @@
       "source_location": "L332",
       "weight": 1.0,
       "source": "growth_engine_web_views_py",
-      "target": "edit_section_html",
+      "target": "growth_engine_web_views_edit_section",
       "confidence_score": 1.0
     },
     {
@@ -25649,234 +25424,234 @@
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.99,
+      "confidence_score": 1.0,
       "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_growth_engine"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_web"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.99,
+      "confidence_score": 1.0,
       "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_gpt_5_4_mini"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 0.99,
-      "source_file": "README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_firestore"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 0.99,
-      "source_file": "README.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
+      "source": "readme_growth_engine",
       "target": "readme_growth_engine_django"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.98,
+      "confidence_score": 1.0,
       "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_openai_service"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_services_openai_service"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.98,
+      "confidence_score": 1.0,
       "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_social_content"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_services_social_content"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.98,
+      "confidence_score": 1.0,
       "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_email_service"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_services_email_service"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.9,
+      "confidence_score": 1.0,
       "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "readme_growth_opportunity_decision_engine",
-      "target": "readme_graphify_out"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_storage"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.95,
-      "source_file": "tests/README.md",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "tests_readme",
-      "target": "readme_growth_opportunity_decision_engine"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_profile_research"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.99,
-      "source_file": "docs/architecture.md",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "architecture_intake",
-      "target": "architecture_interview"
+      "source": "readme_growth_engine",
+      "target": "readme_growth_engine_orchestration"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_growth_engine",
+      "target": "readme_docs_architecture"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.72,
+      "source_file": "docs/use-cases.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_docs_use_cases",
+      "target": "readme_growth_engine"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_growth_engine",
+      "target": "readme_tests_readme"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.86,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_growth_engine_web",
+      "target": "readme_growth_engine_web_views"
     },
     {
       "relation": "conceptually_related_to",
       "confidence": "INFERRED",
       "confidence_score": 0.78,
-      "source_file": "docs/architecture.md",
+      "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "architecture_views",
-      "target": "architecture_intake"
+      "source": "readme_growth_engine_web",
+      "target": "readme_growth_engine_web_templates_home"
     },
     {
       "relation": "conceptually_related_to",
       "confidence": "INFERRED",
       "confidence_score": 0.78,
-      "source_file": "docs/architecture.md",
+      "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "architecture_views",
-      "target": "architecture_storage_artifacts"
+      "source": "readme_growth_engine_web",
+      "target": "readme_growth_engine_web_templates_analytics"
     },
     {
-      "relation": "conceptually_related_to",
+      "relation": "shares_data_with",
       "confidence": "INFERRED",
-      "confidence_score": 0.72,
-      "source_file": "docs/architecture.md",
+      "confidence_score": 0.83,
+      "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "architecture_views",
-      "target": "architecture_run_api"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.72,
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "architecture_views",
-      "target": "architecture_functions"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.72,
-      "source_file": "docs/architecture.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "architecture_views",
-      "target": "architecture_pubsub"
+      "source": "readme_growth_engine_profile_research",
+      "target": "readme_growth_engine_services_openai_service"
     },
     {
       "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.95,
+      "confidence_score": 1.0,
+      "source_file": "docs/architecture.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_docs_architecture",
+      "target": "readme_growth_engine_services_openai_service"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.84,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_growth_engine_services_social_content",
+      "target": "readme_growth_engine_services_email_service"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "tests/README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "tests_readme",
-      "target": "architecture_views"
+      "source": "readme_tests_readme",
+      "target": "readme_growth_engine_services_social_content"
     },
     {
-      "relation": "conceptually_related_to",
+      "relation": "shares_data_with",
       "confidence": "INFERRED",
-      "confidence_score": 0.7,
-      "source_file": "docs/use-cases.md",
+      "confidence_score": 0.8,
+      "source_file": "README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "use_cases_mumbai_food_brand",
-      "target": "use_cases_bengaluru_saas_startup"
+      "source": "readme_growth_engine_orchestration",
+      "target": "readme_growth_engine_storage"
     },
     {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.7,
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "use_cases_mumbai_food_brand",
-      "target": "use_cases_jaipur_manufacturer"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.7,
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "use_cases_mumbai_food_brand",
-      "target": "use_cases_chennai_healthcare_services_company"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.7,
-      "source_file": "docs/use-cases.md",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "use_cases_mumbai_food_brand",
-      "target": "use_cases_pune_d2c_brand"
-    },
-    {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.74,
-      "source_file": "growth_engine_web/templates/growth_engine_web/analytics.html",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "analytics_html",
-      "target": "home_html"
-    },
-    {
-      "relation": "conceptually_related_to",
+      "relation": "references",
       "confidence": "EXTRACTED",
-      "confidence_score": 0.99,
-      "source_file": "growth_engine_web/templates/growth_engine_web/base.html",
+      "confidence_score": 1.0,
+      "source_file": "docs/architecture.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "base_html",
-      "target": "home_html"
+      "source": "readme_docs_architecture",
+      "target": "readme_growth_engine_storage"
     },
     {
-      "relation": "conceptually_related_to",
-      "confidence": "INFERRED",
-      "confidence_score": 0.74,
-      "source_file": "growth_engine_web/templates/growth_engine_web/edit_section.html",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/README.md",
       "source_location": null,
       "weight": 1.0,
-      "source": "edit_section_html",
-      "target": "home_html"
+      "source": "readme_tests_readme",
+      "target": "readme_growth_engine_storage"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/architecture.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_docs_architecture",
+      "target": "readme_growth_engine_web_views"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "readme_tests_readme",
+      "target": "readme_growth_engine_web_views"
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "aa6bc6d502b465018ff8f70ec570d6de469097b2"
+  "built_at_commit": "79773c93b9c1ad159b40ccdd270d5da94f5a6f5f"
 }

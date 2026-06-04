@@ -9,6 +9,7 @@ Rules:
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
 
 
+
 ## Local graphify policy
 - Run graphify only through the active local Python environment for this repo, using `python -m graphify ...`.
 - Do not rely on a global install or any network install step.
