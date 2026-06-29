@@ -13,33 +13,60 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      APP_NAME: ${{ vars.APP_NAME || 'sdr' }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      SSH_OPTS: >-
+        -i ~/.ssh/id_deploy
+        -o StrictHostKeyChecking=accept-new
+        -o ConnectTimeout=15
+        -o ServerAliveInterval=15
+        -o ServerAliveCountMax=4
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure SSH
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Wait for SSH to be reachable
+        run: |
+          set -uo pipefail
+          for attempt in $(seq 1 6); do
+            if ssh $SSH_OPTS -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" true; then
+              echo "SSH reachable on attempt $attempt"
+              exit 0
+            fi
+            echo "SSH attempt $attempt failed (connection reset/refused); retrying in $((attempt * 10))s..."
+            sleep $((attempt * 10))
+          done
+          echo "::error::Could not establish SSH to $DEPLOY_HOST after 6 attempts."
+          echo "::error::TCP/handshake is being reset by the host. Check on the VM: firewall/security-group allows GitHub runner IPs, fail2ban has not banned the runner, and sshd MaxStartups is not throttling."
+          exit 1
 
       - name: Sync source
         run: |
+          set -euo pipefail
           rsync -az --delete \
             --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='.venv' \
             --exclude='__pycache__' --exclude='.env' --exclude='.env.*' --exclude='*.log' \
-            -e "ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new" \
-            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/srv/${{ vars.APP_NAME || 'sdr' }}/"
+            -e "ssh $SSH_OPTS" \
+            ./ "$DEPLOY_USER@$DEPLOY_HOST:/srv/$APP_NAME/"
 
       - name: Build, collect static, and restart
         run: |
-          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            'set -e; cd "/srv/${{ vars.APP_NAME || 'sdr' }}"; \
-             ln -sfn "/etc/${{ vars.APP_NAME || 'sdr' }}/${{ vars.APP_NAME || 'sdr' }}.env" .env; \
+          set -euo pipefail
+          ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" \
+            "set -e; cd /srv/$APP_NAME; \
+             ln -sfn /etc/$APP_NAME/$APP_NAME.env .env; \
              python3 -m venv .venv; \
              .venv/bin/pip install --upgrade pip; \
              .venv/bin/pip install -r requirements.txt; \
              .venv/bin/python manage.py collectstatic --noinput; \
-             sudo systemctl restart "${{ vars.APP_NAME || 'sdr' }}.service"; sleep 3; \
-             systemctl is-active "${{ vars.APP_NAME || 'sdr' }}.service"'
+             sudo systemctl restart $APP_NAME.service; sleep 3; \
+             systemctl is-active $APP_NAME.service"
