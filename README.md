@@ -108,6 +108,12 @@ playwright install chromium
 python manage.py runserver
 ```
 
+## Production deployment
+
+Production runs the Django app behind nginx with `gunicorn` and serves collected static files through WhiteNoise.
+The deploy workflow runs `python manage.py collectstatic --noinput` before restarting the systemd service.
+Production keeps the app dotenv at `/etc/sdr/sdr.env` and symlinks it into `/srv/sdr/.env` so the service can read runtime config while systemd only carries the port and host binding.
+
 ## PowerShell helper script
 
 Use the project helper at `scripts/sdr-tool-script.ps1` to launch the app directly:

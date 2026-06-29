@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv(
 DEBUG = _as_bool(os.getenv("DJANGO_DEBUG"), True)
 ALLOWED_HOSTS = _as_list(
     os.getenv("DJANGO_ALLOWED_HOSTS"),
-    ["localhost", "testserver", "sdr.buildwithai.ai"],
+    ["localhost", "127.0.0.1", "testserver", "sdr.buildwithai.ai"],
 )
 
 INSTALLED_APPS = [
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -92,6 +93,11 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    }
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

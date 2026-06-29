@@ -1,0 +1,45 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-${{ vars.APP_NAME || 'sdr' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync source
+        run: |
+          rsync -az --delete \
+            --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='.venv' \
+            --exclude='__pycache__' --exclude='.env' --exclude='.env.*' --exclude='*.log' \
+            -e "ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes" \
+            ./ "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/srv/${{ vars.APP_NAME || 'sdr' }}/"
+
+      - name: Build, collect static, and restart
+        run: |
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'set -e; cd "/srv/${{ vars.APP_NAME || 'sdr' }}"; \
+             ln -sfn "/etc/${{ vars.APP_NAME || 'sdr' }}/${{ vars.APP_NAME || 'sdr' }}.env" .env; \
+             python3 -m venv .venv; \
+             .venv/bin/pip install --upgrade pip; \
+             .venv/bin/pip install -r requirements.txt; \
+             .venv/bin/python manage.py collectstatic --noinput; \
+             sudo systemctl restart "${{ vars.APP_NAME || 'sdr' }}.service"; sleep 3; \
+             systemctl is-active "${{ vars.APP_NAME || 'sdr' }}.service"'
