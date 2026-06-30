@@ -49,6 +49,15 @@ jobs:
           echo "::error::TCP/handshake is being reset by the host. Check on the VM: firewall/security-group allows GitHub runner IPs, fail2ban has not banned the runner, and sshd MaxStartups is not throttling."
           exit 1
 
+      - name: Prepare target directory
+        run: |
+          set -euo pipefail
+          # Ensure the deploy user owns the target tree so rsync can
+          # preserve attributes (otherwise chgrp/chmod/utime on
+          # pre-existing, foreign-owned dirs fail with exit 23).
+          ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" \
+            "sudo mkdir -p /srv/$APP_NAME && sudo chown -R \$(id -un):\$(id -gn) /srv/$APP_NAME"
+
       - name: Sync source
         run: |
           set -euo pipefail
