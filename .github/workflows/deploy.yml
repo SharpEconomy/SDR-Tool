@@ -52,7 +52,7 @@ jobs:
       - name: Sync source
         run: |
           set -euo pipefail
-          rsync -az --delete \
+          rsync -az --delete --no-owner --no-group \
             --exclude='.git' --exclude='.github' --exclude='node_modules' --exclude='.venv' \
             --exclude='__pycache__' --exclude='.env' --exclude='.env.*' --exclude='*.log' \
             -e "ssh $SSH_OPTS" \
