@@ -24,7 +24,7 @@ jobs:
         -o ServerAliveInterval=15
         -o ServerAliveCountMax=4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Configure SSH
         run: |
