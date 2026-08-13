@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv(
 DEBUG = _as_bool(os.getenv("DJANGO_DEBUG"), True)
 ALLOWED_HOSTS = _as_list(
     os.getenv("DJANGO_ALLOWED_HOSTS"),
-    ["localhost", "127.0.0.1", "testserver", "sdr.buildwithai.ai"],
+    ["localhost", "127.0.0.1", "testserver", "sdr.think-verse.com"],
 )
 
 INSTALLED_APPS = [
